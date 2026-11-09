@@ -45,13 +45,30 @@
     }
   </script>
 
-  <!-- Lucide Icons -->
-  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Fast Anycast CDNs: Cloudflare CDN & jsDelivr with automatic failover -->
+  <!-- Lucide Icons (pinned version) -->
+  <script src="https://cdn.jsdelivr.net/npm/lucide@1.70.0/dist/umd/lucide.min.js"></script>
 
-  <!-- React 18 & Babel Standalone for seamless execution -->
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <!-- React 18 & Babel Standalone (Cloudflare CDN) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.10/babel.min.js"></script>
+
+  <!-- Automatic CDN Failover Handler -->
+  <script>
+    if (!window.React) {
+      document.write('<script src="https://cdn.jsdelivr.net/npm/react@18.2.0/umd/react.production.min.js"><\/script>');
+    }
+    if (!window.ReactDOM) {
+      document.write('<script src="https://cdn.jsdelivr.net/npm/react-dom@18.2.0/umd/react-dom.production.min.js"><\/script>');
+    }
+    if (!window.Babel) {
+      document.write('<script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.23.10/babel.min.js"><\/script>');
+    }
+    if (!window.lucide) {
+      document.write('<script src="https://unpkg.com/lucide@1.70.0/dist/umd/lucide.min.js"><\/script>');
+    }
+  </script>
 
   <style>
     body {
@@ -510,7 +527,23 @@
 <body class="min-h-screen flex flex-col antialiased selection:bg-blue-600 selection:text-white">
 
   <!-- React Root Container -->
-  <div id="root" class="flex-grow flex flex-col"></div>
+    <!-- React Root Container with Instant Pre-Mount Loader -->
+  <div id="root" class="flex-grow flex flex-col min-h-screen">
+    <div id="app-preloader" class="flex-grow flex flex-col items-center justify-center min-h-screen bg-[#0A1F44] text-white p-6">
+      <div class="w-12 h-12 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center mb-5 shadow-lg">
+        <svg class="w-6 h-6 animate-spin text-blue-400" viewBox="0 0 24 24" fill="none">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+      </div>
+      <h3 class="text-base sm:text-lg font-bold tracking-tight text-white mb-1">
+        ITSU Lacoste Portal
+      </h3>
+      <p class="text-xs text-blue-200/80">
+        Loading interface...
+      </p>
+    </div>
+  </div>
 
   <!-- Main Application Script (Babel compiled) -->
   <script type="text/babel">
