@@ -5,6 +5,7 @@
  */
 
 const REPORT_TYPES = {
+  COLLECTION_SIGNOFF: 'COLLECTION_SIGNOFF',
   COMPLETE_REGISTER: 'COMPLETE_REGISTER',
   BLUE_LACOSTE_LIST: 'BLUE_LACOSTE_LIST',
   WHITE_LACOSTE_LIST: 'WHITE_LACOSTE_LIST',
@@ -34,6 +35,30 @@ function exportReport(sessionToken, reportType, format) {
   let summary = {};
 
   switch (reportType) {
+    case REPORT_TYPES.COLLECTION_SIGNOFF:
+      title = 'Distribution & Handout Sign-Off Sheet';
+      headers = ['#', 'Full Name', 'Index Number', 'Colour', 'Size', 'Ref ID', 'Handout Status', 'Student Signature'];
+      const givenCount = selections.filter(s => normalizeText(s['Submission Status']).toUpperCase().includes('COLLECTED')).length;
+      rows = selections.map((s, idx) => {
+        const isGiven = normalizeText(s['Submission Status']).toUpperCase().includes('COLLECTED');
+        return [
+          idx + 1,
+          s['Full Name'],
+          s['Index Number'],
+          s['Selected Colour'],
+          s['Selected Size'],
+          s['Submission ID'],
+          isGiven ? 'Given Out' : 'Not Given Out',
+          isGiven ? 'GIVEN OUT' : '__________________'
+        ];
+      });
+      summary = {
+        'Total Orders': selections.length,
+        'Given Out': givenCount,
+        'Awaiting Pickup': Math.max(0, selections.length - givenCount)
+      };
+      break;
+
     case REPORT_TYPES.COMPLETE_REGISTER:
       title = 'Complete Student Selection Register';
       headers = ['#', 'Submission ID', 'Full Name', 'Index Number', 'Colour', 'Size', 'Submitted At', 'Status'];

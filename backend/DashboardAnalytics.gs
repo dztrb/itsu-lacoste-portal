@@ -35,6 +35,7 @@ function getDashboardStats(sessionToken) {
   let blueCount = 0;
   let whiteCount = 0;
   let otherColourCount = 0;
+  let collectedCount = 0;
 
   // Size distribution counts
   const sizeCounts = {
@@ -59,6 +60,10 @@ function getDashboardStats(sessionToken) {
   selections.forEach(sel => {
     const col = normalizeText(sel['Selected Colour']).toLowerCase();
     const sz = normalizeText(sel['Selected Size']).toUpperCase();
+    const stStatus = normalizeText(sel['Submission Status']).toUpperCase();
+    if (stStatus.includes('COLLECTED')) {
+      collectedCount++;
+    }
 
     if (col === 'blue') {
       blueCount++;
@@ -101,6 +106,8 @@ function getDashboardStats(sessionToken) {
       totalSubmissions: totalSubmissions,
       pendingStudents: pendingCount,
       completionPercentage: completionPercentage,
+      collectedCount: collectedCount,
+      uncollectedCount: Math.max(0, totalSubmissions - collectedCount),
       submissionStatus: settings.submissionStatus
     },
     colours: {
@@ -137,6 +144,7 @@ function getStudentSelections(sessionToken, filters) {
     const idx = normalizeIndexNumber(st['Index Number']);
     const sel = selectionMap.get(idx);
     const isSubmitted = !!sel;
+    const isCollected = sel && normalizeText(sel['Submission Status']).toUpperCase().includes('COLLECTED');
 
     return {
       fullName: st['Full Name'],
@@ -147,7 +155,8 @@ function getStudentSelections(sessionToken, filters) {
       selectedColour: sel ? sel['Selected Colour'] : '-',
       selectedSize: sel ? sel['Selected Size'] : '-',
       submittedAt: sel ? sel['Submitted At'] : '-',
-      submissionStatus: isSubmitted ? 'Submitted' : 'Pending'
+      submissionStatus: isSubmitted ? 'Submitted' : 'Pending',
+      collectionStatus: isSubmitted ? (isCollected ? 'Collected' : 'Not Collected') : '-'
     };
   });
 
@@ -171,9 +180,13 @@ function getStudentSelections(sessionToken, filters) {
     records = records.filter(r => r.selectedSize.toUpperCase() === filters.size.toUpperCase());
   }
 
-  // Apply submission status filter
+  // Apply submission/collection status filter
   if (filters && filters.status && filters.status !== 'ALL') {
-    records = records.filter(r => r.submissionStatus.toLowerCase() === filters.status.toLowerCase());
+    if (filters.status === 'Collected' || filters.status === 'Not Collected') {
+      records = records.filter(r => r.collectionStatus === filters.status);
+    } else {
+      records = records.filter(r => r.submissionStatus.toLowerCase() === filters.status.toLowerCase());
+    }
   }
 
   // Apply payment status filter

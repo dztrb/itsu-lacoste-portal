@@ -328,6 +328,7 @@
 
           let blueCount = 0;
           let whiteCount = 0;
+          let collectedCount = 0;
           const sizeCounts = { S: 0, M: 0, L: 0, XL: 0, XXL: 0, XXXL: 0 };
           const matrix = {
             S: { Blue: 0, White: 0, Total: 0 },
@@ -343,6 +344,7 @@
             const sz = (s.selectedSize || '').toUpperCase();
             if (c === 'blue') blueCount++;
             if (c === 'white') whiteCount++;
+            if (s.collectionStatus === 'Collected' || String(s.status || '').includes('COLLECTED')) collectedCount++;
             if (sizeCounts[sz] !== undefined) sizeCounts[sz]++;
             if (matrix[sz]) {
               if (c === 'blue') matrix[sz].Blue++;
@@ -357,6 +359,8 @@
               totalSubmissions: totalSub,
               pendingStudents: pending,
               completionPercentage: completion,
+              collectedCount: collectedCount,
+              uncollectedCount: Math.max(0, totalSub - collectedCount),
               submissionStatus: db.settings.submissionStatus
             },
             colours: {
@@ -371,7 +375,8 @@
               indexNumber: s.indexNumber,
               colour: s.selectedColour,
               size: s.selectedSize,
-              submittedAt: s.submittedAt
+              submittedAt: s.submittedAt,
+              collectionStatus: s.collectionStatus || 'Not Collected'
             }))
           };
         },
@@ -379,10 +384,11 @@
         getStudentSelections(sessionToken, filters) {
           const db = getDb();
           const selMap = new Map();
-          db.selections.forEach(s => selMap.set(s.indexNumber, s));
+          db.selections.forEach(s => selMap.set(String(s.indexNumber || '').toUpperCase(), s));
 
           let list = db.students.map(st => {
-            const sel = selMap.get(st.indexNumber);
+            const sel = selMap.get(String(st.indexNumber || '').toUpperCase());
+            const isCollected = sel && (sel.collectionStatus === 'Collected' || String(sel.status || '').includes('COLLECTED'));
             return {
               fullName: st.fullName,
               indexNumber: st.indexNumber,
@@ -392,7 +398,9 @@
               selectedColour: sel ? sel.selectedColour : '-',
               selectedSize: sel ? sel.selectedSize : '-',
               submittedAt: sel ? sel.submittedAt : '-',
-              submissionStatus: sel ? 'Submitted' : 'Pending'
+              submissionStatus: sel ? 'Submitted' : 'Pending',
+              collectionStatus: sel ? (isCollected ? 'Collected' : 'Not Collected') : '-',
+              collectedAt: sel && sel.collectedAt ? sel.collectedAt : '-'
             };
           });
 
@@ -407,16 +415,20 @@
             list = list.filter(r => r.selectedSize.toUpperCase() === filters.size.toUpperCase());
           }
           if (filters && filters.status && filters.status !== 'ALL') {
-            list = list.filter(r => r.submissionStatus.toLowerCase() === filters.status.toLowerCase());
+            if (filters.status === 'Collected' || filters.status === 'Not Collected') {
+              list = list.filter(r => r.collectionStatus === filters.status);
+            } else {
+              list = list.filter(r => r.submissionStatus.toLowerCase() === filters.status.toLowerCase());
+            }
           }
           return list;
         },
 
         getPendingStudents(sessionToken) {
           const db = getDb();
-          const subSet = new Set(db.selections.map(s => s.indexNumber));
+          const subSet = new Set(db.selections.map(s => String(s.indexNumber || '').toUpperCase()));
           return db.students
-            .filter(st => st.paymentStatus === 'PAID' && !subSet.has(st.indexNumber))
+            .filter(st => st.paymentStatus === 'PAID' && !subSet.has(String(st.indexNumber || '').toUpperCase()))
             .map(st => ({
               fullName: st.fullName,
               indexNumber: st.indexNumber,
@@ -432,7 +444,7 @@
           const exists = db.students.some(s => String(s.indexNumber).trim().toUpperCase() === normIdx);
           if (exists) throw new Error('Student index number already registered.');
           db.students.push({
-            fullName: String(studentData.fullName || '').trim(),
+            fullName: String(studentData.fullName || '').trim().toUpperCase(),
             indexNumber: normIdx,
             paymentStatus: 'PAID',
             paymentReference: 'PRE-ORDER',
@@ -453,7 +465,7 @@
           const today = new Date().toISOString().split('T')[0];
 
           studentsList.forEach(item => {
-            const fullName = String(item.fullName || '').trim();
+            const fullName = String(item.fullName || '').trim().toUpperCase();
             const indexNumber = String(item.indexNumber || '').trim().toUpperCase();
             if (!fullName || !indexNumber) return;
             if (existingSet.has(indexNumber)) {
@@ -475,23 +487,120 @@
           return { success: true, added, skipped };
         },
 
+        updatePaidStudent(sessionToken, oldIndexNumber, updatedData) {
+          const db = getDb();
+          const oldNorm = String(oldIndexNumber || '').trim().toUpperCase();
+          const newNorm = String(updatedData.indexNumber || '').trim().toUpperCase();
+          const newName = String(updatedData.fullName || '').trim().toUpperCase();
+          if (!newName || !newNorm) throw new Error('Full Name and Index Number are required.');
+
+          const stIdx = db.students.findIndex(s => String(s.indexNumber || '').trim().toUpperCase() === oldNorm);
+          if (stIdx === -1) throw new Error('Student record not found.');
+
+          if (oldNorm !== newNorm && db.students.some((s, i) => i !== stIdx && String(s.indexNumber || '').trim().toUpperCase() === newNorm)) {
+            throw new Error('Another student already has that index number.');
+          }
+
+          db.students[stIdx].fullName = newName;
+          db.students[stIdx].indexNumber = newNorm;
+
+          const sel = db.selections.find(s => String(s.indexNumber || '').trim().toUpperCase() === oldNorm);
+          if (sel) {
+            sel.fullName = newName;
+            sel.indexNumber = newNorm;
+          }
+
+          db.auditLogs.unshift({
+            logId: 'LOG-' + Math.random().toString(36).substring(2, 7).toUpperCase(),
+            timestamp: new Date().toISOString(),
+            user: db.admin.email,
+            action: 'STUDENT_UPDATED',
+            details: JSON.stringify({ oldIndexNumber: oldNorm, newIndexNumber: newNorm, fullName: newName }),
+            status: 'SUCCESS'
+          });
+
+          saveDb(db);
+          return { success: true };
+        },
+
+        deletePaidStudent(sessionToken, indexNumber) {
+          const db = getDb();
+          const normIdx = String(indexNumber || '').trim().toUpperCase();
+          db.students = db.students.filter(s => String(s.indexNumber || '').trim().toUpperCase() !== normIdx);
+          db.selections = db.selections.filter(s => String(s.indexNumber || '').trim().toUpperCase() !== normIdx);
+          db.auditLogs.unshift({
+            logId: 'LOG-' + Math.random().toString(36).substring(2, 7).toUpperCase(),
+            timestamp: new Date().toISOString(),
+            user: db.admin.email,
+            action: 'STUDENT_DELETED',
+            details: `Removed student ${normIdx} from pre-order register`,
+            status: 'WARNING'
+          });
+          saveDb(db);
+          return { success: true };
+        },
+
+        clearAllRecords(sessionToken) {
+          const db = getDb();
+          const count = db.students.length;
+          db.students = [];
+          db.selections = [];
+          db.auditLogs.unshift({
+            logId: 'LOG-' + Math.random().toString(36).substring(2, 7).toUpperCase(),
+            timestamp: new Date().toISOString(),
+            user: db.admin.email,
+            action: 'REGISTER_CLEARED',
+            details: `Cleared all ${count} student record(s) and selections`,
+            status: 'WARNING'
+          });
+          saveDb(db);
+          return { success: true };
+        },
+
+        toggleCollectionStatus(sessionToken, indexNumber) {
+          const db = getDb();
+          const normIdx = String(indexNumber || '').trim().toUpperCase();
+          const sel = db.selections.find(s => String(s.indexNumber || '').trim().toUpperCase() === normIdx);
+          if (!sel) throw new Error('Student has not submitted a Lacoste selection yet.');
+
+          const currentlyCollected = sel.collectionStatus === 'Collected' || String(sel.status || '').includes('COLLECTED');
+          const nextStatus = currentlyCollected ? 'Not Collected' : 'Collected';
+          sel.collectionStatus = nextStatus;
+          sel.collectedAt = nextStatus === 'Collected' ? new Date().toISOString().replace('T', ' ').substring(0, 19) : '';
+          sel.status = nextStatus === 'Collected' ? 'COLLECTED' : 'CONFIRMED';
+
+          db.auditLogs.unshift({
+            logId: 'LOG-' + Math.random().toString(36).substring(2, 7).toUpperCase(),
+            timestamp: new Date().toISOString(),
+            user: db.admin.email,
+            action: nextStatus === 'Collected' ? 'SHIRT_COLLECTED' : 'COLLECTION_REVERTED',
+            details: `${sel.fullName} (${normIdx}) marked as ${nextStatus}`,
+            status: 'SUCCESS'
+          });
+
+          saveDb(db);
+          return { success: true, collectionStatus: nextStatus, collectedAt: sel.collectedAt };
+        },
+
         updateStudentSelection(sessionToken, indexNumber, selection) {
           const db = getDb();
-          let sel = db.selections.find(s => s.indexNumber === indexNumber);
+          const normIdx = String(indexNumber || '').trim().toUpperCase();
+          let sel = db.selections.find(s => String(s.indexNumber || '').trim().toUpperCase() === normIdx);
           if (sel) {
             sel.selectedColour = selection.colour;
             sel.selectedSize = selection.size;
             sel.status = 'CORRECTED';
           } else {
-            const st = db.students.find(s => s.indexNumber === indexNumber);
+            const st = db.students.find(s => String(s.indexNumber || '').trim().toUpperCase() === normIdx);
             db.selections.push({
               submissionId: 'ITSU-LAC-ADM-' + Math.random().toString(36).substring(2, 6).toUpperCase(),
               fullName: st ? st.fullName : 'Student',
-              indexNumber: indexNumber,
+              indexNumber: normIdx,
               selectedColour: selection.colour,
               selectedSize: selection.size,
-              submittedAt: new Date().toISOString(),
-              status: 'CONFIRMED (Admin)'
+              submittedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
+              status: 'CONFIRMED (Admin)',
+              collectionStatus: 'Not Collected'
             });
           }
           saveDb(db);
@@ -500,7 +609,8 @@
 
         deleteStudentSelection(sessionToken, indexNumber, reason) {
           const db = getDb();
-          const idx = db.selections.findIndex(s => s.indexNumber === indexNumber);
+          const normIdx = String(indexNumber || '').trim().toUpperCase();
+          const idx = db.selections.findIndex(s => String(s.indexNumber || '').trim().toUpperCase() === normIdx);
           if (idx !== -1) {
             db.selections.splice(idx, 1);
             saveDb(db);
@@ -523,17 +633,92 @@
         exportReport(sessionToken, reportType, format) {
           const db = getDb();
           const sel = db.selections;
+          const students = db.students;
+          const nowStr = new Date().toISOString().replace('T', ' ').substring(0, 19) + ' GMT';
+          let title = '';
+          let headers = [];
+          let rows = [];
+          let summary = {};
+
+          if (reportType === 'COMPLETE_REGISTER') {
+            title = 'Complete Student Selection Register';
+            headers = ['#', 'Submission ID', 'Full Name', 'Index Number', 'Colour', 'Size', 'Submitted At', 'Collection Status'];
+            rows = sel.map((s, idx) => [idx + 1, s.submissionId, s.fullName, s.indexNumber, s.selectedColour, s.selectedSize, s.submittedAt, s.collectionStatus || 'Not Collected']);
+            summary = { 'Total Selections': sel.length, 'Collected': sel.filter(s => s.collectionStatus === 'Collected').length };
+          } else if (reportType === 'COLLECTION_SIGNOFF') {
+            title = 'Physical Distribution & Collection Sign-Off Sheet';
+            headers = ['#', 'Full Name', 'Index Number', 'Colour', 'Size', 'Ref ID', 'Collection Status', 'Student Signature'];
+            rows = sel.map((s, idx) => [idx + 1, s.fullName, s.indexNumber, s.selectedColour, s.selectedSize, s.submissionId, s.collectionStatus || 'Not Collected', s.collectionStatus === 'Collected' ? 'COLLECTED' : '__________________']);
+            summary = { 'Total Eligible for Pickup': sel.length, 'Collected': sel.filter(s => s.collectionStatus === 'Collected').length, 'Awaiting Pickup': sel.filter(s => s.collectionStatus !== 'Collected').length };
+          } else if (reportType === 'BLUE_LACOSTE_LIST') {
+            title = 'Blue Lacoste Selections List';
+            const blue = sel.filter(s => (s.selectedColour || '').toLowerCase() === 'blue');
+            headers = ['#', 'Submission ID', 'Full Name', 'Index Number', 'Size', 'Collection Status'];
+            rows = blue.map((s, idx) => [idx + 1, s.submissionId, s.fullName, s.indexNumber, s.selectedSize, s.collectionStatus || 'Not Collected']);
+            summary = { 'Colour': 'Royal Blue', 'Total Orders': blue.length };
+          } else if (reportType === 'WHITE_LACOSTE_LIST') {
+            title = 'White Lacoste Selections List';
+            const white = sel.filter(s => (s.selectedColour || '').toLowerCase() === 'white');
+            headers = ['#', 'Submission ID', 'Full Name', 'Index Number', 'Size', 'Collection Status'];
+            rows = white.map((s, idx) => [idx + 1, s.submissionId, s.fullName, s.indexNumber, s.selectedSize, s.collectionStatus || 'Not Collected']);
+            summary = { 'Colour': 'Classic White', 'Total Orders': white.length };
+          } else if (reportType === 'SIZE_DISTRIBUTION') {
+            title = 'Size Distribution Report';
+            headers = ['Size', 'Total Count', 'Percentage of Total'];
+            rows = ['S', 'M', 'L', 'XL', 'XXL', 'XXXL'].map(sz => {
+              const c = sel.filter(s => (s.selectedSize || '').toUpperCase() === sz).length;
+              const pct = sel.length > 0 ? Math.round((c / sel.length) * 100) + '%' : '0%';
+              return [sz, c, pct];
+            });
+            summary = { 'Total Submissions': sel.length };
+          } else if (reportType === 'COLOUR_SIZE_BREAKDOWN') {
+            title = 'Colour and Size Cross-Tabulation Matrix';
+            headers = ['Size', 'Blue', 'White', 'Total Order'];
+            let gBlue = 0, gWhite = 0;
+            rows = ['S', 'M', 'L', 'XL', 'XXL', 'XXXL'].map(sz => {
+              const b = sel.filter(s => (s.selectedSize || '').toUpperCase() === sz && (s.selectedColour || '').toLowerCase() === 'blue').length;
+              const w = sel.filter(s => (s.selectedSize || '').toUpperCase() === sz && (s.selectedColour || '').toLowerCase() === 'white').length;
+              gBlue += b; gWhite += w;
+              return [sz, b, w, b + w];
+            });
+            rows.push(['GRAND TOTAL', gBlue, gWhite, gBlue + gWhite]);
+            summary = { 'Total Units': gBlue + gWhite, 'Blue Total': gBlue, 'White Total': gWhite };
+          } else if (reportType === 'PENDING_STUDENTS') {
+            title = 'Pending Students Register (Unsubmitted Pre-Ordered Students)';
+            const subSet = new Set(sel.map(s => String(s.indexNumber || '').toUpperCase()));
+            const pend = students.filter(st => st.paymentStatus === 'PAID' && !subSet.has(String(st.indexNumber || '').toUpperCase()));
+            headers = ['#', 'Full Name', 'Index Number', 'Status', 'Date Added'];
+            rows = pend.map((p, idx) => [idx + 1, p.fullName, p.indexNumber, p.paymentStatus, p.dateAdded || '-']);
+            summary = { 'Total Pending Students': pend.length };
+          } else {
+            title = 'Overall Lacoste Collection Executive Summary';
+            headers = ['Metric Category', 'Metric Name', 'Count / Value'];
+            const bC = sel.filter(s => (s.selectedColour || '').toLowerCase() === 'blue').length;
+            const wC = sel.filter(s => (s.selectedColour || '').toLowerCase() === 'white').length;
+            const colC = sel.filter(s => s.collectionStatus === 'Collected').length;
+            rows = [
+              ['Pre-Order Register', 'Total Pre-Ordered Students', students.length],
+              ['Selection Progress', 'Total Confirmed Selections', sel.length],
+              ['Selection Progress', 'Total Pending Students', Math.max(0, students.length - sel.length)],
+              ['Colour Preferences', 'Royal Blue Lacoste Count', bC],
+              ['Colour Preferences', 'Classic White Lacoste Count', wC],
+              ['Physical Handout', 'Shirts Collected by Students', colC],
+              ['Physical Handout', 'Shirts Awaiting Pickup', Math.max(0, sel.length - colC)]
+            ];
+            summary = { 'Total Pre-Ordered': students.length, 'Total Submitted': sel.length, 'Total Collected': colC };
+          }
+
           return {
             reportType: reportType,
-            title: 'Report: ' + reportType,
+            title: title,
             institution: 'Takoradi Technical University',
             department: 'Department of Computer Science',
             union: 'Information Technology Students Union (ITSU)',
-            generatedAt: new Date().toISOString(),
+            generatedAt: nowStr,
             generatedBy: db.admin.email,
-            summary: { 'Total Records': sel.length },
-            headers: ['#', 'Submission ID', 'Full Name', 'Index Number', 'Colour', 'Size', 'Date'],
-            rows: sel.map((s, idx) => [idx + 1, s.submissionId, s.fullName, s.indexNumber, s.selectedColour, s.selectedSize, s.submittedAt])
+            summary: summary,
+            headers: headers,
+            rows: rows
           };
         }
       };
@@ -1024,8 +1209,79 @@
       const [selectedView, setSelectedView] = useState('front'); // 'front' | 'back'
       const [autoRotate, setAutoRotate] = useState(true);
       const [isHoveringPolo, setIsHoveringPolo] = useState(false);
+      const [showSizeGuide, setShowSizeGuide] = useState(false);
       const [submissionResult, setSubmissionResult] = useState(null);
       const [alreadySubmittedData, setAlreadySubmittedData] = useState(null);
+
+      // Download Official Student Collection Slip (.html receipt pass)
+      const handleDownloadCollectionSlip = (sub) => {
+        if (!sub) return;
+        const isCollected = sub.collectionStatus === 'Collected' || String(sub.status || '').includes('COLLECTED');
+        const slipHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ITSU Lacoste Collection Slip - ${sub.submissionId}</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 24px; background: #f1f5f9; font-family: 'Segoe UI', Inter, Arial, sans-serif; color: #0f172a; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+    .card { background: white; width: 100%; max-width: 440px; border-radius: 20px; overflow: hidden; box-shadow: 0 12px 32px rgba(10,31,68,0.12); border: 1px solid #e2e8f0; }
+    .header { background: #0A1F44; color: white; padding: 24px; text-align: center; }
+    .header-sub { font-size: 10px; text-transform: uppercase; letter-spacing: 0.14em; color: #93c5fd; font-weight: 700; }
+    .header-title { font-size: 18px; font-weight: 800; margin: 6px 0 2px; letter-spacing: 0.02em; }
+    .header-dept { font-size: 11px; color: #cbd5e1; }
+    .body { padding: 24px; }
+    .ref-box { background: #f8fafc; border: 1px dashed #94a3b8; border-radius: 12px; padding: 12px; text-align: center; margin-bottom: 18px; }
+    .ref-label { font-size: 10px; text-transform: uppercase; color: #64748b; font-weight: 700; letter-spacing: 0.08em; }
+    .ref-code { font-family: monospace; font-size: 20px; font-weight: 800; color: #103E8C; margin-top: 4px; letter-spacing: 0.05em; }
+    .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
+    .row:last-child { border-bottom: none; }
+    .label { color: #64748b; font-weight: 500; }
+    .val { font-weight: 700; color: #0f172a; text-transform: uppercase; }
+    .badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 800; background: ${isCollected ? '#dcfce7' : '#dbeafe'}; color: ${isCollected ? '#166534' : '#1e40af'}; }
+    .footer { background: #f8fafc; padding: 16px 24px; text-align: center; border-top: 1px solid #e2e8f0; font-size: 11px; color: #64748b; }
+    .btn { margin-top: 12px; background: #103E8C; color: white; border: none; padding: 9px 18px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer; }
+    @media print { body { background: white; padding: 0; } .card { box-shadow: none; } .btn { display: none; } }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="header">
+      <div class="header-sub">Takoradi Technical University • ITSU</div>
+      <div class="header-title">LACOSTE COLLECTION PASS</div>
+      <div class="header-dept">Department of Computer Science</div>
+    </div>
+    <div class="body">
+      <div class="ref-box">
+        <div class="ref-label">Official Submission Reference</div>
+        <div class="ref-code">${sub.submissionId}</div>
+      </div>
+      <div class="row"><span class="label">Student Name</span><span class="val">${sub.fullName}</span></div>
+      <div class="row"><span class="label">Index Number</span><span class="val" style="font-family:monospace">${sub.indexNumber || verifiedStudent?.indexNumber || indexNumber}</span></div>
+      <div class="row"><span class="label">Selected Colour</span><span class="val">${sub.selectedColour === 'Blue' ? 'Royal Blue' : sub.selectedColour === 'White' ? 'Classic White' : sub.selectedColour}</span></div>
+      <div class="row"><span class="label">Selected Size</span><span class="val">${sub.selectedSize}</span></div>
+      <div class="row"><span class="label">Quantity</span><span class="val">1</span></div>
+      <div class="row"><span class="label">Collection Status</span><span class="badge">${isCollected ? 'COLLECTED' : 'READY FOR DISTRIBUTION'}</span></div>
+    </div>
+    <div class="footer">
+      Present this pass to the ITSU Treasurer during garment distribution.<br/>
+      <button class="btn" onclick="window.print()">Print / Save as PDF</button>
+    </div>
+  </div>
+</body>
+</html>`;
+        const blob = new Blob([slipHtml], { type: 'text/html;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `ITSU_Collection_Slip_${sub.submissionId}.html`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        onNotify({ message: 'Collection Slip downloaded!', type: 'success' });
+      };
 
       // Animated Front <-> Back Showcase on Step 2
       useEffect(() => {
@@ -2619,6 +2875,24 @@
         }
       };
 
+      // Tick / Untick Shirt Given Out (Collected Status)
+      const handleToggleCollection = async (indexNumber) => {
+        try {
+          const res = await ApiService.call('toggleCollectionStatus', session.sessionToken, indexNumber);
+          if (res.success) {
+            const isGiven = res.collectionStatus === 'Collected';
+            onNotify({
+              message: isGiven ? `Marked ${indexNumber} as Given Out!` : `Marked ${indexNumber} as Not Given Out.`,
+              type: isGiven ? 'success' : 'info'
+            });
+            loadStudentRecords();
+            loadStats();
+          }
+        } catch (err) {
+          onNotify({ message: err.message || 'Could not update handout status.', type: 'error' });
+        }
+      };
+
       // Helper to generate file downloads (CSV, Excel XML, Docx, PDF)
       const downloadFile = (filename, content, mimeType) => {
         const blob = new Blob([content], { type: mimeType });
@@ -3091,7 +3365,7 @@
                 <div className="space-y-6">
                   
                   {/* Metric Cards */}
-                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
                     <div className="bg-white p-4 sm:p-5 rounded-xl border border-slate-200 shadow-sm">
                       <div className="flex items-center justify-between text-slate-400 mb-2">
                         <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">Total Paid</span>
@@ -3100,7 +3374,7 @@
                       <div className="text-2xl sm:text-3xl font-extrabold text-slate-900">
                         {stats?.overview?.totalPaidStudents ?? 0}
                       </div>
-                      <span className="text-[11px] text-slate-400 mt-1 block">Eligible students on register</span>
+                      <span className="text-[11px] text-slate-400 mt-1 block">Pre-ordered students</span>
                     </div>
 
                     <div className="bg-white p-4 sm:p-5 rounded-xl border border-slate-200 shadow-sm">
@@ -3122,10 +3396,26 @@
                       <div className="text-2xl sm:text-3xl font-extrabold text-amber-600">
                         {stats?.overview?.pendingStudents ?? 0}
                       </div>
-                      <span className="text-[11px] text-slate-400 mt-1 block">Yet to select Lacoste</span>
+                      <span className="text-[11px] text-slate-400 mt-1 block">Yet to select size/colour</span>
                     </div>
 
                     <div className="bg-white p-4 sm:p-5 rounded-xl border border-slate-200 shadow-sm">
+                      <div className="flex items-center justify-between text-slate-400 mb-2">
+                        <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">Given Out</span>
+                        <Icon name="package-check" className="w-5 h-5 text-emerald-600" />
+                      </div>
+                      <div className="text-2xl sm:text-3xl font-extrabold text-emerald-700">
+                        {stats?.overview?.collectedCount ?? 0}
+                        <span className="text-xs font-semibold text-slate-400 ml-1">
+                          / {stats?.overview?.totalSubmissions ?? 0}
+                        </span>
+                      </div>
+                      <span className="text-[11px] text-slate-400 mt-1 block">
+                        {stats?.overview?.uncollectedCount ?? 0} awaiting pickup
+                      </span>
+                    </div>
+
+                    <div className="col-span-2 lg:col-span-1 bg-white p-4 sm:p-5 rounded-xl border border-slate-200 shadow-sm">
                       <div className="flex items-center justify-between text-slate-400 mb-2">
                         <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">Completion</span>
                         <Icon name="percent" className="w-5 h-5 text-primary-700" />
@@ -3350,6 +3640,8 @@
                           <option value="ALL">All Status</option>
                           <option value="Submitted">Submitted</option>
                           <option value="Pending">Pending</option>
+                          <option value="Collected">Given Out ✓</option>
+                          <option value="Not Collected">Not Given Out</option>
                         </select>
                       </div>
 
@@ -3373,69 +3665,90 @@
                             <th className="py-3 px-4">#</th>
                             <th className="py-3 px-4">Full Name</th>
                             <th className="py-3 px-4">Index Number</th>
-                            <th className="py-3 px-4">Payment</th>
                             <th className="py-3 px-4">Colour</th>
                             <th className="py-3 px-4">Size</th>
-                            <th className="py-3 px-4">Status</th>
+                            <th className="py-3 px-4">Selection</th>
+                            <th className="py-3 px-4">Given Out (Handout)</th>
                             <th className="py-3 px-4 text-right">Actions</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
                           {studentRecords.length > 0 ? (
-                            studentRecords.map((st, idx) => (
-                              <tr key={idx} className="hover:bg-slate-50/50 transition">
-                                <td className="py-2.5 px-4 text-slate-400">{idx + 1}</td>
-                                <td className="py-2.5 px-4 font-semibold text-slate-900">{st.fullName}</td>
-                                <td className="py-2.5 px-4 font-mono text-slate-600">{st.indexNumber}</td>
-                                <td className="py-2.5 px-4">
-                                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
-                                    st.paymentStatus === 'PAID' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
-                                  }`}>
-                                    {st.paymentStatus}
-                                  </span>
-                                </td>
-                                <td className="py-2.5 px-4">
-                                  {st.selectedColour !== '-' ? (
-                                    <span className={`font-semibold ${st.selectedColour === 'Blue' ? 'text-blue-700' : 'text-slate-800'}`}>
-                                      {st.selectedColour}
+                            studentRecords.map((st, idx) => {
+                              const isGivenOut = st.collectionStatus === 'Collected';
+                              return (
+                                <tr key={idx} className="hover:bg-slate-50/50 transition">
+                                  <td className="py-2.5 px-4 text-slate-400">{idx + 1}</td>
+                                  <td className="py-2.5 px-4 font-semibold text-slate-900 uppercase">{st.fullName}</td>
+                                  <td className="py-2.5 px-4 font-mono text-slate-600">{st.indexNumber}</td>
+                                  <td className="py-2.5 px-4">
+                                    {st.selectedColour !== '-' ? (
+                                      <span className={`font-semibold ${st.selectedColour === 'Blue' ? 'text-blue-700' : 'text-slate-800'}`}>
+                                        {st.selectedColour}
+                                      </span>
+                                    ) : <span className="text-slate-400">-</span>}
+                                  </td>
+                                  <td className="py-2.5 px-4 font-bold text-slate-800">
+                                    {st.selectedSize !== '-' ? st.selectedSize : <span className="text-slate-400 font-normal">-</span>}
+                                  </td>
+                                  <td className="py-2.5 px-4">
+                                    <span className={`inline-flex items-center gap-1 font-semibold ${
+                                      st.submissionStatus === 'Submitted' ? 'text-emerald-700' : 'text-amber-600'
+                                    }`}>
+                                      <span className={`w-1.5 h-1.5 rounded-full ${
+                                        st.submissionStatus === 'Submitted' ? 'bg-emerald-600' : 'bg-amber-500'
+                                      }`}></span>
+                                      {st.submissionStatus}
                                     </span>
-                                  ) : <span className="text-slate-400">-</span>}
-                                </td>
-                                <td className="py-2.5 px-4 font-bold text-slate-800">
-                                  {st.selectedSize !== '-' ? st.selectedSize : <span className="text-slate-400 font-normal">-</span>}
-                                </td>
-                                <td className="py-2.5 px-4">
-                                  <span className={`inline-flex items-center gap-1 font-semibold ${
-                                    st.submissionStatus === 'Submitted' ? 'text-emerald-700' : 'text-amber-600'
-                                  }`}>
-                                    <span className={`w-1.5 h-1.5 rounded-full ${
-                                      st.submissionStatus === 'Submitted' ? 'bg-emerald-600' : 'bg-amber-500'
-                                    }`}></span>
-                                    {st.submissionStatus}
-                                  </span>
-                                </td>
-                                <td className="py-2.5 px-4 text-right">
-                                  <div className="flex items-center justify-end gap-1.5">
-                                    <button
-                                      onClick={() => setCorrectModalStudent(st)}
-                                      title="Edit / Correct Selection"
-                                      className="p-1 text-slate-500 hover:text-primary-800 hover:bg-slate-100 rounded"
-                                    >
-                                      <Icon name="edit-3" className="w-3.5 h-3.5" />
-                                    </button>
-                                    {st.submissionStatus === 'Submitted' && (
+                                  </td>
+                                  <td className="py-2.5 px-4">
+                                    {st.submissionStatus === 'Submitted' ? (
                                       <button
-                                        onClick={() => handleResetSubmission(st.indexNumber)}
-                                        title="Reset Submission (Allow Resubmission)"
-                                        className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded"
+                                        type="button"
+                                        onClick={() => handleToggleCollection(st.indexNumber)}
+                                        className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-lg text-[11px] font-bold border transition cursor-pointer select-none ${
+                                          isGivenOut
+                                            ? 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100'
+                                            : 'bg-white text-slate-600 border-slate-300 hover:border-primary-600 hover:text-primary-800'
+                                        }`}
+                                        title={isGivenOut ? `Given out (${st.collectedAt || ''}) — Click to undo` : 'Click to tick that this student has collected their Lacoste'}
                                       >
-                                        <Icon name="rotate-ccw" className="w-3.5 h-3.5" />
+                                        <span className={`w-4 h-4 rounded flex items-center justify-center border transition ${
+                                          isGivenOut
+                                            ? 'bg-emerald-600 border-emerald-600 text-white'
+                                            : 'bg-white border-slate-300'
+                                        }`}>
+                                          {isGivenOut && <Icon name="check" className="w-3 h-3 stroke-[3]" />}
+                                        </span>
+                                        <span>{isGivenOut ? 'Given Out' : 'Tick Given Out'}</span>
                                       </button>
+                                    ) : (
+                                      <span className="text-[11px] text-slate-400 italic">Awaiting selection</span>
                                     )}
-                                  </div>
-                                </td>
-                              </tr>
-                            ))
+                                  </td>
+                                  <td className="py-2.5 px-4 text-right">
+                                    <div className="flex items-center justify-end gap-1.5">
+                                      <button
+                                        onClick={() => setCorrectModalStudent(st)}
+                                        title="Edit / Correct Selection"
+                                        className="p-1 text-slate-500 hover:text-primary-800 hover:bg-slate-100 rounded"
+                                      >
+                                        <Icon name="edit-3" className="w-3.5 h-3.5" />
+                                      </button>
+                                      {st.submissionStatus === 'Submitted' && (
+                                        <button
+                                          onClick={() => handleResetSubmission(st.indexNumber)}
+                                          title="Reset Submission (Allow Resubmission)"
+                                          className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded"
+                                        >
+                                          <Icon name="rotate-ccw" className="w-3.5 h-3.5" />
+                                        </button>
+                                      )}
+                                    </div>
+                                  </td>
+                                </tr>
+                              );
+                            })
                           ) : (
                             <tr>
                               <td colSpan="8" className="py-8 text-center text-slate-400">
@@ -3629,7 +3942,8 @@
 
                     <div className="divide-y divide-slate-100">
                       {[
-                        { id: 'COMPLETE_REGISTER', title: 'Complete Student Selection Register', desc: 'Full register of all student submissions with timestamps and colours.' },
+                        { id: 'COLLECTION_SIGNOFF', title: 'Distribution & Handout Sign-Off Sheet', desc: 'List of all submitted orders with Given Out status and signature column for distribution day.' },
+                        { id: 'COMPLETE_REGISTER', title: 'Complete Student Selection Register', desc: 'Full register of all student submissions with timestamps, colours, sizes, and handout status.' },
                         { id: 'BLUE_LACOSTE_LIST', title: 'Blue Lacoste Selections List', desc: 'Filtered list of all students ordering Royal Blue shirts.' },
                         { id: 'WHITE_LACOSTE_LIST', title: 'White Lacoste Selections List', desc: 'Filtered list of all students ordering Classic White shirts.' },
                         { id: 'SIZE_DISTRIBUTION', title: 'Size Distribution Report', desc: 'Quantity totals across S, M, L, XL, XXL, and XXXL.' },

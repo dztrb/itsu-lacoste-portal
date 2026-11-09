@@ -309,3 +309,39 @@ function deleteStudentSelection(sessionToken, indexNumber, reason) {
   return { success: true, message: 'Selection record reset successfully.' };
 }
 
+/**
+ * Toggles whether a student's Lacoste shirt has been physically given out / collected (Treasurer only)
+ */
+function toggleCollectionStatus(sessionToken, indexNumber) {
+  const session = validateAdminSession(sessionToken);
+  const normIndex = normalizeIndexNumber(indexNumber);
+
+  const existing = checkExistingSubmission(normIndex);
+  if (!existing) {
+    throw new Error('Student has not submitted a Lacoste selection yet.');
+  }
+
+  const isCurrentlyCollected = String(existing.status || '').toUpperCase().includes('COLLECTED');
+  const nextStatus = isCurrentlyCollected ? 'CONFIRMED' : 'COLLECTED';
+  const collectionStatus = isCurrentlyCollected ? 'Not Collected' : 'Collected';
+
+  const success = updateRowByColumn(SHEET_NAMES.SELECTIONS, 3, normIndex, {
+    'Submission Status': nextStatus
+  });
+
+  if (!success) {
+    throw new Error('Could not update handout status.');
+  }
+
+  logAudit(session.email, nextStatus === 'COLLECTED' ? 'SHIRT_GIVEN_OUT' : 'HANDOUT_REVERTED', {
+    indexNumber: normIndex,
+    status: nextStatus
+  }, 'SUCCESS');
+
+  return {
+    success: true,
+    collectionStatus: collectionStatus,
+    collectedAt: Utilities.formatDate(new Date(), 'GMT', "yyyy-MM-dd HH:mm:ss")
+  };
+}
+
