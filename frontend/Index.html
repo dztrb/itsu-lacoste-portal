@@ -378,6 +378,92 @@
     }
 
     // ==========================================
+    // COMPONENT: Contact ITSU Treasurer Modal
+    // ==========================================
+    function ContactTreasurerModal({ isOpen, onClose }) {
+      if (!isOpen) return null;
+
+      const phoneNumber = "0209795146";
+      const formattedPhone = "020 979 5146";
+      const whatsappUrl = `https://wa.me/233209795146?text=${encodeURIComponent("Hello ITSU Treasurer, I need assistance with my Lacoste verification.")}`;
+      const callUrl = `tel:${phoneNumber}`;
+
+      return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-6 sm:p-7 border border-slate-100 relative overflow-hidden">
+            
+            {/* Close Button */}
+            <button
+              type="button"
+              onClick={onClose}
+              className="absolute top-4 right-4 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 transition flex items-center justify-center"
+            >
+              <Icon name="x" className="w-4 h-4" />
+            </button>
+
+            {/* Header */}
+            <div className="text-center mb-5 pt-2">
+              <div className="w-14 h-14 bg-blue-50 text-[#103E8C] rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-inner">
+                <Icon name="phone-call" className="w-7 h-7" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900 leading-tight">
+                Contact ITSU Treasurer
+              </h3>
+              <p className="text-xs text-slate-500 mt-1">
+                Takoradi Technical University • Department of Computer Science
+              </p>
+            </div>
+
+            {/* Officer Details Card */}
+            <div className="bg-[#F8FAFC] border border-slate-200/80 rounded-2xl p-4 text-center mb-5">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-primary-800 bg-primary-50 px-2.5 py-0.5 rounded-full border border-primary-200 inline-block mb-1.5">
+                Authorized Treasurer
+              </span>
+              <div className="text-base font-bold text-slate-900">
+                Anthony Maclean
+              </div>
+              <div className="font-mono text-sm font-semibold text-[#103E8C] mt-1">
+                {formattedPhone}
+              </div>
+            </div>
+
+            {/* Direct Actions: WhatsApp or Call */}
+            <div className="space-y-3">
+              {/* WhatsApp Button */}
+              <a
+                href={whatsappUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full bg-[#25D366] hover:bg-[#20bd5a] text-white font-semibold py-3.5 px-4 rounded-xl shadow-sm transition flex items-center justify-center gap-2.5 text-sm"
+              >
+                <Icon name="message-circle" className="w-4 h-4" />
+                <span>Chat on WhatsApp</span>
+              </a>
+
+              {/* Call Button */}
+              <a
+                href={callUrl}
+                className="w-full bg-[#103E8C] hover:bg-[#0B2E68] text-white font-semibold py-3.5 px-4 rounded-xl shadow-sm transition flex items-center justify-center gap-2.5 text-sm"
+              >
+                <Icon name="phone" className="w-4 h-4" />
+                <span>Call {formattedPhone}</span>
+              </a>
+            </div>
+
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-full mt-4 py-2 text-xs font-medium text-slate-400 hover:text-slate-600 transition text-center"
+            >
+              Cancel
+            </button>
+
+          </div>
+        </div>
+      );
+    }
+
+    // ==========================================
     // COMPONENT: Student Portal Flow
     // ==========================================
     function StudentPortal({ settings, onNotify, onOpenTreasurer }) {
@@ -386,6 +472,7 @@
       const [indexNumber, setIndexNumber] = useState('');
       const [isLoading, setIsLoading] = useState(false);
       const [errorMessage, setErrorMessage] = useState('');
+      const [showContactModal, setShowContactModal] = useState(false);
       
       const [verifiedStudent, setVerifiedStudent] = useState(null);
       const [studentToken, setStudentToken] = useState('');
@@ -596,11 +683,37 @@
                   </div>
                 </form>
 
-                <div className="mt-8 text-center text-xs text-slate-500">
-                  Need assistance? <button type="button" onClick={onOpenTreasurer} className="text-[#103E8C] font-semibold hover:underline">Contact ITSU Treasurer</button>
+                <div className="mt-8 text-center text-xs text-slate-500 space-y-3">
+                  <div>
+                    Need assistance?{' '}
+                    <button
+                      type="button"
+                      onClick={() => setShowContactModal(true)}
+                      className="text-[#103E8C] font-semibold hover:underline"
+                    >
+                      Contact ITSU Treasurer
+                    </button>
+                  </div>
+
+                  <div className="pt-2 border-t border-slate-100">
+                    <button
+                      type="button"
+                      onClick={onOpenTreasurer}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg border border-slate-200/80 transition"
+                    >
+                      <Icon name="shield-check" className="w-3.5 h-3.5 text-slate-400" />
+                      <span>Treasurer Login</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
+
+            {/* Contact Treasurer Popup Modal */}
+            <ContactTreasurerModal
+              isOpen={showContactModal}
+              onClose={() => setShowContactModal(false)}
+            />
 
           </div>
         );
