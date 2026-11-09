@@ -1153,10 +1153,10 @@
                     <input
                       type="text"
                       required
-                      placeholder="e.g. Anthony Maclean"
+                      placeholder="e.g. ANTHONY MACLEAN"
                       value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#103E8C] focus:border-transparent text-sm transition text-slate-900 placeholder:text-slate-400"
+                      onChange={(e) => setFullName(e.target.value.toUpperCase())}
+                      className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#103E8C] focus:border-transparent text-sm uppercase transition text-slate-900 placeholder:text-slate-400"
                     />
                   </div>
 
@@ -1235,23 +1235,26 @@
           <div className="flex-grow flex flex-col bg-[#FDFDFD] py-6 sm:py-8 px-4 sm:px-6 lg:px-8 min-h-screen">
             <div className="max-w-5xl mx-auto w-full flex-grow flex flex-col justify-between">
               
-              {/* Top Student Details Bar */}
-              <div className="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+              {/* Top Student Details Bar (Locked on Scroll) */}
+              <div className="sticky top-3 z-30 bg-white/95 backdrop-blur-md rounded-2xl shadow-sm border border-slate-200/80 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 select-none">
                 <div className="flex items-center gap-3.5">
-                  <div className="w-11 h-11 rounded-2xl bg-[#0A1F44] text-white flex items-center justify-center font-bold text-base shadow-sm">
-                    {verifiedStudent.fullName.charAt(0)}
+                  <div className="w-11 h-11 rounded-2xl bg-[#0A1F44] text-white flex items-center justify-center font-bold text-base uppercase shadow-sm flex-shrink-0">
+                    {verifiedStudent.fullName.charAt(0).toUpperCase()}
                   </div>
                   <div>
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-bold text-slate-900 text-base sm:text-lg">
-                        {verifiedStudent.fullName}
+                      <span className="font-bold text-slate-900 text-base sm:text-lg uppercase tracking-wide">
+                        {verifiedStudent.fullName.toUpperCase()}
                       </span>
-                      <span className="text-xs font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
-                        Verified Paid
+                      <span
+                        title="Verified Paid"
+                        aria-label="Verified Paid"
+                        className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-600 flex-shrink-0 shadow-2xs"
+                      >
+                        <Icon name="badge-check" className="w-4 h-4" />
                       </span>
                     </div>
-                    <div className="text-xs text-slate-500 font-mono mt-0.5">
+                    <div className="text-xs text-slate-500 font-mono mt-0.5 uppercase">
                       Index: {verifiedStudent.indexNumber}
                     </div>
                   </div>
@@ -1540,8 +1543,8 @@
                           <Icon name="user-check" className="w-7 h-7 sm:w-8 sm:h-8" />
                         </div>
                         <div className="flex-grow min-w-0">
-                          <h4 className="text-sm sm:text-base font-bold text-slate-900 leading-snug truncate">
-                            {verifiedStudent.fullName}
+                          <h4 className="text-sm sm:text-base font-bold text-slate-900 leading-snug truncate uppercase">
+                            {verifiedStudent.fullName.toUpperCase()}
                           </h4>
                           <p className="text-xs text-slate-500 mt-1">
                             Index: <span className="font-mono font-bold text-slate-900">{verifiedStudent.indexNumber}</span> &nbsp;&nbsp;&nbsp;&nbsp; Dept: <span className="font-medium text-slate-700">Computer Science</span> &nbsp;&nbsp;&nbsp;&nbsp; Status: <span className="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full text-[11px]">PAID</span>
@@ -1651,7 +1654,7 @@
                 </div>
                 <div className="flex justify-between py-1 border-b border-slate-200">
                   <span className="text-slate-500">Student:</span>
-                  <span className="font-semibold text-slate-900">{submissionResult.fullName}</span>
+                  <span className="font-semibold text-slate-900 uppercase">{submissionResult.fullName}</span>
                 </div>
                 <div className="flex justify-between py-1 border-b border-slate-200">
                   <span className="text-slate-500">Colour:</span>
@@ -1705,7 +1708,7 @@
                   </div>
                   <div className="flex justify-between py-1 border-b border-slate-200">
                     <span className="text-slate-500">Student Name:</span>
-                    <span className="font-semibold text-slate-900">{alreadySubmittedData.fullName}</span>
+                    <span className="font-semibold text-slate-900 uppercase">{alreadySubmittedData.fullName}</span>
                   </div>
                   <div className="flex justify-between py-1 border-b border-slate-200">
                     <span className="text-slate-500">Colour:</span>
