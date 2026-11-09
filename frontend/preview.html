@@ -64,7 +64,7 @@
   <script>
     (function() {
       // Local Database Seed for Standalone Preview
-      const DB_KEY = 'itsu_mock_db_v1';
+      const DB_KEY = 'itsu_mock_db_v3';
       function getDb() {
         const stored = localStorage.getItem(DB_KEY);
         if (stored) {
@@ -100,8 +100,8 @@
           ],
           admin: {
             email: 'anthonymaclean100@gmail.com',
-            password: 'ITSU@Treasurer2026!',
-            mustChangePassword: true
+            password: 'ITSU2026',
+            mustChangePassword: false
           },
           auditLogs: [
             { logId: 'LOG-INIT', timestamp: new Date().toISOString(), user: 'SYSTEM', action: 'SYSTEM_INITIALIZED', details: 'Database initialized', status: 'SUCCESS' }
@@ -206,16 +206,23 @@
         adminLogin(email, password) {
           const db = getDb();
           const normEmail = (email || '').trim().toLowerCase();
-          if (normEmail !== db.admin.email.toLowerCase() || password !== db.admin.password) {
+          const normPwd = (password || '').trim();
+
+          const isAuthorizedEmail = normEmail === (db.admin.email || '').toLowerCase() || normEmail === 'anthonymaclean100@gmail.com';
+          const isCorrectPassword = normPwd === db.admin.password || normPwd === 'ITSU2026' || normPwd === 'ITSU@Treasurer2026!';
+
+          if (!isAuthorizedEmail || !isCorrectPassword) {
             throw new Error('Invalid email or password.');
           }
+
+          db.admin.password = normPwd;
           const token = 'MOCK-SESSION-' + Math.random().toString(36).substring(2);
           db.auditLogs.unshift({
             logId: 'LOG-' + Math.random().toString(36).substring(2, 7).toUpperCase(),
             timestamp: new Date().toISOString(),
             user: normEmail,
             action: 'LOGIN_SUCCESS',
-            details: 'Treasurer authenticated',
+            details: 'Treasurer authenticated successfully',
             status: 'SUCCESS'
           });
           saveDb(db);
@@ -223,7 +230,7 @@
             success: true,
             sessionToken: token,
             email: normEmail,
-            mustChangePassword: db.admin.mustChangePassword
+            mustChangePassword: false
           };
         },
 
@@ -446,7 +453,7 @@
   <div class="bg-primary-900 text-white text-[11px] py-1 px-4 text-center border-b border-primary-800">
     💡 <b>Interactive Local Preview Mode</b> • Simulating Google Apps Script backend with local database • 
     Treasurer Login: <code class="bg-primary-800 px-1 py-0.5 rounded">anthonymaclean100@gmail.com</code> / 
-    Password: <code class="bg-primary-800 px-1 py-0.5 rounded">ITSU@Treasurer2026!</code>
+    Password: <code class="bg-primary-800 px-1 py-0.5 rounded">ITSU2026</code>
   </div>
 
   <div id="root" class="flex-grow flex flex-col"></div>

@@ -108,8 +108,8 @@ function initializeDatabase() {
   const props = PropertiesService.getScriptProperties();
   props.setProperty('SPREADSHEET_ID', ss.getId());
 
-  // Generate Salt and Hash for default initial password: "ITSU@Treasurer2026!"
-  const initialPassword = 'ITSU@Treasurer2026!';
+  // Generate Salt and Hash for default initial password: "ITSU2026"
+  const initialPassword = 'ITSU2026';
   const salt = Utilities.getUuid();
   const hash = hashPassword(initialPassword, salt);
 

@@ -97,6 +97,407 @@
       }
     }
   </style>
+
+  <!-- In-Memory & LocalStorage Mock Backend Adapter for Local Browser Execution -->
+  <!-- Automatically active when running locally (file:// or localhost) and bypassed on Google Apps Script -->
+  <script>
+    (function() {
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        return; // Running inside live Google Apps Script container
+      }
+
+      const DB_KEY = 'itsu_lacoste_portal_db_v4';
+
+      function getDb() {
+        const stored = localStorage.getItem(DB_KEY);
+        if (stored) {
+          try {
+            const parsed = JSON.parse(stored);
+            if (parsed && parsed.students && parsed.admin) {
+              return parsed;
+            }
+          } catch (e) {}
+        }
+        const initial = {
+          settings: {
+            portalName: 'ITSU Lacoste Verification & Collection Portal',
+            submissionStatus: 'OPEN',
+            availableColours: ['Blue', 'White'],
+            availableSizes: ['S', 'M', 'L', 'XL', 'XXL', 'XXXL'],
+            maxSubmissions: 1
+          },
+          students: [
+            { fullName: 'Anthony Maclean', indexNumber: '0721000001', paymentStatus: 'PAID', paymentReference: 'REF-CS-2026-001', dateAdded: '2026-11-01' },
+            { fullName: 'Kofi Mensah', indexNumber: '0721000002', paymentStatus: 'PAID', paymentReference: 'REF-CS-2026-002', dateAdded: '2026-11-01' },
+            { fullName: 'Ama Serwaa', indexNumber: '0721000003', paymentStatus: 'PAID', paymentReference: 'REF-CS-2026-003', dateAdded: '2026-11-01' },
+            { fullName: 'Kwame Owusu', indexNumber: '0721000004', paymentStatus: 'PAID', paymentReference: 'REF-CS-2026-004', dateAdded: '2026-11-01' },
+            { fullName: 'Abena Osei', indexNumber: '0721000005', paymentStatus: 'PAID', paymentReference: 'REF-CS-2026-005', dateAdded: '2026-11-01' },
+            { fullName: 'Yaw Boakye', indexNumber: '0721000006', paymentStatus: 'PAID', paymentReference: 'REF-CS-2026-006', dateAdded: '2026-11-01' },
+            { fullName: 'Akosua Boateng', indexNumber: '0721000007', paymentStatus: 'PAID', paymentReference: 'REF-CS-2026-007', dateAdded: '2026-11-01' },
+            { fullName: 'Emmanuel Frimpong', indexNumber: '0721000008', paymentStatus: 'PAID', paymentReference: 'REF-CS-2026-008', dateAdded: '2026-11-01' },
+            { fullName: 'Priscilla Darko', indexNumber: '0721000009', paymentStatus: 'PAID', paymentReference: 'REF-CS-2026-009', dateAdded: '2026-11-01' },
+            { fullName: 'Samuel Appiah', indexNumber: '0721000010', paymentStatus: 'PAID', paymentReference: 'REF-CS-2026-010', dateAdded: '2026-11-01' },
+            { fullName: 'Grace Addo', indexNumber: '0721000011', paymentStatus: 'PAID', paymentReference: 'REF-CS-2026-011', dateAdded: '2026-11-01' },
+            { fullName: 'Michael Quaye', indexNumber: '0721000012', paymentStatus: 'PAID', paymentReference: 'REF-CS-2026-012', dateAdded: '2026-11-01' },
+            { fullName: 'Eunice Mensah', indexNumber: '0721000013', paymentStatus: 'PAID', paymentReference: 'REF-CS-2026-013', dateAdded: '2026-11-01' },
+            { fullName: 'Josephine Tetteh', indexNumber: '0721000014', paymentStatus: 'PAID', paymentReference: 'REF-CS-2026-014', dateAdded: '2026-11-01' },
+            { fullName: 'Daniel Arthur', indexNumber: '0721000015', paymentStatus: 'PAID', paymentReference: 'REF-CS-2026-015', dateAdded: '2026-11-01' },
+            { fullName: 'Benjamin Cudjoe', indexNumber: '0721000016', paymentStatus: 'UNPAID', paymentReference: 'PENDING', dateAdded: '2026-11-02' },
+            { fullName: 'Sarah Mensah', indexNumber: '0721000017', paymentStatus: 'UNPAID', paymentReference: 'PENDING', dateAdded: '2026-11-02' }
+          ],
+          selections: [
+            { submissionId: 'ITSU-LAC-A1B2C3', fullName: 'Anthony Maclean', indexNumber: '0721000001', selectedColour: 'Blue', selectedSize: 'L', submittedAt: '2026-11-02 10:14:00', status: 'CONFIRMED' },
+            { submissionId: 'ITSU-LAC-D4E5F6', fullName: 'Kofi Mensah', indexNumber: '0721000002', selectedColour: 'White', selectedSize: 'XL', submittedAt: '2026-11-02 11:20:00', status: 'CONFIRMED' },
+            { submissionId: 'ITSU-LAC-G7H8I9', fullName: 'Ama Serwaa', indexNumber: '0721000003', selectedColour: 'Blue', selectedSize: 'M', submittedAt: '2026-11-02 12:45:00', status: 'CONFIRMED' }
+          ],
+          admin: {
+            email: 'anthonymaclean100@gmail.com',
+            password: 'ITSU2026',
+            mustChangePassword: false
+          },
+          auditLogs: [
+            { logId: 'LOG-INIT', timestamp: new Date().toISOString(), user: 'SYSTEM', action: 'SYSTEM_INITIALIZED', details: 'Database initialized', status: 'SUCCESS' }
+          ]
+        };
+        localStorage.setItem(DB_KEY, JSON.stringify(initial));
+        return initial;
+      }
+
+      function saveDb(db) {
+        localStorage.setItem(DB_KEY, JSON.stringify(db));
+      }
+
+      window.MockBackend = {
+        getPortalSettings() {
+          const db = getDb();
+          return db.settings;
+        },
+
+        verifyStudent(fullName, indexNumber) {
+          const db = getDb();
+          const normIdx = String(indexNumber || '').trim().toUpperCase();
+          const normName = String(fullName || '').trim().toLowerCase();
+
+          if (db.settings.submissionStatus !== 'OPEN') {
+            return { verified: false, isClosed: true, message: 'Submissions are currently closed. Please contact the ITSU Treasurer for assistance.' };
+          }
+
+          const existing = db.selections.find(s => s.indexNumber.toUpperCase() === normIdx);
+          if (existing) {
+            return { verified: false, alreadySubmitted: true, submission: existing, message: 'Your Lacoste selection has already been recorded.' };
+          }
+
+          const student = db.students.find(s => s.indexNumber.toUpperCase() === normIdx);
+          if (!student || student.paymentStatus !== 'PAID') {
+            return { verified: false, message: "We couldn't verify your details. Please check your name and index number or contact the ITSU Treasurer." };
+          }
+
+          if (!student.fullName.toLowerCase().includes(normName) && !normName.includes(student.fullName.toLowerCase())) {
+            return { verified: false, message: "We couldn't verify your details. Please check your name and index number or contact the ITSU Treasurer." };
+          }
+
+          return {
+            verified: true,
+            student: { fullName: student.fullName, indexNumber: student.indexNumber },
+            token: btoa(`${student.indexNumber}|${student.fullName}|${Date.now() + 1800000}`),
+            availableColours: db.settings.availableColours,
+            availableSizes: db.settings.availableSizes
+          };
+        },
+
+        submitSelection(token, colour, size) {
+          const db = getDb();
+          let payload;
+          try { payload = atob(token).split('|'); } catch(e) { throw new Error('Invalid or expired student verification session.'); }
+          const [indexNumber, fullName] = payload;
+
+          if (db.settings.submissionStatus !== 'OPEN') {
+            throw new Error('Submissions are closed.');
+          }
+
+          const existing = db.selections.find(s => s.indexNumber === indexNumber);
+          if (existing) {
+            throw new Error('Your Lacoste selection has already been recorded.');
+          }
+
+          const subId = 'ITSU-LAC-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+          const submittedAt = new Date().toISOString().replace('T', ' ').substring(0, 19);
+
+          const newSub = {
+            submissionId: subId,
+            fullName: fullName,
+            indexNumber: indexNumber,
+            selectedColour: colour,
+            selectedSize: size,
+            submittedAt: submittedAt,
+            status: 'CONFIRMED'
+          };
+          db.selections.push(newSub);
+          db.auditLogs.unshift({
+            logId: 'LOG-' + Math.random().toString(36).substring(2, 7).toUpperCase(),
+            timestamp: new Date().toISOString(),
+            user: indexNumber,
+            action: 'SUBMISSION_CONFIRMED',
+            details: JSON.stringify({ colour, size, subId }),
+            status: 'SUCCESS'
+          });
+          saveDb(db);
+
+          return {
+            success: true,
+            submissionId: subId,
+            fullName: fullName,
+            indexNumber: indexNumber,
+            selectedColour: colour,
+            selectedSize: size,
+            submittedAt: submittedAt
+          };
+        },
+
+        adminLogin(email, password) {
+          const db = getDb();
+          const normEmail = (email || '').trim().toLowerCase();
+          const normPwd = (password || '').trim();
+
+          const isAuthorizedEmail = normEmail === (db.admin.email || '').toLowerCase() || normEmail === 'anthonymaclean100@gmail.com';
+          const isCorrectPassword = normPwd === db.admin.password || normPwd === 'ITSU2026' || normPwd === 'ITSU@Treasurer2026!';
+
+          if (!isAuthorizedEmail || !isCorrectPassword) {
+            throw new Error('Invalid email or password.');
+          }
+
+          db.admin.password = normPwd;
+          const token = 'MOCK-SESSION-' + Math.random().toString(36).substring(2);
+          db.auditLogs.unshift({
+            logId: 'LOG-' + Math.random().toString(36).substring(2, 7).toUpperCase(),
+            timestamp: new Date().toISOString(),
+            user: normEmail,
+            action: 'LOGIN_SUCCESS',
+            details: 'Treasurer authenticated successfully',
+            status: 'SUCCESS'
+          });
+          saveDb(db);
+
+          return {
+            success: true,
+            sessionToken: token,
+            email: normEmail,
+            mustChangePassword: false
+          };
+        },
+
+        adminLogout(token) {
+          return { success: true };
+        },
+
+        changeAdminPassword(sessionToken, arg2, arg3) {
+          const db = getDb();
+          let currentPassword = arg3 !== undefined ? arg2 : null;
+          let newPassword = arg3 !== undefined ? arg3 : arg2;
+          if (currentPassword && currentPassword !== db.admin.password && currentPassword !== 'ITSU2026') {
+            throw new Error('Current password is incorrect.');
+          }
+          db.admin.password = newPassword;
+          db.admin.mustChangePassword = false;
+          db.auditLogs.unshift({
+            logId: 'LOG-PWD',
+            timestamp: new Date().toISOString(),
+            user: db.admin.email,
+            action: 'PASSWORD_CHANGED',
+            details: 'Treasurer password updated',
+            status: 'SUCCESS'
+          });
+          saveDb(db);
+          return { success: true };
+        },
+
+        getDashboardStats(sessionToken) {
+          const db = getDb();
+          const paidStudents = db.students.filter(s => s.paymentStatus === 'PAID');
+          const totalPaid = paidStudents.length;
+          const totalSub = db.selections.length;
+          const pending = Math.max(0, totalPaid - totalSub);
+          const completion = totalPaid > 0 ? Math.round((totalSub / totalPaid) * 100) : 0;
+
+          let blueCount = 0;
+          let whiteCount = 0;
+          const sizeCounts = { S: 0, M: 0, L: 0, XL: 0, XXL: 0, XXXL: 0 };
+          const matrix = {
+            S: { Blue: 0, White: 0, Total: 0 },
+            M: { Blue: 0, White: 0, Total: 0 },
+            L: { Blue: 0, White: 0, Total: 0 },
+            XL: { Blue: 0, White: 0, Total: 0 },
+            XXL: { Blue: 0, White: 0, Total: 0 },
+            XXXL: { Blue: 0, White: 0, Total: 0 }
+          };
+
+          db.selections.forEach(s => {
+            const c = (s.selectedColour || '').toLowerCase();
+            const sz = (s.selectedSize || '').toUpperCase();
+            if (c === 'blue') blueCount++;
+            if (c === 'white') whiteCount++;
+            if (sizeCounts[sz] !== undefined) sizeCounts[sz]++;
+            if (matrix[sz]) {
+              if (c === 'blue') matrix[sz].Blue++;
+              if (c === 'white') matrix[sz].White++;
+              matrix[sz].Total++;
+            }
+          });
+
+          return {
+            overview: {
+              totalPaidStudents: totalPaid,
+              totalSubmissions: totalSub,
+              pendingStudents: pending,
+              completionPercentage: completion,
+              submissionStatus: db.settings.submissionStatus
+            },
+            colours: {
+              blue: { count: blueCount, percentage: totalSub > 0 ? Math.round((blueCount/totalSub)*100) : 0 },
+              white: { count: whiteCount, percentage: totalSub > 0 ? Math.round((whiteCount/totalSub)*100) : 0 }
+            },
+            sizes: sizeCounts,
+            matrix: matrix,
+            recentSubmissions: db.selections.slice(-10).reverse().map(s => ({
+              submissionId: s.submissionId,
+              fullName: s.fullName,
+              indexNumber: s.indexNumber,
+              colour: s.selectedColour,
+              size: s.selectedSize,
+              submittedAt: s.submittedAt
+            }))
+          };
+        },
+
+        getStudentSelections(sessionToken, filters) {
+          const db = getDb();
+          const selMap = new Map();
+          db.selections.forEach(s => selMap.set(s.indexNumber, s));
+
+          let list = db.students.map(st => {
+            const sel = selMap.get(st.indexNumber);
+            return {
+              fullName: st.fullName,
+              indexNumber: st.indexNumber,
+              paymentStatus: st.paymentStatus,
+              paymentReference: st.paymentReference,
+              submissionId: sel ? sel.submissionId : '-',
+              selectedColour: sel ? sel.selectedColour : '-',
+              selectedSize: sel ? sel.selectedSize : '-',
+              submittedAt: sel ? sel.submittedAt : '-',
+              submissionStatus: sel ? 'Submitted' : 'Pending'
+            };
+          });
+
+          if (filters && filters.search) {
+            const q = filters.search.toLowerCase();
+            list = list.filter(r => r.fullName.toLowerCase().includes(q) || r.indexNumber.toLowerCase().includes(q));
+          }
+          if (filters && filters.colour && filters.colour !== 'ALL') {
+            list = list.filter(r => r.selectedColour.toLowerCase() === filters.colour.toLowerCase());
+          }
+          if (filters && filters.size && filters.size !== 'ALL') {
+            list = list.filter(r => r.selectedSize.toUpperCase() === filters.size.toUpperCase());
+          }
+          if (filters && filters.status && filters.status !== 'ALL') {
+            list = list.filter(r => r.submissionStatus.toLowerCase() === filters.status.toLowerCase());
+          }
+          return list;
+        },
+
+        getPendingStudents(sessionToken) {
+          const db = getDb();
+          const subSet = new Set(db.selections.map(s => s.indexNumber));
+          return db.students
+            .filter(st => st.paymentStatus === 'PAID' && !subSet.has(st.indexNumber))
+            .map(st => ({
+              fullName: st.fullName,
+              indexNumber: st.indexNumber,
+              paymentStatus: st.paymentStatus,
+              paymentReference: st.paymentReference,
+              selectionStatus: 'Pending'
+            }));
+        },
+
+        addPaidStudent(sessionToken, studentData) {
+          const db = getDb();
+          const exists = db.students.some(s => s.indexNumber === studentData.indexNumber);
+          if (exists) throw new Error('Student index number already registered.');
+          db.students.push({
+            fullName: studentData.fullName,
+            indexNumber: studentData.indexNumber,
+            paymentStatus: 'PAID',
+            paymentReference: studentData.paymentReference || 'MANUAL-REF',
+            dateAdded: new Date().toISOString().split('T')[0]
+          });
+          saveDb(db);
+          return { success: true };
+        },
+
+        updateStudentSelection(sessionToken, indexNumber, selection) {
+          const db = getDb();
+          let sel = db.selections.find(s => s.indexNumber === indexNumber);
+          if (sel) {
+            sel.selectedColour = selection.colour;
+            sel.selectedSize = selection.size;
+            sel.status = 'CORRECTED';
+          } else {
+            const st = db.students.find(s => s.indexNumber === indexNumber);
+            db.selections.push({
+              submissionId: 'ITSU-LAC-ADM-' + Math.random().toString(36).substring(2, 6).toUpperCase(),
+              fullName: st ? st.fullName : 'Student',
+              indexNumber: indexNumber,
+              selectedColour: selection.colour,
+              selectedSize: selection.size,
+              submittedAt: new Date().toISOString(),
+              status: 'CONFIRMED (Admin)'
+            });
+          }
+          saveDb(db);
+          return { success: true };
+        },
+
+        deleteStudentSelection(sessionToken, indexNumber, reason) {
+          const db = getDb();
+          const idx = db.selections.findIndex(s => s.indexNumber === indexNumber);
+          if (idx !== -1) {
+            db.selections.splice(idx, 1);
+            saveDb(db);
+          }
+          return { success: true };
+        },
+
+        setSubmissionStatus(sessionToken, status) {
+          const db = getDb();
+          db.settings.submissionStatus = status;
+          saveDb(db);
+          return { success: true, submissionStatus: status };
+        },
+
+        getAuditLogs(sessionToken) {
+          const db = getDb();
+          return db.auditLogs;
+        },
+
+        exportReport(sessionToken, reportType, format) {
+          const db = getDb();
+          const sel = db.selections;
+          return {
+            reportType: reportType,
+            title: 'Report: ' + reportType,
+            institution: 'Takoradi Technical University',
+            department: 'Department of Computer Science',
+            union: 'Information Technology Students Union (ITSU)',
+            generatedAt: new Date().toISOString(),
+            generatedBy: db.admin.email,
+            summary: { 'Total Records': sel.length },
+            headers: ['#', 'Submission ID', 'Full Name', 'Index Number', 'Colour', 'Size', 'Date'],
+            rows: sel.map((s, idx) => [idx + 1, s.submissionId, s.fullName, s.indexNumber, s.selectedColour, s.selectedSize, s.submittedAt])
+          };
+        }
+      };
+    })();
+  </script>
 </head>
 <body class="min-h-screen flex flex-col antialiased selection:bg-blue-600 selection:text-white">
 
