@@ -244,6 +244,194 @@
     }
 
     // ==========================================
+    // COMPONENT: Lacoste Polo Shirt Realistic Preview
+    // ==========================================
+    function LacostePoloPreview({ colour }) {
+      const isWhite = colour === 'White';
+
+      return (
+        <div className="relative w-full max-w-[240px] sm:max-w-[270px] aspect-[4/5] flex items-center justify-center transition-all duration-500 my-1">
+          <svg
+            viewBox="0 0 400 480"
+            className="w-full h-full drop-shadow-xl transition-all duration-500"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <defs>
+              {/* Blue fabric gradients */}
+              <linearGradient id="blueBody" x1="50" y1="50" x2="350" y2="450" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="#2563EB" />
+                <stop offset="35%" stopColor="#1D4ED8" />
+                <stop offset="70%" stopColor="#1E40AF" />
+                <stop offset="100%" stopColor="#172554" />
+              </linearGradient>
+              <linearGradient id="blueCollar" x1="150" y1="20" x2="250" y2="150" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="#1D4ED8" />
+                <stop offset="100%" stopColor="#1E3A8A" />
+              </linearGradient>
+              <linearGradient id="bluePlacket" x1="180" y1="70" x2="220" y2="210" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="#1E40AF" />
+                <stop offset="100%" stopColor="#172554" />
+              </linearGradient>
+
+              {/* White fabric gradients */}
+              <linearGradient id="whiteBody" x1="50" y1="50" x2="350" y2="450" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="#FFFFFF" />
+                <stop offset="40%" stopColor="#F8FAFC" />
+                <stop offset="80%" stopColor="#E2E8F0" />
+                <stop offset="100%" stopColor="#CBD5E1" />
+              </linearGradient>
+              <linearGradient id="whiteCollar" x1="150" y1="20" x2="250" y2="150" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="#FFFFFF" />
+                <stop offset="100%" stopColor="#E2E8F0" />
+              </linearGradient>
+              <linearGradient id="whitePlacket" x1="180" y1="70" x2="220" y2="210" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="#F8FAFC" />
+                <stop offset="100%" stopColor="#E2E8F0" />
+              </linearGradient>
+
+              {/* Natural Lighting Overlay */}
+              <radialGradient id="shirtHighlight" cx="35%" cy="30%" r="65%">
+                <stop offset="0%" stopColor="#ffffff" stopOpacity={isWhite ? "0.6" : "0.22"} />
+                <stop offset="100%" stopColor="#000000" stopOpacity="0.25" />
+              </radialGradient>
+            </defs>
+
+            {/* Torso & Sleeves */}
+            <path
+              d="M125 72 L65 140 L105 195 L135 165 L135 440 L265 440 L265 165 L295 195 L335 140 L275 72 Z"
+              fill={isWhite ? "url(#whiteBody)" : "url(#blueBody)"}
+              className="transition-colors duration-500"
+            />
+
+            {/* Natural Highlights & Folds */}
+            <path
+              d="M125 72 L65 140 L105 195 L135 165 L135 440 L265 440 L265 165 L295 195 L335 140 L275 72 Z"
+              fill="url(#shirtHighlight)"
+              style={{ mixBlendMode: 'overlay' }}
+            />
+
+            {/* Sleeve Ribbing Cuffs */}
+            <path
+              d="M65 140 L105 195 L113 189 L73 134 Z"
+              fill={isWhite ? "#E2E8F0" : "#1E3A8A"}
+              opacity="0.85"
+            />
+            <path
+              d="M335 140 L295 195 L287 189 L327 134 Z"
+              fill={isWhite ? "#E2E8F0" : "#1E3A8A"}
+              opacity="0.85"
+            />
+
+            {/* Waistband Bottom Hem */}
+            <path
+              d="M135 432 L265 432 L265 440 L135 440 Z"
+              fill={isWhite ? "#CBD5E1" : "#172554"}
+              opacity="0.6"
+            />
+
+            {/* Front Placket */}
+            <path
+              d="M186 70 L214 70 L214 200 L186 200 Z"
+              fill={isWhite ? "url(#whitePlacket)" : "url(#bluePlacket)"}
+              stroke={isWhite ? "#CBD5E1" : "#172554"}
+              strokeWidth="1.5"
+            />
+            <path d="M186 200 L214 200" stroke={isWhite ? "#94A3B8" : "#0F172A"} strokeWidth="2" />
+            <path d="M186 186 L214 186" stroke={isWhite ? "#CBD5E1" : "#1E3A8A"} strokeWidth="1" strokeDasharray="2 2" />
+
+            {/* Collar Leaves */}
+            {/* Left Leaf */}
+            <path
+              d="M200 68 C175 60 150 48 135 70 C128 82 145 130 188 135 C193 118 196 90 200 68 Z"
+              fill={isWhite ? "url(#whiteCollar)" : "url(#blueCollar)"}
+              stroke={isWhite ? "#CBD5E1" : "#172554"}
+              strokeWidth="1.5"
+            />
+            {/* Right Leaf */}
+            <path
+              d="M200 68 C225 60 250 48 265 70 C272 82 255 130 212 135 C207 118 204 90 200 68 Z"
+              fill={isWhite ? "url(#whiteCollar)" : "url(#blueCollar)"}
+              stroke={isWhite ? "#CBD5E1" : "#172554"}
+              strokeWidth="1.5"
+            />
+
+            {/* Inner Collar Curve */}
+            <path
+              d="M168 60 Q200 78 232 60"
+              stroke={isWhite ? "#94A3B8" : "#172554"}
+              strokeWidth="2"
+              fill="none"
+            />
+
+            {/* Department Label Tag */}
+            <rect
+              x="188"
+              y="42"
+              width="24"
+              height="16"
+              rx="2"
+              fill="#0F172A"
+              stroke="#334155"
+              strokeWidth="0.8"
+            />
+            <text
+              x="200"
+              y="53"
+              textAnchor="middle"
+              fill="#FFFFFF"
+              fontSize="6"
+              fontWeight="bold"
+              fontFamily="sans-serif"
+            >
+              ITSU
+            </text>
+
+            {/* Top Button */}
+            <circle
+              cx="200"
+              cy="104"
+              r="4.5"
+              fill={isWhite ? "#334155" : "#F8FAFC"}
+              stroke={isWhite ? "#1E293B" : "#94A3B8"}
+              strokeWidth="1"
+            />
+            <circle cx="199" cy="103" r="1.2" fill={isWhite ? "#94A3B8" : "#334155"} />
+            <circle cx="201" cy="105" r="1.2" fill={isWhite ? "#94A3B8" : "#334155"} />
+
+            {/* Second Button */}
+            <circle
+              cx="200"
+              cy="146"
+              r="4.5"
+              fill={isWhite ? "#334155" : "#F8FAFC"}
+              stroke={isWhite ? "#1E293B" : "#94A3B8"}
+              strokeWidth="1"
+            />
+            <circle cx="199" cy="145" r="1.2" fill={isWhite ? "#94A3B8" : "#334155"} />
+            <circle cx="201" cy="147" r="1.2" fill={isWhite ? "#94A3B8" : "#334155"} />
+
+            {/* Chest ITSU Badge */}
+            <g transform="translate(148, 148)">
+              <circle cx="8" cy="8" r="8" fill={isWhite ? "#1E40AF" : "#FFFFFF"} />
+              <text
+                x="8"
+                y="10.5"
+                textAnchor="middle"
+                fill={isWhite ? "#FFFFFF" : "#1E40AF"}
+                fontSize="6"
+                fontWeight="bold"
+                fontFamily="sans-serif"
+              >
+                IT
+              </text>
+            </g>
+          </svg>
+        </div>
+      );
+    }
+
+    // ==========================================
     // COMPONENT: Student Portal Flow
     // ==========================================
     function StudentPortal({ settings, onNotify }) {
@@ -276,6 +464,7 @@
           if (res.verified) {
             setVerifiedStudent(res.student);
             setStudentToken(res.token);
+            if (!selectedColour) setSelectedColour('Blue');
             setStep('select');
           } else if (res.alreadySubmitted) {
             setAlreadySubmittedData(res.submission);
@@ -378,7 +567,7 @@
               RIGHT PANEL: White Interactive Content Area
              ========================================= */}
           <div className="w-full lg:w-1/2 bg-white flex flex-col justify-center items-center p-6 sm:p-10 lg:p-16">
-            <div className="max-w-md w-full">
+            <div className={`${step === 'select' ? 'max-w-xl' : 'max-w-md'} w-full transition-all duration-300`}>
 
               {/* ------------------------------------------
                   STEP 1: VERIFICATION SCREEN (Welcome Back)
@@ -472,120 +661,166 @@
               )}
 
               {/* ------------------------------------------
-                  STEP 2: COLOUR & SIZE SELECTION
+                  STEP 2: COLOUR & SIZE SELECTION (Interactive Lacoste Showcase)
                  ------------------------------------------ */}
               {step === 'select' && (
-                <div>
-                  <div className="mb-6">
-                    <span className="text-[11px] font-semibold uppercase tracking-wider text-[#103E8C] bg-blue-50 px-2.5 py-0.5 rounded border border-blue-200">
-                      Step 2 of 3
-                    </span>
-                    <h2 className="text-2xl font-serif font-bold text-slate-900 mt-2">
+                <div className="w-full">
+                  
+                  {/* Top Bar: Step indicator & Student Details */}
+                  <div className="mb-5">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#103E8C] bg-blue-50 px-2.5 py-0.5 rounded border border-blue-200">
+                        Step 2 of 3
+                      </span>
+                      <span className="text-xs text-slate-400 font-medium">Department of Computer Science</span>
+                    </div>
+                    <h2 className="text-2xl sm:text-3xl font-serif font-bold text-slate-900 tracking-tight">
                       Select Your Lacoste
                     </h2>
-                    <p className="text-xs text-slate-500 mt-1">
-                      Choose your preferred colour and size
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      Choose your official shirt colour and size preference
                     </p>
                   </div>
 
-                  {/* Student Verified Info Tag */}
-                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 mb-6 flex items-center justify-between text-xs">
-                    <div>
-                      <span className="font-bold text-slate-900 block">{verifiedStudent.fullName}</span>
-                      <span className="font-mono text-slate-500">{verifiedStudent.indexNumber}</span>
+                  {/* Verified Student Details Card */}
+                  <div className="bg-slate-50/90 border border-slate-200 rounded-2xl p-4 mb-6 flex items-center justify-between shadow-xs">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-full bg-[#103E8C] text-white flex items-center justify-center font-bold text-xs shadow-xs">
+                        {verifiedStudent.fullName.charAt(0)}
+                      </div>
+                      <div>
+                        <span className="font-bold text-slate-900 text-sm block leading-snug">
+                          {verifiedStudent.fullName}
+                        </span>
+                        <span className="font-mono text-xs text-slate-500">
+                          Index: {verifiedStudent.indexNumber}
+                        </span>
+                      </div>
                     </div>
-                    <span className="text-emerald-700 bg-emerald-50 border border-emerald-200 font-semibold px-2 py-0.5 rounded-full text-[10px]">
+                    <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full shadow-xs">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
                       Verified Paid
                     </span>
                   </div>
 
-                  <div className="space-y-6">
-                    {/* Colours */}
-                    <div>
-                      <label className="text-xs font-bold text-slate-800 uppercase tracking-wider block mb-2">
-                        1. Select Colour
-                      </label>
-                      <div className="grid grid-cols-2 gap-3">
-                        <button
-                          type="button"
-                          onClick={() => setSelectedColour('Blue')}
-                          className={`p-4 rounded-xl border-2 text-center transition flex flex-col items-center justify-center gap-2 ${
-                            selectedColour === 'Blue'
-                              ? 'border-[#103E8C] bg-blue-50/50 shadow-sm'
-                              : 'border-slate-200 hover:border-slate-300 bg-white'
-                          }`}
-                        >
-                          <div className="w-10 h-10 rounded-full bg-blue-700 flex items-center justify-center text-white shadow">
-                            {selectedColour === 'Blue' && <Icon name="check" className="w-5 h-5 stroke-[3]" />}
-                          </div>
-                          <div>
-                            <span className="font-bold text-slate-900 text-xs block">Royal Blue</span>
-                            <span className="text-[10px] text-slate-500">Official Blue</span>
-                          </div>
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => setSelectedColour('White')}
-                          className={`p-4 rounded-xl border-2 text-center transition flex flex-col items-center justify-center gap-2 ${
-                            selectedColour === 'White'
-                              ? 'border-[#103E8C] bg-blue-50/50 shadow-sm'
-                              : 'border-slate-200 hover:border-slate-300 bg-white'
-                          }`}
-                        >
-                          <div className="w-10 h-10 rounded-full bg-white border border-slate-300 flex items-center justify-center text-slate-800 shadow">
-                            {selectedColour === 'White' && <Icon name="check" className="w-5 h-5 stroke-[3]" />}
-                          </div>
-                          <div>
-                            <span className="font-bold text-slate-900 text-xs block">Classic White</span>
-                            <span className="text-[10px] text-slate-500">Official White</span>
-                          </div>
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Sizes */}
-                    <div>
-                      <label className="text-xs font-bold text-slate-800 uppercase tracking-wider block mb-2">
-                        2. Select Size
-                      </label>
-                      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-                        {['S', 'M', 'L', 'XL', 'XXL', 'XXXL'].map(sz => (
+                  {/* Main Interactive Product Showcase with Floating Cards */}
+                  <div className="relative bg-gradient-to-b from-slate-50/70 to-slate-100/50 border border-slate-200 rounded-3xl p-4 sm:p-6 mb-6 overflow-hidden">
+                    
+                    {/* Floating COLOR Card (Inspired by User Reference Image) */}
+                    <div className="sm:absolute sm:top-5 sm:left-5 z-20 mb-4 sm:mb-0">
+                      <div className="bg-white/95 backdrop-blur-md p-3.5 sm:p-4 rounded-2xl shadow-lg border border-slate-100 max-w-[200px]">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2.5">
+                          COLOR
+                        </span>
+                        <div className="flex items-center gap-3">
+                          {/* Royal Blue Swatch */}
                           <button
-                            key={sz}
                             type="button"
-                            onClick={() => setSelectedSize(sz)}
-                            className={`py-2.5 rounded-lg border text-center transition font-semibold text-xs ${
-                              selectedSize === sz
-                                ? 'border-[#103E8C] bg-[#103E8C] text-white shadow-sm'
-                                : 'border-slate-200 hover:border-slate-300 bg-white text-slate-800'
+                            onClick={() => setSelectedColour('Blue')}
+                            title="Royal Blue"
+                            className={`w-9 h-9 rounded-full bg-[#1E40AF] transition-all duration-200 flex items-center justify-center shadow-sm ${
+                              selectedColour === 'Blue'
+                                ? 'ring-2 ring-offset-2 ring-[#1E40AF] scale-105'
+                                : 'hover:scale-105 opacity-80 hover:opacity-100'
                             }`}
                           >
-                            {sz}
+                            {selectedColour === 'Blue' && (
+                              <span className="w-2.5 h-2.5 rounded-full bg-white shadow-xs"></span>
+                            )}
                           </button>
-                        ))}
+
+                          {/* Classic White Swatch */}
+                          <button
+                            type="button"
+                            onClick={() => setSelectedColour('White')}
+                            title="Classic White"
+                            className={`w-9 h-9 rounded-full bg-white border border-slate-300 transition-all duration-200 flex items-center justify-center shadow-sm ${
+                              selectedColour === 'White'
+                                ? 'ring-2 ring-offset-2 ring-slate-800 scale-105'
+                                : 'hover:scale-105 opacity-80 hover:opacity-100'
+                            }`}
+                          >
+                            {selectedColour === 'White' && (
+                              <span className="w-2.5 h-2.5 rounded-full bg-slate-800 shadow-xs"></span>
+                            )}
+                          </button>
+                        </div>
+                        <div className="mt-2 text-[11px] font-semibold text-slate-700">
+                          {selectedColour === 'Blue' ? 'Royal Blue' : selectedColour === 'White' ? 'Classic White' : 'Select color'}
+                        </div>
                       </div>
                     </div>
 
-                    {/* Buttons */}
-                    <div className="pt-2 flex items-center gap-3">
-                      <button
-                        type="button"
-                        onClick={() => setStep('verify')}
-                        className="px-4 py-3 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl"
-                      >
-                        Back
-                      </button>
-                      <button
-                        type="button"
-                        disabled={!selectedColour || !selectedSize}
-                        onClick={() => setStep('review')}
-                        className="flex-1 bg-[#103E8C] hover:bg-[#0B2E68] disabled:bg-slate-200 disabled:text-slate-400 text-white font-medium py-3 px-4 rounded-xl shadow-sm transition text-xs"
-                      >
-                        Continue to Review
-                      </button>
+                    {/* Central Realistic Lacoste Polo Shirt Visual */}
+                    <div className="py-2 flex justify-center items-center">
+                      <LacostePoloPreview colour={selectedColour || 'Blue'} />
                     </div>
+
+                    {/* Floating SIZE Card (Inspired by User Reference Image) */}
+                    <div className="sm:absolute sm:bottom-5 sm:right-5 z-20 mt-4 sm:mt-0">
+                      <div className="bg-white/95 backdrop-blur-md p-4 sm:p-5 rounded-2xl shadow-xl border border-slate-100 min-w-[210px]">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2.5">
+                          SIZE
+                        </span>
+                        
+                        <div className="space-y-1.5 max-h-[190px] overflow-y-auto pr-1">
+                          {['S', 'M', 'L', 'XL', 'XXL', 'XXXL'].map(sz => {
+                            const isSelected = selectedSize === sz;
+                            return (
+                              <div
+                                key={sz}
+                                onClick={() => setSelectedSize(sz)}
+                                className={`flex items-center justify-between py-1.5 px-2 rounded-lg cursor-pointer transition ${
+                                  isSelected ? 'bg-blue-50/70' : 'hover:bg-slate-50'
+                                }`}
+                              >
+                                <div className="flex items-center gap-2.5">
+                                  {/* Radio indicator */}
+                                  <div className={`w-4 h-4 rounded-full border transition flex items-center justify-center ${
+                                    isSelected
+                                      ? 'border-[#103E8C] bg-white'
+                                      : 'border-slate-300 bg-white'
+                                  }`}>
+                                    {isSelected && (
+                                      <div className="w-2 h-2 rounded-full bg-[#103E8C]"></div>
+                                    )}
+                                  </div>
+                                  <span className={`text-xs font-semibold ${isSelected ? 'text-[#103E8C]' : 'text-slate-800'}`}>
+                                    {sz}
+                                  </span>
+                                </div>
+                                <span className="text-[10px] font-semibold text-[#103E8C]">
+                                  Available
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+
                   </div>
+
+                  {/* Action Buttons */}
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setStep('verify')}
+                      className="px-4 py-3 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition"
+                    >
+                      Back
+                    </button>
+                    <button
+                      type="button"
+                      disabled={!selectedColour || !selectedSize}
+                      onClick={() => setStep('review')}
+                      className="flex-1 bg-[#103E8C] hover:bg-[#0B2E68] disabled:bg-slate-200 disabled:text-slate-400 text-white font-medium py-3.5 px-6 rounded-xl shadow-sm transition flex items-center justify-center gap-2 text-sm"
+                    >
+                      <span>Continue to Review</span>
+                      <Icon name="arrow-right" className="w-4 h-4" />
+                    </button>
+                  </div>
+
                 </div>
               )}
 
