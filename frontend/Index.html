@@ -109,11 +109,11 @@
         return; // Running inside live Google Apps Script container
       }
 
-      const DB_KEY = 'itsu_lacoste_portal_db_v6';
+      const DB_KEY = 'itsu_lacoste_portal_db_v7';
 
       function getDb() {
         try {
-          ['itsu_lacoste_portal_db_v1', 'itsu_lacoste_portal_db_v2', 'itsu_lacoste_portal_db_v3', 'itsu_lacoste_portal_db_v4', 'itsu_lacoste_portal_db_v5'].forEach(k => localStorage.removeItem(k));
+          ['itsu_lacoste_portal_db_v1', 'itsu_lacoste_portal_db_v2', 'itsu_lacoste_portal_db_v3', 'itsu_lacoste_portal_db_v4', 'itsu_lacoste_portal_db_v5', 'itsu_lacoste_portal_db_v6'].forEach(k => localStorage.removeItem(k));
         } catch (e) {}
         const stored = localStorage.getItem(DB_KEY);
         if (stored) {
@@ -171,18 +171,31 @@
             return { verified: false, alreadySubmitted: true, submission: existing, message: 'Your Lacoste selection has already been recorded.' };
           }
 
+          if (!Array.isArray(db.students) || db.students.length === 0) {
+            return {
+              verified: false,
+              message: "We couldn't verify your details. Your name and index number are not on the pre-ordered student register."
+            };
+          }
+
           const student = db.students.find(s => {
             if (String(s.indexNumber || '').trim().toUpperCase() !== normIdx) return false;
-            const sName = String(s.fullName || '').trim().toLowerCase();
-            if (sName === normName) return true;
-            const inputWords = normName.split(/\s+/).filter(w => w.length > 1);
-            const sheetWords = sName.split(/\s+/).filter(w => w.length > 1);
+            const sName = String(s.fullName || '').trim().toLowerCase().replace(/\s+/g, ' ');
+            const cleanInputName = normName.replace(/\s+/g, ' ');
+            if (!sName || !cleanInputName) return false;
+            if (sName === cleanInputName) return true;
+            const inputWords = cleanInputName.split(' ').filter(w => w.length > 1);
+            const sheetWords = sName.split(' ').filter(w => w.length > 1);
+            if (inputWords.length < 2) return false;
             const matchCount = inputWords.filter(w => sheetWords.includes(w)).length;
-            return inputWords.length > 0 && matchCount >= Math.min(2, inputWords.length);
+            return matchCount === inputWords.length || matchCount >= Math.max(2, sheetWords.length);
           });
 
           if (!student || student.paymentStatus !== 'PAID') {
-            return { verified: false, message: "We couldn't verify your details. Please check your name and index number or contact the ITSU Treasurer." };
+            return {
+              verified: false,
+              message: "We couldn't verify your details. Please check your name and index number or contact the ITSU Treasurer."
+            };
           }
 
           return {
@@ -202,6 +215,11 @@
 
           if (db.settings.submissionStatus !== 'OPEN') {
             throw new Error('Submissions are closed.');
+          }
+
+          const registeredStudent = (db.students || []).find(s => String(s.indexNumber || '').trim().toUpperCase() === String(indexNumber || '').trim().toUpperCase());
+          if (!registeredStudent || registeredStudent.paymentStatus !== 'PAID') {
+            throw new Error('Student is not registered in the pre-ordered student list.');
           }
 
           const existing = db.selections.find(s => s.indexNumber === indexNumber);
