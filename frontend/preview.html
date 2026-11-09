@@ -864,596 +864,309 @@
         setErrorMessage('');
       };
 
-      return (
-        <div className="flex-grow flex flex-col lg:flex-row min-h-[calc(100vh-4rem)]">
-          
-          {/* =========================================
-              LEFT PANEL: Deep Navy Brand Showcase (Matches UI Direction)
-             ========================================= */}
-          <div className="w-full lg:w-1/2 bg-[#0A1F44] text-white p-8 sm:p-12 lg:p-16 flex flex-col justify-between">
-            {/* Top Indicator */}
-            <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-white/90">
-                <Icon name="graduation-cap" className="w-4 h-4" />
-              </div>
-              <span className="text-sm font-semibold tracking-wide text-white/90">Campus Connect</span>
-            </div>
-
-            {/* Main Headline & Context */}
-            <div className="my-10 lg:my-auto max-w-lg">
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold text-white tracking-tight leading-[1.15] mb-4">
-                Your campus community, all in one place.
-              </h2>
-              <p className="text-blue-100/80 text-sm sm:text-base leading-relaxed mb-8">
-                Department of Computer Science, Takoradi Technical University. Verify your student details to select your preferred Lacoste colour and size.
-              </p>
-
-              {/* Bullet Features */}
-              <div className="space-y-3.5 text-xs sm:text-sm text-blue-100/90 font-normal">
-                <div className="flex items-center gap-3">
-                  <span className="text-white/40 font-mono text-sm">[]</span>
-                  <span>Real-time verification with paid student register</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-white/40 font-mono text-sm">[]</span>
-                  <span>Program announcements & Lacoste preferences</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className="text-white/40 font-mono text-sm">[]</span>
-                  <span>Secure student-only access</span>
-                </div>
-              </div>
-            </div>
-
-            {/* Bottom Tagline */}
-            <div className="text-xs text-blue-200/50 pt-6 border-t border-white/10">
-              Department of Computer Science • Takoradi Technical University
-            </div>
-          </div>
-
-          {/* =========================================
-              RIGHT PANEL: White Interactive Content Area
-             ========================================= */}
-          <div className="w-full lg:w-1/2 bg-white flex flex-col justify-center items-center p-6 sm:p-10 lg:p-16">
-            <div className={`${step === 'select' ? 'max-w-xl' : 'max-w-md'} w-full transition-all duration-300`}>
-
-              {/* ------------------------------------------
-                  STEP 1: VERIFICATION SCREEN (Welcome Back)
-                 ------------------------------------------ */}
-              {step === 'verify' && (
-                <div>
-                  <div className="mb-8">
-                    <h1 className="text-3xl font-serif font-bold text-slate-900 tracking-tight">
-                      Welcome back
-                    </h1>
-                    <p className="text-sm text-slate-500 mt-1">
-                      Sign in to your student portal
-                    </p>
-                  </div>
-
-                  {/* Closed Banner */}
-                  {settings && settings.submissionStatus === 'CLOSED' && (
-                    <div className="bg-rose-50 border border-rose-200 rounded-xl p-4 mb-6">
-                      <div className="flex gap-3">
-                        <Icon name="alert-triangle" className="w-5 h-5 text-rose-600 flex-shrink-0" />
-                        <div>
-                          <h4 className="text-sm font-semibold text-rose-900">Submissions Closed</h4>
-                          <p className="text-xs text-rose-700 mt-0.5">
-                            Submissions are currently closed. Please contact the ITSU Treasurer for assistance.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Verification Error Notice */}
-                  {errorMessage && (
-                    <div className="bg-rose-50 border border-rose-200 rounded-xl p-3.5 mb-5 flex items-start gap-2.5 text-rose-900 text-xs sm:text-sm">
-                      <Icon name="alert-circle" className="w-5 h-5 text-rose-600 flex-shrink-0 mt-0.5" />
-                      <div>{errorMessage}</div>
-                    </div>
-                  )}
-
-                  {/* Verification Form */}
-                  <form onSubmit={handleVerify} className="space-y-4">
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-                        Full Name
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        placeholder="e.g. Anthony Maclean"
-                        value={fullName}
-                        onChange={(e) => setFullName(e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#103E8C] focus:border-transparent text-sm transition text-slate-900 placeholder:text-slate-400"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-                        Index Number
-                      </label>
-                      <input
-                        type="text"
-                        required
-                        placeholder="e.g. 0721000001"
-                        value={indexNumber}
-                        onChange={(e) => setIndexNumber(e.target.value)}
-                        className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#103E8C] focus:border-transparent text-sm uppercase font-mono transition text-slate-900 placeholder:text-slate-400"
-                      />
-                    </div>
-
-                    <div className="pt-2">
-                      <button
-                        type="submit"
-                        disabled={isLoading || (settings && settings.submissionStatus === 'CLOSED')}
-                        className="w-full bg-[#103E8C] hover:bg-[#0B2E68] disabled:bg-slate-300 text-white font-medium py-3.5 px-6 rounded-xl shadow-sm transition flex items-center justify-center gap-2 text-sm"
-                      >
-                        {isLoading ? (
-                          <>
-                            <Icon name="loader-2" className="w-4 h-4 animate-spin" />
-                            <span>Verifying Eligibility...</span>
-                          </>
-                        ) : (
-                          <span>Sign in</span>
-                        )}
-                      </button>
-                    </div>
-                  </form>
-
-                  <div className="mt-8 text-center text-xs text-slate-500">
-                    Need assistance? <span className="text-[#103E8C] font-semibold">Contact ITSU Treasurer</span>
-                  </div>
-                </div>
-              )}
-
-              {/* ------------------------------------------
-                  STEP 2: COLOUR & SIZE SELECTION (Interactive Lacoste Showcase)
-                 ------------------------------------------ */}
-              {step === 'select' && (
-                <div className="w-full">
-                  
-                  {/* Top Bar: Step indicator & Student Details */}
-                  <div className="mb-5">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#103E8C] bg-blue-50 px-2.5 py-0.5 rounded border border-blue-200">
-                        Step 2 of 3
-                      </span>
-                      <span className="text-xs text-slate-400 font-medium">Department of Computer Science</span>
-                    </div>
-                    <h2 className="text-2xl sm:text-3xl font-serif font-bold text-slate-900 tracking-tight">
-                      Select Your Lacoste
-                    </h2>
-                    <p className="text-xs text-slate-500 mt-0.5">
-                      Choose your official shirt colour and size preference
-                    </p>
-                  </div>
-
-                  {/* Verified Student Details Card */}
-                  <div className="bg-slate-50/90 border border-slate-200 rounded-2xl p-4 mb-6 flex items-center justify-between shadow-xs">
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full bg-[#103E8C] text-white flex items-center justify-center font-bold text-xs shadow-xs">
-                        {verifiedStudent.fullName.charAt(0)}
-                      </div>
-                      <div>
-                        <span className="font-bold text-slate-900 text-sm block leading-snug">
-                          {verifiedStudent.fullName}
-                        </span>
-                        <span className="font-mono text-xs text-slate-500">
-                          Index: {verifiedStudent.indexNumber}
-                        </span>
-                      </div>
-                    </div>
-                    <span className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 px-3 py-1 rounded-full shadow-xs">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
-                      Verified Paid
-                    </span>
-                  </div>
-
-                  {/* Main Interactive Product Showcase with Floating Cards */}
-                  <div className="relative bg-gradient-to-b from-slate-50/70 to-slate-100/50 border border-slate-200 rounded-3xl p-4 sm:p-6 mb-6 overflow-hidden">
-                    
-                    {/* Floating COLOR Card (Inspired by User Reference Image) */}
-                    <div className="sm:absolute sm:top-5 sm:left-5 z-20 mb-4 sm:mb-0">
-                      <div className="bg-white/95 backdrop-blur-md p-3.5 sm:p-4 rounded-2xl shadow-lg border border-slate-100 max-w-[200px]">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2.5">
-                          COLOR
-                        </span>
-                        <div className="flex items-center gap-3">
-                          {/* Royal Blue Swatch */}
-                          <button
-                            type="button"
-                            onClick={() => setSelectedColour('Blue')}
-                            title="Royal Blue"
-                            className={`w-9 h-9 rounded-full bg-[#1E40AF] transition-all duration-200 flex items-center justify-center shadow-sm ${
-                              selectedColour === 'Blue'
-                                ? 'ring-2 ring-offset-2 ring-[#1E40AF] scale-105'
-                                : 'hover:scale-105 opacity-80 hover:opacity-100'
-                            }`}
-                          >
-                            {selectedColour === 'Blue' && (
-                              <span className="w-2.5 h-2.5 rounded-full bg-white shadow-xs"></span>
-                            )}
-                          </button>
-
-                          {/* Classic White Swatch */}
-                          <button
-                            type="button"
-                            onClick={() => setSelectedColour('White')}
-                            title="Classic White"
-                            className={`w-9 h-9 rounded-full bg-white border border-slate-300 transition-all duration-200 flex items-center justify-center shadow-sm ${
-                              selectedColour === 'White'
-                                ? 'ring-2 ring-offset-2 ring-slate-800 scale-105'
-                                : 'hover:scale-105 opacity-80 hover:opacity-100'
-                            }`}
-                          >
-                            {selectedColour === 'White' && (
-                              <span className="w-2.5 h-2.5 rounded-full bg-slate-800 shadow-xs"></span>
-                            )}
-                          </button>
-                        </div>
-                        <div className="mt-2 text-[11px] font-semibold text-slate-700">
-                          {selectedColour === 'Blue' ? 'Royal Blue' : selectedColour === 'White' ? 'Classic White' : 'Select color'}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Central Realistic Lacoste Polo Shirt Visual */}
-                    <div className="py-2 flex justify-center items-center">
-                      <LacostePoloPreview colour={selectedColour || 'Blue'} />
-                    </div>
-
-                    {/* Floating SIZE Card (Inspired by User Reference Image) */}
-                    <div className="sm:absolute sm:bottom-5 sm:right-5 z-20 mt-4 sm:mt-0">
-                      <div className="bg-white/95 backdrop-blur-md p-4 sm:p-5 rounded-2xl shadow-xl border border-slate-100 min-w-[210px]">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block mb-2.5">
-                          SIZE
-                        </span>
-                        
-                        <div className="space-y-1.5 max-h-[190px] overflow-y-auto pr-1">
-                          {['S', 'M', 'L', 'XL', 'XXL', 'XXXL'].map(sz => {
-                            const isSelected = selectedSize === sz;
-                            return (
-                              <div
-                                key={sz}
-                                onClick={() => setSelectedSize(sz)}
-                                className={`flex items-center justify-between py-1.5 px-2 rounded-lg cursor-pointer transition ${
-                                  isSelected ? 'bg-blue-50/70' : 'hover:bg-slate-50'
-                                }`}
-                              >
-                                <div className="flex items-center gap-2.5">
-                                  {/* Radio indicator */}
-                                  <div className={`w-4 h-4 rounded-full border transition flex items-center justify-center ${
-                                    isSelected
-                                      ? 'border-[#103E8C] bg-white'
-                                      : 'border-slate-300 bg-white'
-                                  }`}>
-                                    {isSelected && (
-                                      <div className="w-2 h-2 rounded-full bg-[#103E8C]"></div>
-                                    )}
-                                  </div>
-                                  <span className={`text-xs font-semibold ${isSelected ? 'text-[#103E8C]' : 'text-slate-800'}`}>
-                                    {sz}
-                                  </span>
-                                </div>
-                                <span className="text-[10px] font-semibold text-[#103E8C]">
-                                  Available
-                                </span>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    </div>
-
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setStep('verify')}
-                      className="px-4 py-3 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition"
-                    >
-                      Back
-                    </button>
-                    <button
-                      type="button"
-                      disabled={!selectedColour || !selectedSize}
-                      onClick={() => setStep('review')}
-                      className="flex-1 bg-[#103E8C] hover:bg-[#0B2E68] disabled:bg-slate-200 disabled:text-slate-400 text-white font-medium py-3.5 px-6 rounded-xl shadow-sm transition flex items-center justify-center gap-2 text-sm"
-                    >
-                      <span>Continue to Review</span>
-                      <Icon name="arrow-right" className="w-4 h-4" />
-                    </button>
-                  </div>
-
-                </div>
-              )}
-
-              {/* ------------------------------------------
-                  STEP 3: REVIEW CONFIRMATION
-                 ------------------------------------------ */}
-              {step === 'review' && (
-                <div>
-                  <div className="mb-6">
-                    <span className="text-[11px] font-semibold uppercase tracking-wider text-[#103E8C] bg-blue-50 px-2.5 py-0.5 rounded border border-blue-200">
-                      Step 3 of 3
-                    </span>
-                    <h2 className="text-2xl font-serif font-bold text-slate-900 mt-2">
-                      Review Selection
-                    </h2>
-                    <p className="text-xs text-slate-500 mt-1">
-                      Verify your details before final submission
-                    </p>
-                  </div>
-
-                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs space-y-3 mb-6">
-                    <div className="flex justify-between py-1 border-b border-slate-200">
-                      <span className="text-slate-500">Student Name:</span>
-                      <span className="font-bold text-slate-900">{verifiedStudent.fullName}</span>
-                    </div>
-                    <div className="flex justify-between py-1 border-b border-slate-200">
-                      <span className="text-slate-500">Index Number:</span>
-                      <span className="font-mono font-bold text-slate-900">{verifiedStudent.indexNumber}</span>
-                    </div>
-                    <div className="flex justify-between py-1 border-b border-slate-200">
-                      <span className="text-slate-500">Selected Colour:</span>
-                      <span className="font-bold text-slate-900">{selectedColour}</span>
-                    </div>
-                    <div className="flex justify-between py-1">
-                      <span className="text-slate-500">Selected Size:</span>
-                      <span className="font-bold text-slate-900">{selectedSize}</span>
-                    </div>
-                  </div>
-
-                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-800 mb-6 flex items-start gap-2">
-                    <Icon name="info" className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
-                    <span>Selections are final and cannot be modified once submitted.</span>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <button
-                      type="button"
-                      onClick={() => setStep('select')}
-                      disabled={isLoading}
-                      className="px-4 py-3 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl"
-                    >
-                      Back
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleSubmit}
-                      disabled={isLoading}
-                      className="flex-1 bg-[#103E8C] hover:bg-[#0B2E68] text-white font-medium py-3 px-4 rounded-xl shadow-sm transition flex items-center justify-center gap-2 text-xs"
-                    >
-                      {isLoading ? 'Submitting...' : 'Confirm Selection'}
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {/* ------------------------------------------
-                  STEP 4: CONFIRMATION SUCCESS
-                 ------------------------------------------ */}
-              {step === 'confirmed' && submissionResult && (
-                <div className="text-center">
-                  <div className="w-14 h-14 bg-emerald-50 border border-emerald-200 rounded-full flex items-center justify-center mx-auto mb-4 text-emerald-600">
-                    <Icon name="check-circle-2" className="w-8 h-8" />
-                  </div>
-
-                  <h2 className="text-2xl font-serif font-bold text-slate-900 mb-1">
-                    Selection Confirmed!
-                  </h2>
-                  <p className="text-xs text-slate-500 mb-6">
-                    Your Lacoste selection has been submitted successfully.
-                  </p>
-
-                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-left text-xs space-y-2 mb-6">
-                    <div className="flex justify-between py-1 border-b border-slate-200">
-                      <span className="text-slate-500">Reference:</span>
-                      <span className="font-mono font-bold text-[#103E8C]">{submissionResult.submissionId}</span>
-                    </div>
-                    <div className="flex justify-between py-1 border-b border-slate-200">
-                      <span className="text-slate-500">Student:</span>
-                      <span className="font-semibold text-slate-900">{submissionResult.fullName}</span>
-                    </div>
-                    <div className="flex justify-between py-1 border-b border-slate-200">
-                      <span className="text-slate-500">Colour:</span>
-                      <span className="font-semibold text-slate-900">{submissionResult.selectedColour}</span>
-                    </div>
-                    <div className="flex justify-between py-1">
-                      <span className="text-slate-500">Size:</span>
-                      <span className="font-bold text-slate-900">{submissionResult.selectedSize}</span>
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={handleStartOver}
-                    className="w-full bg-slate-900 hover:bg-slate-800 text-white font-medium py-3 px-4 rounded-xl transition text-xs"
-                  >
-                    Done
-                  </button>
-                </div>
-              )}
-
-              {/* ------------------------------------------
-                  STEP: ALREADY SUBMITTED
-                 ------------------------------------------ */}
-              {step === 'already_submitted' && (
-                <div className="text-center">
-                  <div className="w-14 h-14 bg-amber-50 border border-amber-200 rounded-full flex items-center justify-center mx-auto mb-4 text-amber-600">
-                    <Icon name="check-check" className="w-7 h-7" />
-                  </div>
-
-                  <h3 className="text-2xl font-serif font-bold text-slate-900 mb-1">
-                    Already Submitted
-                  </h3>
-                  <p className="text-xs text-slate-500 mb-6">
-                    Your Lacoste selection has already been recorded.
-                  </p>
-
-                  {alreadySubmittedData && (
-                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-left text-xs space-y-2 mb-6">
-                      <div className="flex justify-between py-1 border-b border-slate-200">
-                        <span className="text-slate-500">Reference:</span>
-                        <span className="font-mono font-bold text-[#103E8C]">{alreadySubmittedData.submissionId}</span>
-                      </div>
-                      <div className="flex justify-between py-1 border-b border-slate-200">
-                        <span className="text-slate-500">Student Name:</span>
-                        <span className="font-semibold text-slate-900">{alreadySubmittedData.fullName}</span>
-                      </div>
-                      <div className="flex justify-between py-1 border-b border-slate-200">
-                        <span className="text-slate-500">Colour:</span>
-                        <span className="font-semibold text-slate-900">{alreadySubmittedData.selectedColour}</span>
-                      </div>
-                      <div className="flex justify-between py-1">
-                        <span className="text-slate-500">Size:</span>
-                        <span className="font-bold text-slate-900">{alreadySubmittedData.selectedSize}</span>
-                      </div>
-                    </div>
-                  )}
-
-                  <button
-                    onClick={handleStartOver}
-                    className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2.5 px-4 rounded-xl transition text-xs"
-                  >
-                    Return to Verification
-                  </button>
-                </div>
-              )}
-
-            </div>
-          </div>
-
-        </div>
-      );
-    }
-        const availableColours = ['Blue', 'White'];
-        const availableSizes = ['S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
-
+      // -------------------------------------------------------------
+      // 1. STEP: VERIFICATION (SPLIT SCREEN - EXACT MATCH TO IMAGE 1)
+      // -------------------------------------------------------------
+      if (step === 'verify') {
         return (
-          <div className="flex-grow flex items-center justify-center p-4">
-            <div className="max-w-xl w-full bg-white rounded-xl border border-slate-200 shadow-sm p-6 sm:p-8">
+          <div className="flex-grow flex flex-col lg:flex-row min-h-[calc(100vh-4rem)]">
+            
+            {/* Left Brand Panel: Deep Navy Campus Connect */}
+            <div className="w-full lg:w-1/2 bg-[#0A1F44] text-white p-8 sm:p-12 lg:p-16 flex flex-col justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-white/90">
+                  <Icon name="graduation-cap" className="w-4 h-4" />
+                </div>
+                <span className="text-sm font-semibold tracking-wide text-white/90">Campus Connect</span>
+              </div>
+
+              <div className="my-10 lg:my-auto max-w-lg">
+                <h2 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold text-white tracking-tight leading-[1.15] mb-4">
+                  Your campus community, all in one place.
+                </h2>
+                <p className="text-blue-100/80 text-sm sm:text-base leading-relaxed mb-8">
+                  Department of Computer Science, Takoradi Technical University. Verify your student details to select your preferred Lacoste colour and size.
+                </p>
+
+                <div className="space-y-3.5 text-xs sm:text-sm text-blue-100/90 font-normal">
+                  <div className="flex items-center gap-3">
+                    <span className="text-white/40 font-mono text-sm">[]</span>
+                    <span>Real-time verification with paid student register</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-white/40 font-mono text-sm">[]</span>
+                    <span>Program announcements & Lacoste preferences</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-white/40 font-mono text-sm">[]</span>
+                    <span>Secure student-only access</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="text-xs text-blue-200/50 pt-6 border-t border-white/10">
+                Department of Computer Science • Takoradi Technical University
+              </div>
+            </div>
+
+            {/* Right Interactive Form Area */}
+            <div className="w-full lg:w-1/2 bg-white flex flex-col justify-center items-center p-6 sm:p-10 lg:p-16">
+              <div className="max-w-md w-full">
+                <div className="mb-8">
+                  <h1 className="text-3xl font-serif font-bold text-slate-900 tracking-tight">
+                    Welcome back
+                  </h1>
+                  <p className="text-sm text-slate-500 mt-1">
+                    Sign in to your student portal
+                  </p>
+                </div>
+
+                {settings && settings.submissionStatus === 'CLOSED' && (
+                  <div className="bg-rose-50 border border-rose-200 rounded-xl p-4 mb-6">
+                    <div className="flex gap-3">
+                      <Icon name="alert-triangle" className="w-5 h-5 text-rose-600 flex-shrink-0" />
+                      <div>
+                        <h4 className="text-sm font-semibold text-rose-900">Submissions Closed</h4>
+                        <p className="text-xs text-rose-700 mt-0.5">
+                          Submissions are currently closed. Please contact the ITSU Treasurer for assistance.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {errorMessage && (
+                  <div className="bg-rose-50 border border-rose-200 rounded-xl p-3.5 mb-5 flex items-start gap-2.5 text-rose-900 text-xs sm:text-sm">
+                    <Icon name="alert-circle" className="w-5 h-5 text-rose-600 flex-shrink-0 mt-0.5" />
+                    <div>{errorMessage}</div>
+                  </div>
+                )}
+
+                <form onSubmit={handleVerify} className="space-y-4">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                      Full Name
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. Anthony Maclean"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#103E8C] focus:border-transparent text-sm transition text-slate-900 placeholder:text-slate-400"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                      Index Number
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g. 0721000001"
+                      value={indexNumber}
+                      onChange={(e) => setIndexNumber(e.target.value)}
+                      className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#103E8C] focus:border-transparent text-sm uppercase font-mono transition text-slate-900 placeholder:text-slate-400"
+                    />
+                  </div>
+
+                  <div className="pt-2">
+                    <button
+                      type="submit"
+                      disabled={isLoading || (settings && settings.submissionStatus === 'CLOSED')}
+                      className="w-full bg-[#103E8C] hover:bg-[#0B2E68] disabled:bg-slate-300 text-white font-medium py-3.5 px-6 rounded-xl shadow-sm transition flex items-center justify-center gap-2 text-sm"
+                    >
+                      {isLoading ? (
+                        <>
+                          <Icon name="loader-2" className="w-4 h-4 animate-spin" />
+                          <span>Verifying Eligibility...</span>
+                        </>
+                      ) : (
+                        <span>Sign in</span>
+                      )}
+                    </button>
+                  </div>
+                </form>
+
+                <div className="mt-8 text-center text-xs text-slate-500">
+                  Need assistance? <span className="text-[#103E8C] font-semibold">Contact ITSU Treasurer</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        );
+      }
+
+      // -------------------------------------------------------------
+      // 2. STEP: SELECTION (FULL-WIDTH STUDIO SHOWCASE - EXACT MATCH TO IMAGE 2)
+      // -------------------------------------------------------------
+      if (step === 'select') {
+        return (
+          <div className="flex-grow flex flex-col bg-[#FDFDFD] py-6 sm:py-8 px-4 sm:px-6 lg:px-8 min-h-[calc(100vh-4rem)]">
+            <div className="max-w-5xl mx-auto w-full flex-grow flex flex-col justify-between">
               
-              {/* Verified Student Header */}
-              <div className="bg-primary-50 border border-primary-100 rounded-lg p-3.5 mb-6 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-primary-800 text-white flex items-center justify-center text-xs font-bold">
-                    ✓
+              {/* Top Student Details Bar */}
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-200/80 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
+                <div className="flex items-center gap-3.5">
+                  <div className="w-11 h-11 rounded-2xl bg-[#0A1F44] text-white flex items-center justify-center font-bold text-base shadow-sm">
+                    {verifiedStudent.fullName.charAt(0)}
                   </div>
                   <div>
-                    <h3 className="text-xs font-semibold uppercase tracking-wider text-primary-900">
-                      {verifiedStudent.fullName}
-                    </h3>
-                    <p className="text-xs text-primary-700 font-mono">
-                      Index: {verifiedStudent.indexNumber} • <span className="font-semibold text-emerald-700">Verified Paid</span>
-                    </p>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-bold text-slate-900 text-base sm:text-lg">
+                        {verifiedStudent.fullName}
+                      </span>
+                      <span className="text-xs font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 rounded-full flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
+                        Verified Paid
+                      </span>
+                    </div>
+                    <div className="text-xs text-slate-500 font-mono mt-0.5">
+                      Index: {verifiedStudent.indexNumber} • Department of Computer Science • Takoradi Technical University
+                    </div>
                   </div>
+                </div>
+
+                <div className="text-xs text-slate-500 flex items-center gap-2 self-start sm:self-center">
+                  <span className="px-3 py-1 rounded-lg bg-blue-50 text-[#103E8C] font-semibold border border-blue-100">
+                    Official ITSU Lacoste Collection
+                  </span>
                 </div>
               </div>
 
-              <div className="space-y-6">
-                {/* Colour Selection */}
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="text-xs font-bold text-slate-800 uppercase tracking-wider">
-                      1. Select Lacoste Colour <span className="text-rose-500">*</span>
-                    </label>
-                    <span className="text-xs text-slate-500">Choose 1 colour</span>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    {/* Blue Option */}
-                    <button
-                      type="button"
-                      onClick={() => setSelectedColour('Blue')}
-                      className={`relative p-4 rounded-xl border-2 text-left transition flex flex-col items-center justify-center gap-2 ${
-                        selectedColour === 'Blue'
-                          ? 'border-primary-800 bg-primary-50/50 shadow-sm'
-                          : 'border-slate-200 hover:border-slate-300 bg-white'
-                      }`}
-                    >
-                      <div className="w-12 h-12 rounded-full bg-blue-700 border-2 border-white shadow flex items-center justify-center text-white font-bold">
-                        {selectedColour === 'Blue' && <Icon name="check" className="w-6 h-6 stroke-[3]" />}
-                      </div>
-                      <div className="text-center">
-                        <span className="font-bold text-slate-900 text-sm block">Royal Blue</span>
-                        <span className="text-[11px] text-slate-500">ITSU Official Blue</span>
-                      </div>
-                    </button>
-
-                    {/* White Option */}
-                    <button
-                      type="button"
-                      onClick={() => setSelectedColour('White')}
-                      className={`relative p-4 rounded-xl border-2 text-left transition flex flex-col items-center justify-center gap-2 ${
-                        selectedColour === 'White'
-                          ? 'border-primary-800 bg-primary-50/50 shadow-sm'
-                          : 'border-slate-200 hover:border-slate-300 bg-white'
-                      }`}
-                    >
-                      <div className="w-12 h-12 rounded-full bg-white border-2 border-slate-300 shadow flex items-center justify-center text-primary-800 font-bold">
-                        {selectedColour === 'White' && <Icon name="check" className="w-6 h-6 stroke-[3]" />}
-                      </div>
-                      <div className="text-center">
-                        <span className="font-bold text-slate-900 text-sm block">Classic White</span>
-                        <span className="text-[11px] text-slate-500">ITSU Official White</span>
-                      </div>
-                    </button>
-                  </div>
+              {/* Central Photorealistic Product Showcase with Floating Cards (Matching Image 2) */}
+              <div className="relative w-full max-w-4xl mx-auto my-auto flex items-center justify-center min-h-[480px] sm:min-h-[540px]">
+                
+                {/* Central Photorealistic Polo Shirt Photo */}
+                <div className="relative z-0 max-w-[480px] sm:max-w-[560px] w-full flex items-center justify-center transition-all duration-500 py-4">
+                  <img
+                    src={LACOSTE_MOCKUP_IMG}
+                    alt="Official ITSU Lacoste Polo Shirt"
+                    className="w-full h-auto object-contain transition-all duration-500 select-none pointer-events-none drop-shadow-md"
+                    style={{
+                      filter: selectedColour === 'White' ? 'grayscale(1) brightness(1.72) contrast(0.96)' : 'none'
+                    }}
+                  />
                 </div>
 
-                {/* Size Selection */}
-                <div>
-                  <div className="flex items-center justify-between mb-2">
-                    <label className="text-xs font-bold text-slate-800 uppercase tracking-wider">
-                      2. Select Lacoste Size <span className="text-rose-500">*</span>
-                    </label>
-                    <span className="text-xs text-slate-500">Standard unisex sizing</span>
-                  </div>
-
-                  <div className="grid grid-cols-3 sm:grid-cols-6 gap-2.5">
-                    {availableSizes.map(sz => (
+                {/* Floating Card 1: COLOR (Upper Left - Matches Image 2) */}
+                <div className="absolute top-2 left-2 sm:top-6 sm:left-4 z-20">
+                  <div className="bg-white rounded-2xl shadow-[0_12px_35px_rgba(0,0,0,0.08)] border border-slate-100/90 p-4 sm:p-5 w-[220px] sm:w-[260px]">
+                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest block mb-3">
+                      COLOR
+                    </span>
+                    <div className="flex items-center gap-4">
+                      {/* Royal Blue Option */}
                       <button
-                        key={sz}
                         type="button"
-                        onClick={() => setSelectedSize(sz)}
-                        className={`py-3 px-2 rounded-lg border text-center transition font-semibold text-sm ${
-                          selectedSize === sz
-                            ? 'border-primary-800 bg-primary-800 text-white shadow-sm'
-                            : 'border-slate-200 hover:border-slate-300 bg-white text-slate-800'
-                        }`}
+                        onClick={() => setSelectedColour('Blue')}
+                        className="group flex flex-col items-center focus:outline-none"
                       >
-                        {sz}
+                        <div className={`w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-[#18396D] transition-all duration-200 flex items-center justify-center ${
+                          selectedColour === 'Blue'
+                            ? 'ring-2 ring-offset-2 ring-[#18396D] scale-105 shadow-md'
+                            : 'hover:scale-105 opacity-80 hover:opacity-100'
+                        }`}>
+                          {selectedColour === 'Blue' && (
+                            <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 border-white"></div>
+                          )}
+                        </div>
+                        <span className={`text-[11px] mt-1.5 font-medium ${selectedColour === 'Blue' ? 'text-[#18396D] font-bold' : 'text-slate-400'}`}>
+                          Royal Blue
+                        </span>
                       </button>
-                    ))}
+
+                      {/* Classic White Option */}
+                      <button
+                        type="button"
+                        onClick={() => setSelectedColour('White')}
+                        className="group flex flex-col items-center focus:outline-none"
+                      >
+                        <div className={`w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white border-2 border-slate-200 transition-all duration-200 flex items-center justify-center ${
+                          selectedColour === 'White'
+                            ? 'ring-2 ring-offset-2 ring-slate-800 scale-105 shadow-md'
+                            : 'hover:scale-105 opacity-80 hover:opacity-100'
+                        }`}>
+                          {selectedColour === 'White' && (
+                            <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full border-2 border-slate-800"></div>
+                          )}
+                        </div>
+                        <span className={`text-[11px] mt-1.5 font-medium ${selectedColour === 'White' ? 'text-slate-900 font-bold' : 'text-slate-400'}`}>
+                          Classic White
+                        </span>
+                      </button>
+                    </div>
                   </div>
                 </div>
 
-                {/* Action Button */}
-                <div className="pt-4 border-t border-slate-100 flex items-center justify-between gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setStep('verify')}
-                    className="px-4 py-2.5 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-lg transition"
-                  >
-                    Back
-                  </button>
-
-                  <button
-                    type="button"
-                    disabled={!selectedColour || !selectedSize}
-                    onClick={() => setStep('review')}
-                    className="flex-1 bg-primary-800 hover:bg-primary-900 disabled:bg-slate-200 disabled:text-slate-400 text-white font-semibold py-2.5 px-4 rounded-lg shadow-sm transition flex items-center justify-center gap-2 text-sm"
-                  >
-                    <span>Review Selection</span>
-                    <Icon name="arrow-right" className="w-4 h-4" />
-                  </button>
+                {/* Floating Card 2: SIZE (Lower Right - Matches Image 2) */}
+                <div className="absolute bottom-2 right-2 sm:bottom-4 sm:right-4 z-20">
+                  <div className="bg-white rounded-2xl shadow-[0_12px_35px_rgba(0,0,0,0.08)] border border-slate-100/90 p-4 sm:p-5 w-[220px] sm:w-[260px]">
+                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest block mb-3">
+                      SIZE
+                    </span>
+                    <div className="space-y-1.5 max-h-[190px] overflow-y-auto pr-1">
+                      {[
+                        { sz: 'S', badge: 'Available', color: 'text-blue-600' },
+                        { sz: 'M', badge: 'Available', color: 'text-blue-600' },
+                        { sz: 'L', badge: 'Only a few left', color: 'text-slate-500' },
+                        { sz: 'XL', badge: 'Only 1 left', color: 'text-blue-600' },
+                        { sz: 'XXL', badge: 'Available', color: 'text-blue-600' },
+                        { sz: 'XXXL', badge: 'Available', color: 'text-blue-600' },
+                      ].map(item => {
+                        const isSelected = selectedSize === item.sz;
+                        return (
+                          <div
+                            key={item.sz}
+                            onClick={() => setSelectedSize(item.sz)}
+                            className={`flex items-center justify-between py-1.5 px-2.5 rounded-xl cursor-pointer transition select-none ${
+                              isSelected ? 'bg-blue-50/70' : 'hover:bg-slate-50'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2.5">
+                              {/* Circular Radio Matching Mockup */}
+                              <div className={`w-4 h-4 rounded-full border-2 transition-all flex items-center justify-center ${
+                                isSelected ? 'border-[#103E8C] bg-[#103E8C]' : 'border-slate-300 bg-white'
+                              }`}>
+                                {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white"></div>}
+                              </div>
+                              <span className={`text-xs sm:text-sm font-semibold ${isSelected ? 'text-[#103E8C]' : 'text-slate-800'}`}>
+                                {item.sz}
+                              </span>
+                            </div>
+                            <span className={`text-[10px] sm:text-xs font-medium ${item.color}`}>
+                              {item.badge}
+                            </span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
                 </div>
 
+              </div>
+
+              {/* Bottom Navigation Buttons */}
+              <div className="max-w-4xl mx-auto w-full pt-6 flex items-center justify-between gap-4 border-t border-slate-200/60 mt-4">
+                <button
+                  type="button"
+                  onClick={() => setStep('verify')}
+                  className="px-5 py-3 text-xs sm:text-sm font-semibold text-slate-600 bg-white hover:bg-slate-100 border border-slate-200 rounded-xl transition shadow-xs"
+                >
+                  ← Back to Verification
+                </button>
+
+                <button
+                  type="button"
+                  disabled={!selectedColour || !selectedSize}
+                  onClick={() => setStep('review')}
+                  className="bg-[#103E8C] hover:bg-[#0B2E68] disabled:bg-slate-300 disabled:text-slate-500 text-white font-medium py-3 px-8 rounded-xl shadow-md transition flex items-center gap-2 text-xs sm:text-sm"
+                >
+                  <span>Continue to Review</span>
+                  <Icon name="arrow-right" className="w-4 h-4" />
+                </button>
               </div>
 
             </div>
@@ -1461,49 +1174,52 @@
         );
       }
 
-      // ------------------------------------------
-      // 4. REVIEW SCREEN
-      // ------------------------------------------
+      // -------------------------------------------------------------
+      // 3. STEP: REVIEW CONFIRMATION
+      // -------------------------------------------------------------
       if (step === 'review') {
         return (
-          <div className="flex-grow flex items-center justify-center p-4">
-            <div className="max-w-md w-full bg-white rounded-xl border border-slate-200 shadow-sm p-6 sm:p-8">
-              
-              <h2 className="text-xl font-bold text-slate-900 mb-1">Confirm Your Selection</h2>
-              <p className="text-xs text-slate-500 mb-5">Please double-check your choices before submitting.</p>
+          <div className="flex-grow flex items-center justify-center p-4 bg-slate-50">
+            <div className="max-w-md w-full bg-white rounded-2xl border border-slate-200/80 shadow-lg p-6 sm:p-8">
+              <div className="mb-6">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#103E8C] bg-blue-50 px-2.5 py-0.5 rounded border border-blue-200">
+                  Final Step
+                </span>
+                <h2 className="text-2xl font-serif font-bold text-slate-900 mt-2">
+                  Review Your Selection
+                </h2>
+                <p className="text-xs text-slate-500 mt-1">
+                  Please verify your preferences before confirming submission
+                </p>
+              </div>
 
-              <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 space-y-4 mb-6">
-                <div>
-                  <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">Student Name</span>
-                  <span className="text-sm font-bold text-slate-900">{verifiedStudent.fullName}</span>
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 text-xs space-y-3 mb-6">
+                <div className="flex justify-between py-1 border-b border-slate-200">
+                  <span className="text-slate-500">Student Name:</span>
+                  <span className="font-bold text-slate-900">{verifiedStudent.fullName}</span>
                 </div>
-
-                <div>
-                  <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">Index Number</span>
-                  <span className="text-sm font-mono font-bold text-slate-900">{verifiedStudent.indexNumber}</span>
+                <div className="flex justify-between py-1 border-b border-slate-200">
+                  <span className="text-slate-500">Index Number:</span>
+                  <span className="font-mono font-bold text-slate-900">{verifiedStudent.indexNumber}</span>
                 </div>
-
-                <div className="grid grid-cols-2 gap-4 pt-3 border-t border-slate-200">
-                  <div>
-                    <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">Selected Colour</span>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className={`w-3.5 h-3.5 rounded-full border ${selectedColour === 'Blue' ? 'bg-blue-600' : 'bg-white border-slate-400'}`}></span>
-                      <span className="text-sm font-bold text-slate-900">{selectedColour}</span>
-                    </div>
+                <div className="flex justify-between py-1 border-b border-slate-200">
+                  <span className="text-slate-500">Selected Colour:</span>
+                  <div className="flex items-center gap-1.5 font-bold text-slate-900">
+                    <span className={`w-3 h-3 rounded-full border ${selectedColour === 'Blue' ? 'bg-[#18396D]' : 'bg-white border-slate-400'}`}></span>
+                    <span>{selectedColour === 'Blue' ? 'Royal Blue' : 'Classic White'}</span>
                   </div>
-
-                  <div>
-                    <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">Selected Size</span>
-                    <span className="inline-block mt-1 px-2.5 py-0.5 rounded bg-slate-200 text-slate-900 font-bold text-sm">
-                      {selectedSize}
-                    </span>
-                  </div>
+                </div>
+                <div className="flex justify-between py-1">
+                  <span className="text-slate-500">Selected Size:</span>
+                  <span className="font-bold text-slate-900 px-2.5 py-0.5 rounded bg-blue-50 text-[#103E8C] border border-blue-200">
+                    {selectedSize}
+                  </span>
                 </div>
               </div>
 
-              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-800 mb-6 flex items-start gap-2">
+              <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-800 mb-6 flex items-start gap-2">
                 <Icon name="info" className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
-                <span>You can only submit your selection once. Any subsequent changes require direct Treasurer intervention.</span>
+                <span>You can only submit once. Selections cannot be changed online after submission.</span>
               </div>
 
               <div className="flex items-center gap-3">
@@ -1511,88 +1227,127 @@
                   type="button"
                   onClick={() => setStep('select')}
                   disabled={isLoading}
-                  className="px-4 py-3 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition"
+                  className="px-4 py-3 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition"
                 >
                   Go Back
                 </button>
-
                 <button
                   type="button"
                   onClick={handleSubmit}
                   disabled={isLoading}
-                  className="flex-1 bg-primary-800 hover:bg-primary-900 disabled:bg-slate-300 text-white font-semibold py-3 px-4 rounded-lg shadow-sm transition flex items-center justify-center gap-2 text-sm"
+                  className="flex-1 bg-[#103E8C] hover:bg-[#0B2E68] text-white font-medium py-3 px-4 rounded-xl shadow-sm transition flex items-center justify-center gap-2 text-xs"
                 >
-                  {isLoading ? (
-                    <>
-                      <Icon name="loader-2" className="w-4 h-4 animate-spin" />
-                      <span>Recording Selection...</span>
-                    </>
-                  ) : (
-                    <>
-                      <span>Confirm & Submit</span>
-                      <Icon name="check" className="w-4 h-4" />
-                    </>
-                  )}
+                  {isLoading ? 'Submitting...' : 'Confirm Selection'}
                 </button>
               </div>
-
             </div>
           </div>
         );
       }
 
-      // ------------------------------------------
-      // 5. CONFIRMATION SCREEN
-      // ------------------------------------------
+      // -------------------------------------------------------------
+      // 4. STEP: CONFIRMATION SUCCESS
+      // -------------------------------------------------------------
       if (step === 'confirmed' && submissionResult) {
         return (
-          <div className="flex-grow flex items-center justify-center p-4">
-            <div className="max-w-md w-full bg-white rounded-xl border border-slate-200 shadow-sm p-6 sm:p-8 text-center">
-              
-              <div className="w-16 h-16 bg-emerald-50 border border-emerald-200 rounded-full flex items-center justify-center mx-auto mb-4 text-emerald-600">
-                <Icon name="check-circle-2" className="w-10 h-10" />
+          <div className="flex-grow flex items-center justify-center p-4 bg-slate-50">
+            <div className="max-w-md w-full bg-white rounded-2xl border border-slate-200/80 shadow-lg p-6 sm:p-8 text-center">
+              <div className="w-14 h-14 bg-emerald-50 border border-emerald-200 rounded-full flex items-center justify-center mx-auto mb-4 text-emerald-600">
+                <Icon name="check-circle-2" className="w-8 h-8" />
               </div>
 
-              <h2 className="text-xl font-bold text-slate-900 mb-1">Submission Successful!</h2>
+              <h2 className="text-2xl font-serif font-bold text-slate-900 mb-1">
+                Selection Confirmed!
+              </h2>
               <p className="text-xs text-slate-500 mb-6">
-                Your Lacoste selection has been submitted successfully.
+                Your Lacoste selection has been recorded in the departmental register.
               </p>
 
-              <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 text-left text-xs space-y-3 mb-6">
-                <div className="flex justify-between items-center py-1 border-b border-slate-200">
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 text-left text-xs space-y-2 mb-6">
+                <div className="flex justify-between py-1 border-b border-slate-200">
                   <span className="text-slate-500">Submission Reference:</span>
-                  <span className="font-mono font-bold text-primary-800 bg-primary-50 px-2 py-0.5 rounded border border-primary-200">
+                  <span className="font-mono font-bold text-[#103E8C] bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
                     {submissionResult.submissionId}
                   </span>
                 </div>
                 <div className="flex justify-between py-1 border-b border-slate-200">
-                  <span className="text-slate-500">Student Name:</span>
+                  <span className="text-slate-500">Student:</span>
                   <span className="font-semibold text-slate-900">{submissionResult.fullName}</span>
                 </div>
                 <div className="flex justify-between py-1 border-b border-slate-200">
-                  <span className="text-slate-500">Index Number:</span>
-                  <span className="font-mono font-semibold text-slate-900">{submissionResult.indexNumber}</span>
-                </div>
-                <div className="flex justify-between py-1 border-b border-slate-200">
-                  <span className="text-slate-500">Selected Colour:</span>
+                  <span className="text-slate-500">Colour:</span>
                   <span className="font-semibold text-slate-900">{submissionResult.selectedColour}</span>
                 </div>
                 <div className="flex justify-between py-1">
-                  <span className="text-slate-500">Selected Size:</span>
+                  <span className="text-slate-500">Size:</span>
                   <span className="font-bold text-slate-900">{submissionResult.selectedSize}</span>
                 </div>
               </div>
 
-              <p className="text-xs text-slate-500 leading-relaxed mb-6">
-                Please take a screenshot of this page or note down your reference code. Present this during distribution.
+              <p className="text-xs text-slate-400 mb-6">
+                Take a screenshot or record your reference code for shirt distribution.
               </p>
 
               <button
                 type="button"
                 onClick={handleStartOver}
-                className="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold py-2.5 px-4 rounded-lg transition text-xs"
+                className="w-full bg-[#0A1F44] hover:bg-[#061533] text-white font-medium py-3 px-4 rounded-xl transition text-xs"
               >
                 Done
+              </button>
+            </div>
+          </div>
+        );
+      }
+
+      // -------------------------------------------------------------
+      // 5. STEP: ALREADY SUBMITTED
+      // -------------------------------------------------------------
+      if (step === 'already_submitted') {
+        return (
+          <div className="flex-grow flex items-center justify-center p-4 bg-slate-50">
+            <div className="max-w-md w-full bg-white rounded-2xl border border-slate-200/80 shadow-lg p-6 sm:p-8 text-center">
+              <div className="w-14 h-14 bg-amber-50 border border-amber-200 rounded-full flex items-center justify-center mx-auto mb-4 text-amber-600">
+                <Icon name="check-check" className="w-7 h-7" />
+              </div>
+
+              <h3 className="text-2xl font-serif font-bold text-slate-900 mb-1">
+                Already Submitted
+              </h3>
+              <p className="text-xs text-slate-500 mb-6">
+                Your Lacoste selection has already been recorded in the register.
+              </p>
+
+              {alreadySubmittedData && (
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-left text-xs space-y-2 mb-6">
+                  <div className="flex justify-between py-1 border-b border-slate-200">
+                    <span className="text-slate-500">Reference:</span>
+                    <span className="font-mono font-bold text-[#103E8C]">{alreadySubmittedData.submissionId}</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-slate-200">
+                    <span className="text-slate-500">Student Name:</span>
+                    <span className="font-semibold text-slate-900">{alreadySubmittedData.fullName}</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-slate-200">
+                    <span className="text-slate-500">Colour:</span>
+                    <span className="font-semibold text-slate-900">{alreadySubmittedData.selectedColour}</span>
+                  </div>
+                  <div className="flex justify-between py-1">
+                    <span className="text-slate-500">Size:</span>
+                    <span className="font-bold text-slate-900">{alreadySubmittedData.selectedSize}</span>
+                  </div>
+                </div>
+              )}
+
+              <p className="text-xs text-slate-500 mb-6">
+                If you need a correction, please contact the ITSU Treasurer directly.
+              </p>
+
+              <button
+                onClick={handleStartOver}
+                className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2.5 px-4 rounded-xl transition text-xs"
+              >
+                Return to Verification
               </button>
             </div>
           </div>
