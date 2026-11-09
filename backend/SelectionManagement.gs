@@ -134,7 +134,72 @@ function addPaidStudent(sessionToken, studentData) {
 
     return {
       success: true,
+      added: 1,
+      skipped: 0,
       student: { fullName, indexNumber, paymentStatus, paymentReference, dateAdded }
+    };
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+/**
+ * Bulk imports a list of pre-ordered/paid students by Full Name and Index Number (Treasurer only)
+ */
+function bulkAddPaidStudents(sessionToken, studentsList) {
+  const session = validateAdminSession(sessionToken);
+
+  if (!Array.isArray(studentsList) || studentsList.length === 0) {
+    throw new Error('No valid student records provided for bulk import.');
+  }
+
+  const lock = LockService.getScriptLock();
+  try {
+    lock.waitLock(15000);
+  } catch (e) {
+    throw new Error('Server busy. Please try again.');
+  }
+
+  try {
+    const existingRows = getRowsAsObjects(SHEET_NAMES.STUDENTS);
+    const existingIndexSet = new Set(existingRows.map(s => normalizeIndexNumber(s['Index Number'])));
+    const dateAdded = Utilities.formatDate(new Date(), 'GMT', "yyyy-MM-dd'T'HH:mm:ss'Z'");
+
+    let added = 0;
+    let skipped = 0;
+    const sheet = getSheetByName(SHEET_NAMES.STUDENTS);
+    const rowsToAppend = [];
+
+    studentsList.forEach(item => {
+      const fullName = normalizeText(item.fullName).toUpperCase();
+      const indexNumber = normalizeIndexNumber(item.indexNumber);
+      if (!fullName || !indexNumber) return;
+      if (existingIndexSet.has(indexNumber)) {
+        skipped++;
+        return;
+      }
+      existingIndexSet.add(indexNumber);
+      rowsToAppend.push([
+        fullName,
+        indexNumber,
+        'PAID',
+        'PRE-ORDER',
+        dateAdded
+      ]);
+      added++;
+    });
+
+    if (rowsToAppend.length > 0) {
+      const startRow = sheet.getLastRow() + 1;
+      sheet.getRange(startRow, 1, rowsToAppend.length, rowsToAppend[0].length).setValues(rowsToAppend);
+    }
+
+    logAudit(session.email, 'BULK_STUDENTS_ADDED', { added, skipped }, 'SUCCESS');
+
+    return {
+      success: true,
+      added: added,
+      skipped: skipped
     };
   } finally {
     lock.releaseLock();

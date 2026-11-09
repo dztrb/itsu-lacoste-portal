@@ -129,8 +129,8 @@ function exportReport(sessionToken, reportType, format) {
       break;
 
     case REPORT_TYPES.PENDING_STUDENTS:
-      title = 'Pending Students Register (Unsubmitted Paid Students)';
-      headers = ['#', 'Full Name', 'Index Number', 'Payment Status', 'Payment Reference', 'Date Added'];
+      title = 'Pending Students Register (Unsubmitted Pre-Ordered Students)';
+      headers = ['#', 'Full Name', 'Index Number', 'Status', 'Date Added'];
       const submittedIdxSet = new Set(selections.map(s => normalizeIndexNumber(s['Index Number'])));
       const pendingList = students.filter(s => {
         return normalizeText(s['Payment Status']).toUpperCase() === 'PAID' &&
@@ -141,7 +141,6 @@ function exportReport(sessionToken, reportType, format) {
         p['Full Name'],
         p['Index Number'],
         p['Payment Status'],
-        p['Payment Reference'],
         p['Date Added']
       ]);
       summary = {
