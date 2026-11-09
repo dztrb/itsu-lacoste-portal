@@ -1670,7 +1670,14 @@
                       <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest block">
                         SIZE
                       </span>
-                      <span className="text-[10px] text-slate-400 md:hidden font-medium">Select size</span>
+                      <button
+                        type="button"
+                        onClick={() => setShowSizeGuide(true)}
+                        className="text-[11px] font-semibold text-[#103E8C] hover:underline flex items-center gap-1 cursor-pointer"
+                      >
+                        <Icon name="ruler" className="w-3 h-3" />
+                        <span>Size Guide</span>
+                      </button>
                     </div>
 
                     {/* Responsive Grid on Mobile, Clean List on Desktop */}
@@ -1737,6 +1744,72 @@
                   <Icon name="arrow-right" className="w-4 h-4" />
                 </button>
               </div>
+
+              {/* Interactive Size Guide Modal */}
+              {showSizeGuide && (
+                <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setShowSizeGuide(false)}>
+                  <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-md w-full p-5 sm:p-6 relative" onClick={e => e.stopPropagation()}>
+                    <button
+                      type="button"
+                      onClick={() => setShowSizeGuide(false)}
+                      className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"
+                    >
+                      <Icon name="x" className="w-5 h-5" />
+                    </button>
+                    <div className="flex items-center gap-2.5 mb-1">
+                      <div className="w-8 h-8 rounded-lg bg-blue-50 text-[#103E8C] flex items-center justify-center">
+                        <Icon name="ruler" className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <h3 className="text-sm sm:text-base font-bold text-slate-900">ITSU Lacoste Size Guide</h3>
+                        <p className="text-[11px] text-slate-500">Standard Unisex Piqué Polo Measurements</p>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 overflow-hidden rounded-xl border border-slate-200">
+                      <table className="w-full text-left border-collapse text-xs">
+                        <thead>
+                          <tr className="bg-slate-100 text-slate-700 font-bold text-[11px] uppercase">
+                            <th className="py-2 px-3">Size</th>
+                            <th className="py-2 px-3">Chest (in)</th>
+                            <th className="py-2 px-3">Length (in)</th>
+                            <th className="py-2 px-3">Recommended Fit</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {[
+                            { sz: 'S', chest: '36 – 38"', len: '27"', fit: 'Slim / Petite' },
+                            { sz: 'M', chest: '39 – 41"', len: '28"', fit: 'Regular Medium' },
+                            { sz: 'L', chest: '42 – 44"', len: '29"', fit: 'Standard Large' },
+                            { sz: 'XL', chest: '45 – 47"', len: '30"', fit: 'Relaxed Fit' },
+                            { sz: 'XXL', chest: '48 – 50"', len: '31"', fit: 'Broad / Plus' },
+                            { sz: 'XXXL', chest: '51 – 53"', len: '32"', fit: 'Extra Broad' },
+                          ].map(r => (
+                            <tr key={r.sz} className={selectedSize === r.sz ? 'bg-blue-50/80 font-semibold' : ''}>
+                              <td className="py-2 px-3 font-bold text-[#103E8C]">{r.sz}</td>
+                              <td className="py-2 px-3 text-slate-700">{r.chest}</td>
+                              <td className="py-2 px-3 text-slate-700">{r.len}</td>
+                              <td className="py-2 px-3 text-slate-500 text-[11px]">{r.fit}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <p className="text-[11px] text-slate-500 mt-3">
+                      Tip: If you prefer a looser fit, choose one size up from your usual shirt size.
+                    </p>
+
+                    <button
+                      type="button"
+                      onClick={() => setShowSizeGuide(false)}
+                      className="mt-4 w-full bg-[#103E8C] hover:bg-[#0B2E68] text-white font-semibold py-2.5 rounded-xl text-xs transition"
+                    >
+                      Got It
+                    </button>
+                  </div>
+                </div>
+              )}
 
             </div>
           </div>
@@ -2643,6 +2716,8 @@
     // COMPONENT: Correct Selection Modal
     // ==========================================
     function CorrectSelectionModal({ isOpen, onClose, student, sessionToken, onSelectionUpdated, onNotify }) {
+      const [editName, setEditName] = useState('');
+      const [editIndex, setEditIndex] = useState('');
       const [colour, setColour] = useState('Blue');
       const [size, setSize] = useState('L');
       const [reason, setReason] = useState('');
@@ -2651,6 +2726,8 @@
 
       useEffect(() => {
         if (student) {
+          setEditName(student.fullName || '');
+          setEditIndex(student.indexNumber || '');
           if (student.selectedColour && student.selectedColour !== '-') setColour(student.selectedColour);
           if (student.selectedSize && student.selectedSize !== '-') setSize(student.selectedSize);
         }
@@ -2664,14 +2741,24 @@
         setIsLoading(true);
 
         try {
-          const res = await ApiService.call('updateStudentSelection', sessionToken, student.indexNumber, {
+          let targetIdx = student.indexNumber;
+          if (editName.trim().toUpperCase() !== String(student.fullName || '').trim().toUpperCase() ||
+              editIndex.trim().toUpperCase() !== String(student.indexNumber || '').trim().toUpperCase()) {
+            await ApiService.call('updatePaidStudent', sessionToken, student.indexNumber, {
+              fullName: editName.trim().toUpperCase(),
+              indexNumber: editIndex.trim().toUpperCase()
+            });
+            targetIdx = editIndex.trim().toUpperCase();
+          }
+
+          const res = await ApiService.call('updateStudentSelection', sessionToken, targetIdx, {
             colour: colour,
             size: size,
-            reason: reason || 'Treasurer Manual Correction'
+            reason: reason || 'Treasurer Manual Update'
           });
 
           if (res.success) {
-            onNotify({ message: 'Selection updated successfully!', type: 'success' });
+            onNotify({ message: 'Student record & selection updated!', type: 'success' });
             onSelectionUpdated();
             onClose();
           } else {
@@ -2691,9 +2778,9 @@
               <Icon name="x" className="w-5 h-5" />
             </button>
 
-            <h3 className="text-base font-bold text-slate-900 mb-1">Correct Student Selection</h3>
+            <h3 className="text-base font-bold text-slate-900 mb-1">Edit Student &amp; Selection</h3>
             <p className="text-xs text-slate-500 mb-3">
-              Editing for: <span className="font-semibold text-slate-800">{student.fullName}</span> ({student.indexNumber})
+              Update student details or record/correct their Lacoste colour &amp; size.
             </p>
 
             {error && (
@@ -2703,43 +2790,67 @@
             )}
 
             <form onSubmit={handleUpdate} className="space-y-3">
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Colour</label>
-                <select
-                  value={colour}
-                  onChange={(e) => setColour(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-primary-500 focus:outline-none"
-                >
-                  <option value="Blue">Blue</option>
-                  <option value="White">White</option>
-                </select>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Full Name</label>
+                  <input
+                    type="text"
+                    required
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value.toUpperCase())}
+                    className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs uppercase font-semibold focus:ring-2 focus:ring-primary-500 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Index Number</label>
+                  <input
+                    type="text"
+                    required
+                    value={editIndex}
+                    onChange={(e) => setEditIndex(e.target.value.toUpperCase())}
+                    className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs uppercase font-mono focus:ring-2 focus:ring-primary-500 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2.5">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Colour</label>
+                  <select
+                    value={colour}
+                    onChange={(e) => setColour(e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-primary-500 focus:outline-none"
+                  >
+                    <option value="Blue">Blue</option>
+                    <option value="White">White</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">Size</label>
+                  <select
+                    value={size}
+                    onChange={(e) => setSize(e.target.value)}
+                    className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-primary-500 focus:outline-none"
+                  >
+                    <option value="S">S</option>
+                    <option value="M">M</option>
+                    <option value="L">L</option>
+                    <option value="XL">XL</option>
+                    <option value="XXL">XXL</option>
+                    <option value="XXXL">XXXL</option>
+                  </select>
+                </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Size</label>
-                <select
-                  value={size}
-                  onChange={(e) => setSize(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-primary-500 focus:outline-none"
-                >
-                  <option value="S">S</option>
-                  <option value="M">M</option>
-                  <option value="L">L</option>
-                  <option value="XL">XL</option>
-                  <option value="XXL">XXL</option>
-                  <option value="XXXL">XXXL</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">Reason for Change (Audit Log)</label>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Note / Reason (Optional)</label>
                 <input
                   type="text"
-                  required
-                  placeholder="e.g. Student requested size change due to fit"
+                  placeholder="e.g. Student requested size change"
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-primary-500 focus:outline-none"
+                  className="w-full px-3 py-2 rounded-lg border border-slate-300 text-xs focus:ring-2 focus:ring-primary-500 focus:outline-none"
                 />
               </div>
 
@@ -3738,7 +3849,7 @@
                             <th className="py-3 px-4">Colour</th>
                             <th className="py-3 px-4">Size</th>
                             <th className="py-3 px-4">Selection</th>
-                            <th className="py-3 px-4">Given Out (Handout)</th>
+                            <th className="py-3 px-4">Given Out</th>
                             <th className="py-3 px-4 text-right">Actions</th>
                           </tr>
                         </thead>
@@ -3776,24 +3887,24 @@
                                       <button
                                         type="button"
                                         onClick={() => handleToggleCollection(st.indexNumber)}
-                                        className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-lg text-[11px] font-bold border transition cursor-pointer select-none ${
+                                        className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-semibold border transition cursor-pointer select-none ${
                                           isGivenOut
                                             ? 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100'
                                             : 'bg-white text-slate-600 border-slate-300 hover:border-primary-600 hover:text-primary-800'
                                         }`}
                                         title={isGivenOut ? `Given out (${st.collectedAt || ''}) — Click to undo` : 'Click to tick that this student has collected their Lacoste'}
                                       >
-                                        <span className={`w-4 h-4 rounded flex items-center justify-center border transition ${
+                                        <span className={`w-3.5 h-3.5 rounded-sm flex items-center justify-center border transition ${
                                           isGivenOut
                                             ? 'bg-emerald-600 border-emerald-600 text-white'
                                             : 'bg-white border-slate-300'
                                         }`}>
-                                          {isGivenOut && <Icon name="check" className="w-3 h-3 stroke-[3]" />}
+                                          {isGivenOut && <Icon name="check" className="w-2.5 h-2.5 stroke-[3]" />}
                                         </span>
-                                        <span>{isGivenOut ? 'Given Out' : 'Tick Given Out'}</span>
+                                        <span>{isGivenOut ? 'Given' : 'Tick'}</span>
                                       </button>
                                     ) : (
-                                      <span className="text-[11px] text-slate-400 italic">Awaiting selection</span>
+                                      <span className="text-[10px] text-slate-400">-</span>
                                     )}
                                   </td>
                                   <td className="py-2.5 px-4 text-right">
