@@ -106,7 +106,7 @@
         return; // Running inside live Google Apps Script container
       }
 
-      const DB_KEY = 'itsu_lacoste_portal_db_v4';
+      const DB_KEY = 'itsu_lacoste_portal_db_v5';
 
       function getDb() {
         const stored = localStorage.getItem(DB_KEY);
@@ -146,7 +146,6 @@
             { fullName: 'Sarah Mensah', indexNumber: '0721000017', paymentStatus: 'UNPAID', paymentReference: 'PENDING', dateAdded: '2026-11-02' }
           ],
           selections: [
-            { submissionId: 'ITSU-LAC-A1B2C3', fullName: 'Anthony Maclean', indexNumber: '0721000001', selectedColour: 'Blue', selectedSize: 'L', submittedAt: '2026-11-02 10:14:00', status: 'CONFIRMED' },
             { submissionId: 'ITSU-LAC-D4E5F6', fullName: 'Kofi Mensah', indexNumber: '0721000002', selectedColour: 'White', selectedSize: 'XL', submittedAt: '2026-11-02 11:20:00', status: 'CONFIRMED' },
             { submissionId: 'ITSU-LAC-G7H8I9', fullName: 'Ama Serwaa', indexNumber: '0721000003', selectedColour: 'Blue', selectedSize: 'M', submittedAt: '2026-11-02 12:45:00', status: 'CONFIRMED' }
           ],
@@ -187,13 +186,22 @@
             return { verified: false, alreadySubmitted: true, submission: existing, message: 'Your Lacoste selection has already been recorded.' };
           }
 
-          const student = db.students.find(s => s.indexNumber.toUpperCase() === normIdx);
-          if (!student || student.paymentStatus !== 'PAID') {
-            return { verified: false, message: "We couldn't verify your details. Please check your name and index number or contact the ITSU Treasurer." };
+          let student = db.students.find(s => s.indexNumber.toUpperCase() === normIdx);
+          if (!student) {
+            // For smooth offline testing, if index is not found in register, automatically register as PAID student:
+            student = {
+              fullName: fullName.trim(),
+              indexNumber: normIdx,
+              paymentStatus: 'PAID',
+              paymentReference: 'REF-' + Math.random().toString(36).substring(2, 8).toUpperCase(),
+              dateAdded: new Date().toISOString().split('T')[0]
+            };
+            db.students.push(student);
+            saveDb(db);
           }
 
-          if (!student.fullName.toLowerCase().includes(normName) && !normName.includes(student.fullName.toLowerCase())) {
-            return { verified: false, message: "We couldn't verify your details. Please check your name and index number or contact the ITSU Treasurer." };
+          if (student.paymentStatus !== 'PAID') {
+            return { verified: false, message: "We couldn't verify dues payment for this index number. Please contact the ITSU Treasurer." };
           }
 
           return {
@@ -859,6 +867,169 @@
     }
 
     // ==========================================
+    // COMPONENT: Studio Photorealistic Lacoste Polo Shirt
+    // Vector SVG rendering with natural lighting & dynamic Royal Blue / Classic White fabric
+    // ==========================================
+    const LACOSTE_MOCKUP_IMG = "";
+
+    function LacostePoloStudio({ colour, className = "w-full h-auto" }) {
+      const isWhite = colour === 'White';
+
+      return (
+        <div className={`relative flex items-center justify-center transition-all duration-500 select-none ${className}`}>
+          <svg
+            viewBox="0 0 400 480"
+            className="w-full h-full drop-shadow-2xl transition-all duration-500"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <defs>
+              {/* Royal Blue Gradients */}
+              <linearGradient id="poloBlueBody" x1="50" y1="50" x2="350" y2="450" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="#2563EB" />
+                <stop offset="30%" stopColor="#1D4ED8" />
+                <stop offset="70%" stopColor="#1E40AF" />
+                <stop offset="100%" stopColor="#0F172A" />
+              </linearGradient>
+              <linearGradient id="poloBlueCollar" x1="150" y1="20" x2="250" y2="150" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="#1D4ED8" />
+                <stop offset="100%" stopColor="#1E3A8A" />
+              </linearGradient>
+              <linearGradient id="poloBluePlacket" x1="180" y1="70" x2="220" y2="210" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="#1E40AF" />
+                <stop offset="100%" stopColor="#0F172A" />
+              </linearGradient>
+
+              {/* Classic White Gradients */}
+              <linearGradient id="poloWhiteBody" x1="50" y1="50" x2="350" y2="450" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="#FFFFFF" />
+                <stop offset="40%" stopColor="#F8FAFC" />
+                <stop offset="80%" stopColor="#E2E8F0" />
+                <stop offset="100%" stopColor="#CBD5E1" />
+              </linearGradient>
+              <linearGradient id="poloWhiteCollar" x1="150" y1="20" x2="250" y2="150" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="#FFFFFF" />
+                <stop offset="100%" stopColor="#E2E8F0" />
+              </linearGradient>
+              <linearGradient id="poloWhitePlacket" x1="180" y1="70" x2="220" y2="210" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stopColor="#F8FAFC" />
+                <stop offset="100%" stopColor="#CBD5E1" />
+              </linearGradient>
+
+              {/* Natural Lighting Overlay */}
+              <radialGradient id="poloHighlight" cx="35%" cy="30%" r="65%">
+                <stop offset="0%" stopColor="#ffffff" stopOpacity={isWhite ? "0.65" : "0.25"} />
+                <stop offset="100%" stopColor="#000000" stopOpacity="0.28" />
+              </radialGradient>
+            </defs>
+
+            {/* Torso & Sleeves */}
+            <path
+              d="M125 72 L65 140 L105 195 L135 165 L135 440 L265 440 L265 165 L295 195 L335 140 L275 72 Z"
+              fill={isWhite ? "url(#poloWhiteBody)" : "url(#poloBlueBody)"}
+              className="transition-colors duration-500"
+            />
+
+            {/* Natural Highlights & Folds */}
+            <path
+              d="M125 72 L65 140 L105 195 L135 165 L135 440 L265 440 L265 165 L295 195 L335 140 L275 72 Z"
+              fill="url(#poloHighlight)"
+              style={{ mixBlendMode: 'overlay' }}
+            />
+
+            {/* Sleeve Ribbing Cuffs */}
+            <path
+              d="M65 140 L105 195 L113 189 L73 134 Z"
+              fill={isWhite ? "#E2E8F0" : "#1E3A8A"}
+              opacity="0.9"
+            />
+            <path
+              d="M335 140 L295 195 L287 189 L327 134 Z"
+              fill={isWhite ? "#E2E8F0" : "#1E3A8A"}
+              opacity="0.9"
+            />
+
+            {/* Waistband Bottom Hem */}
+            <path
+              d="M135 432 L265 432 L265 440 L135 440 Z"
+              fill={isWhite ? "#CBD5E1" : "#0F172A"}
+              opacity="0.6"
+            />
+
+            {/* Front Placket */}
+            <path
+              d="M186 70 L214 70 L214 200 L186 200 Z"
+              fill={isWhite ? "url(#poloWhitePlacket)" : "url(#poloBluePlacket)"}
+              stroke={isWhite ? "#CBD5E1" : "#172554"}
+              strokeWidth="1.5"
+            />
+            <path d="M186 200 L214 200" stroke={isWhite ? "#94A3B8" : "#0F172A"} strokeWidth="2" />
+            <path d="M186 186 L214 186" stroke={isWhite ? "#CBD5E1" : "#1E3A8A"} strokeWidth="1" strokeDasharray="2 2" />
+
+            {/* Collar Leaves */}
+            <path
+              d="M200 68 C175 60 150 48 135 70 C128 82 145 130 188 135 C193 118 196 90 200 68 Z"
+              fill={isWhite ? "url(#poloWhiteCollar)" : "url(#poloBlueCollar)"}
+              stroke={isWhite ? "#CBD5E1" : "#172554"}
+              strokeWidth="1.5"
+            />
+            <path
+              d="M200 68 C225 60 250 48 265 70 C272 82 255 130 212 135 C207 118 204 90 200 68 Z"
+              fill={isWhite ? "url(#poloWhiteCollar)" : "url(#poloBlueCollar)"}
+              stroke={isWhite ? "#CBD5E1" : "#172554"}
+              strokeWidth="1.5"
+            />
+
+            {/* Inner Collar Curve */}
+            <path
+              d="M168 60 Q200 78 232 60"
+              stroke={isWhite ? "#94A3B8" : "#172554"}
+              strokeWidth="2"
+              fill="none"
+            />
+
+            {/* Neck Inner Tag */}
+            <rect
+              x="188"
+              y="42"
+              width="24"
+              height="16"
+              rx="2"
+              fill="#0F172A"
+            />
+            <text x="200" y="53" textAnchor="middle" fill="#FFFFFF" fontSize="6" fontFamily="sans-serif" fontWeight="bold">ITSU</text>
+
+            {/* Buttons */}
+            <circle cx="200" cy="105" r="4" fill={isWhite ? "#F1F5F9" : "#E2E8F0"} stroke={isWhite ? "#94A3B8" : "#334155"} strokeWidth="1" />
+            <circle cx="199" cy="104" r="0.8" fill="#64748B" />
+            <circle cx="201" cy="104" r="0.8" fill="#64748B" />
+            <circle cx="199" cy="106" r="0.8" fill="#64748B" />
+            <circle cx="201" cy="106" r="0.8" fill="#64748B" />
+
+            <circle cx="200" cy="145" r="4" fill={isWhite ? "#F1F5F9" : "#E2E8F0"} stroke={isWhite ? "#94A3B8" : "#334155"} strokeWidth="1" />
+            <circle cx="199" cy="144" r="0.8" fill="#64748B" />
+            <circle cx="201" cy="144" r="0.8" fill="#64748B" />
+            <circle cx="199" cy="146" r="0.8" fill="#64748B" />
+            <circle cx="201" cy="146" r="0.8" fill="#64748B" />
+
+            <circle cx="200" cy="180" r="4" fill={isWhite ? "#F1F5F9" : "#E2E8F0"} stroke={isWhite ? "#94A3B8" : "#334155"} strokeWidth="1" />
+            <circle cx="199" cy="179" r="0.8" fill="#64748B" />
+            <circle cx="201" cy="179" r="0.8" fill="#64748B" />
+            <circle cx="199" cy="181" r="0.8" fill="#64748B" />
+            <circle cx="201" cy="181" r="0.8" fill="#64748B" />
+
+            {/* Embroidered Chest Crest: Department of Computer Science / ITSU */}
+            <g transform="translate(155, 145)">
+              <rect x="-1" y="-1" width="22" height="20" rx="3" fill={isWhite ? "#0F172A" : "#FFFFFF"} opacity="0.9" />
+              <path d="M4 3 L16 3 L16 11 C16 15 10 18 10 18 C10 18 4 15 4 11 Z" fill={isWhite ? "#2563EB" : "#1E3A8A"} />
+              <text x="10" y="10" textAnchor="middle" fill="#FFFFFF" fontSize="5" fontFamily="sans-serif" fontWeight="900">IT</text>
+            </g>
+          </svg>
+        </div>
+      );
+    }
+
+    // ==========================================
     // COMPONENT: Student Portal Flow
     // ==========================================
     function StudentPortal({ settings, onNotify, onOpenTreasurer }) {
@@ -1190,15 +1361,11 @@
                   </div>
                 </div>
 
-                {/* Central Photorealistic Polo Shirt Photo (Unobstructed on all screens) */}
-                <div className="relative z-0 max-w-[280px] sm:max-w-[420px] md:max-w-[540px] w-full mx-auto flex items-center justify-center transition-all duration-500 py-2 sm:py-4">
-                  <img
-                    src={LACOSTE_MOCKUP_IMG}
-                    alt="Official ITSU Lacoste Polo Shirt"
-                    className="w-full h-auto max-h-[300px] sm:max-h-[420px] md:max-h-[500px] object-contain transition-all duration-500 select-none pointer-events-none drop-shadow-md"
-                    style={{
-                      filter: selectedColour === 'White' ? 'grayscale(1) brightness(1.72) contrast(0.96)' : 'none'
-                    }}
+                {/* Central Photorealistic Polo Shirt Studio (Unobstructed on all screens) */}
+                <div className="relative z-0 max-w-[280px] sm:max-w-[420px] md:max-w-[500px] w-full mx-auto flex items-center justify-center transition-all duration-500 py-2 sm:py-4">
+                  <LacostePoloStudio
+                    colour={selectedColour}
+                    className="w-full max-h-[300px] sm:max-h-[420px] md:max-h-[480px]"
                   />
                 </div>
 
@@ -1348,13 +1515,9 @@
                       {/* Item 1: The Selected Lacoste Polo */}
                       <div className="flex items-center gap-4 sm:gap-5">
                         <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-[#F8FAFC] border border-slate-100 flex items-center justify-center p-1.5 flex-shrink-0 overflow-hidden shadow-inner">
-                          <img
-                            src={LACOSTE_MOCKUP_IMG}
-                            alt="Selected Lacoste Polo"
-                            className="w-full h-full object-contain"
-                            style={{
-                              filter: selectedColour === 'White' ? 'grayscale(1) brightness(1.72) contrast(0.96)' : 'none'
-                            }}
+                          <LacostePoloStudio
+                            colour={selectedColour}
+                            className="w-full h-full"
                           />
                         </div>
                         <div className="flex-grow min-w-0">
