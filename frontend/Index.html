@@ -109,11 +109,11 @@
         return; // Running inside live Google Apps Script container
       }
 
-      const DB_KEY = 'itsu_lacoste_portal_db_v7';
+      const DB_KEY = 'itsu_lacoste_portal_db_v8';
 
       function getDb() {
         try {
-          ['itsu_lacoste_portal_db_v1', 'itsu_lacoste_portal_db_v2', 'itsu_lacoste_portal_db_v3', 'itsu_lacoste_portal_db_v4', 'itsu_lacoste_portal_db_v5', 'itsu_lacoste_portal_db_v6'].forEach(k => localStorage.removeItem(k));
+          ['itsu_lacoste_portal_db_v1', 'itsu_lacoste_portal_db_v2', 'itsu_lacoste_portal_db_v3', 'itsu_lacoste_portal_db_v4', 'itsu_lacoste_portal_db_v5', 'itsu_lacoste_portal_db_v6', 'itsu_lacoste_portal_db_v7'].forEach(k => localStorage.removeItem(k));
         } catch (e) {}
         const stored = localStorage.getItem(DB_KEY);
         if (stored) {
@@ -132,7 +132,9 @@
             availableSizes: ['S', 'M', 'L', 'XL', 'XXL', 'XXXL'],
             maxSubmissions: 1
           },
-          students: [],
+          students: [
+            { fullName: 'ANTHONY MACLEAN', indexNumber: '0721000001', paymentStatus: 'PAID', paymentReference: 'PRE-ORDER', dateAdded: '2026-11-09' }
+          ],
           selections: [],
           admin: {
             email: 'anthonymaclean100@gmail.com',
@@ -1955,17 +1957,28 @@
                 </div>
               </div>
 
-              <p className="text-xs text-slate-400 mb-6">
-                Take a screenshot or record your reference code for shirt distribution.
+              <p className="text-xs text-slate-400 mb-5">
+                Save your official collection pass or take a screenshot for shirt distribution.
               </p>
 
-              <button
-                type="button"
-                onClick={handleStartOver}
-                className="w-full bg-[#0A1F44] hover:bg-[#061533] text-white font-medium py-3 px-4 rounded-xl transition text-xs"
-              >
-                Done
-              </button>
+              <div className="space-y-2.5">
+                <button
+                  type="button"
+                  onClick={() => handleDownloadCollectionSlip(submissionResult)}
+                  className="w-full bg-[#103E8C] hover:bg-[#0B2E68] text-white font-semibold py-3 px-4 rounded-xl transition text-xs flex items-center justify-center gap-2 shadow-xs"
+                >
+                  <Icon name="download" className="w-4 h-4" />
+                  <span>Download Collection Slip</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleStartOver}
+                  className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2.5 px-4 rounded-xl transition text-xs"
+                >
+                  Done
+                </button>
+              </div>
             </div>
           </div>
         );
@@ -1975,6 +1988,7 @@
       // 5. STEP: ALREADY SUBMITTED
       // -------------------------------------------------------------
       if (step === 'already_submitted') {
+        const isGivenOut = alreadySubmittedData && (alreadySubmittedData.collectionStatus === 'Collected' || String(alreadySubmittedData.status || '').includes('COLLECTED'));
         return (
           <div className="flex-grow flex items-center justify-center p-4 bg-slate-50">
             <div className="max-w-md w-full bg-white rounded-2xl border border-slate-200/80 shadow-lg p-6 sm:p-8 text-center">
@@ -1990,7 +2004,7 @@
               </p>
 
               {alreadySubmittedData && (
-                <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-left text-xs space-y-2 mb-6">
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-left text-xs space-y-2 mb-5">
                   <div className="flex justify-between py-1 border-b border-slate-200">
                     <span className="text-slate-500">Reference:</span>
                     <span className="font-mono font-bold text-[#103E8C]">{alreadySubmittedData.submissionId}</span>
@@ -2003,23 +2017,44 @@
                     <span className="text-slate-500">Colour:</span>
                     <span className="font-semibold text-slate-900">{alreadySubmittedData.selectedColour}</span>
                   </div>
-                  <div className="flex justify-between py-1">
+                  <div className="flex justify-between py-1 border-b border-slate-200">
                     <span className="text-slate-500">Size:</span>
                     <span className="font-bold text-slate-900">{alreadySubmittedData.selectedSize}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-1">
+                    <span className="text-slate-500">Handout Status:</span>
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                      isGivenOut ? 'bg-emerald-100 text-emerald-800' : 'bg-blue-100 text-blue-800'
+                    }`}>
+                      {isGivenOut ? 'Given Out ✓' : 'Awaiting Distribution'}
+                    </span>
                   </div>
                 </div>
               )}
 
-              <p className="text-xs text-slate-500 mb-6">
+              <p className="text-xs text-slate-500 mb-5">
                 If you need a correction, please contact the ITSU Treasurer directly.
               </p>
 
-              <button
-                onClick={handleStartOver}
-                className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2.5 px-4 rounded-xl transition text-xs"
-              >
-                Return to Verification
-              </button>
+              <div className="space-y-2.5">
+                {alreadySubmittedData && (
+                  <button
+                    type="button"
+                    onClick={() => handleDownloadCollectionSlip(alreadySubmittedData)}
+                    className="w-full bg-[#103E8C] hover:bg-[#0B2E68] text-white font-semibold py-2.5 px-4 rounded-xl transition text-xs flex items-center justify-center gap-2 shadow-xs"
+                  >
+                    <Icon name="download" className="w-4 h-4" />
+                    <span>Download Collection Slip</span>
+                  </button>
+                )}
+
+                <button
+                  onClick={handleStartOver}
+                  className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2.5 px-4 rounded-xl transition text-xs"
+                >
+                  Return to Verification
+                </button>
+              </div>
             </div>
           </div>
         );
@@ -2893,6 +2928,41 @@
         }
       };
 
+      // Remove Student from Register
+      const handleDeleteStudent = async (indexNumber, fullName) => {
+        if (!confirm(`Remove ${fullName} (${indexNumber}) from the pre-order register?`)) return;
+        try {
+          const res = await ApiService.call('deletePaidStudent', session.sessionToken, indexNumber);
+          if (res.success) {
+            onNotify({ message: `Removed ${fullName} from register.`, type: 'info' });
+            loadStudentRecords();
+            loadStats();
+          }
+        } catch (err) {
+          onNotify({ message: err.message || 'Could not remove student.', type: 'error' });
+        }
+      };
+
+      // Copy Pending Students List formatted for Class WhatsApp Group
+      const handleCopyPendingWhatsApp = () => {
+        if (!pendingStudents || pendingStudents.length === 0) {
+          onNotify({ message: 'No pending students to copy.', type: 'info' });
+          return;
+        }
+        const lines = [
+          '*ITSU LACOSTE SELECTION REMINDER*',
+          'The following pre-ordered students have not yet selected their Lacoste *Colour* and *Size* on the portal:',
+          ''
+        ];
+        pendingStudents.forEach((st, i) => {
+          lines.push(`${i + 1}. ${String(st.fullName || '').toUpperCase()} (${st.indexNumber})`);
+        });
+        lines.push('', 'Kindly visit the ITSU Lacoste Portal and submit your preference immediately.');
+        navigator.clipboard.writeText(lines.join('\n'))
+          .then(() => onNotify({ message: `Copied ${pendingStudents.length} pending student(s) for WhatsApp!`, type: 'success' }))
+          .catch(() => onNotify({ message: 'Could not copy to clipboard.', type: 'error' }));
+      };
+
       // Helper to generate file downloads (CSV, Excel XML, Docx, PDF)
       const downloadFile = (filename, content, mimeType) => {
         const blob = new Blob([content], { type: mimeType });
@@ -3739,11 +3809,18 @@
                                         <button
                                           onClick={() => handleResetSubmission(st.indexNumber)}
                                           title="Reset Submission (Allow Resubmission)"
-                                          className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded"
+                                          className="p-1 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded"
                                         >
                                           <Icon name="rotate-ccw" className="w-3.5 h-3.5" />
                                         </button>
                                       )}
+                                      <button
+                                        onClick={() => handleDeleteStudent(st.indexNumber, st.fullName)}
+                                        title="Remove Student from Register"
+                                        className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded"
+                                      >
+                                        <Icon name="trash-2" className="w-3.5 h-3.5" />
+                                      </button>
                                     </div>
                                   </td>
                                 </tr>
@@ -3786,7 +3863,15 @@
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                      <button
+                        onClick={handleCopyPendingWhatsApp}
+                        disabled={pendingStudents.length === 0}
+                        className="flex-1 sm:flex-initial px-3 py-2 bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 text-white font-semibold text-xs rounded-lg transition flex items-center justify-center gap-1.5 shadow-sm"
+                      >
+                        <Icon name="copy" className="w-3.5 h-3.5" />
+                        <span>Copy for WhatsApp</span>
+                      </button>
                       <button
                         onClick={() => setShowAddStudentModal(true)}
                         className="flex-1 sm:flex-initial px-3 py-2 bg-primary-800 hover:bg-primary-900 text-white font-semibold text-xs rounded-lg transition flex items-center justify-center gap-1.5 shadow-sm"
@@ -3799,7 +3884,7 @@
                         className="flex-1 sm:flex-initial px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs rounded-lg transition flex items-center justify-center gap-1.5 shadow-sm"
                       >
                         <Icon name="download" className="w-3.5 h-3.5" />
-                        <span>Export Pending List (Excel)</span>
+                        <span>Export Pending (Excel)</span>
                       </button>
                     </div>
                   </div>
