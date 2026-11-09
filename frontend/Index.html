@@ -109,14 +109,17 @@
         return; // Running inside live Google Apps Script container
       }
 
-      const DB_KEY = 'itsu_lacoste_portal_db_v5';
+      const DB_KEY = 'itsu_lacoste_portal_db_v6';
 
       function getDb() {
+        try {
+          ['itsu_lacoste_portal_db_v1', 'itsu_lacoste_portal_db_v2', 'itsu_lacoste_portal_db_v3', 'itsu_lacoste_portal_db_v4', 'itsu_lacoste_portal_db_v5'].forEach(k => localStorage.removeItem(k));
+        } catch (e) {}
         const stored = localStorage.getItem(DB_KEY);
         if (stored) {
           try {
             const parsed = JSON.parse(stored);
-            if (parsed && parsed.students && parsed.admin) {
+            if (parsed && Array.isArray(parsed.students) && parsed.admin) {
               return parsed;
             }
           } catch (e) {}
@@ -129,29 +132,8 @@
             availableSizes: ['S', 'M', 'L', 'XL', 'XXL', 'XXXL'],
             maxSubmissions: 1
           },
-          students: [
-            { fullName: 'Anthony Maclean', indexNumber: '0721000001', paymentStatus: 'PAID', paymentReference: 'REF-CS-2026-001', dateAdded: '2026-11-01' },
-            { fullName: 'Kofi Mensah', indexNumber: '0721000002', paymentStatus: 'PAID', paymentReference: 'REF-CS-2026-002', dateAdded: '2026-11-01' },
-            { fullName: 'Ama Serwaa', indexNumber: '0721000003', paymentStatus: 'PAID', paymentReference: 'REF-CS-2026-003', dateAdded: '2026-11-01' },
-            { fullName: 'Kwame Owusu', indexNumber: '0721000004', paymentStatus: 'PAID', paymentReference: 'REF-CS-2026-004', dateAdded: '2026-11-01' },
-            { fullName: 'Abena Osei', indexNumber: '0721000005', paymentStatus: 'PAID', paymentReference: 'REF-CS-2026-005', dateAdded: '2026-11-01' },
-            { fullName: 'Yaw Boakye', indexNumber: '0721000006', paymentStatus: 'PAID', paymentReference: 'REF-CS-2026-006', dateAdded: '2026-11-01' },
-            { fullName: 'Akosua Boateng', indexNumber: '0721000007', paymentStatus: 'PAID', paymentReference: 'REF-CS-2026-007', dateAdded: '2026-11-01' },
-            { fullName: 'Emmanuel Frimpong', indexNumber: '0721000008', paymentStatus: 'PAID', paymentReference: 'REF-CS-2026-008', dateAdded: '2026-11-01' },
-            { fullName: 'Priscilla Darko', indexNumber: '0721000009', paymentStatus: 'PAID', paymentReference: 'REF-CS-2026-009', dateAdded: '2026-11-01' },
-            { fullName: 'Samuel Appiah', indexNumber: '0721000010', paymentStatus: 'PAID', paymentReference: 'REF-CS-2026-010', dateAdded: '2026-11-01' },
-            { fullName: 'Grace Addo', indexNumber: '0721000011', paymentStatus: 'PAID', paymentReference: 'REF-CS-2026-011', dateAdded: '2026-11-01' },
-            { fullName: 'Michael Quaye', indexNumber: '0721000012', paymentStatus: 'PAID', paymentReference: 'REF-CS-2026-012', dateAdded: '2026-11-01' },
-            { fullName: 'Eunice Mensah', indexNumber: '0721000013', paymentStatus: 'PAID', paymentReference: 'REF-CS-2026-013', dateAdded: '2026-11-01' },
-            { fullName: 'Josephine Tetteh', indexNumber: '0721000014', paymentStatus: 'PAID', paymentReference: 'REF-CS-2026-014', dateAdded: '2026-11-01' },
-            { fullName: 'Daniel Arthur', indexNumber: '0721000015', paymentStatus: 'PAID', paymentReference: 'REF-CS-2026-015', dateAdded: '2026-11-01' },
-            { fullName: 'Benjamin Cudjoe', indexNumber: '0721000016', paymentStatus: 'UNPAID', paymentReference: 'PENDING', dateAdded: '2026-11-02' },
-            { fullName: 'Sarah Mensah', indexNumber: '0721000017', paymentStatus: 'UNPAID', paymentReference: 'PENDING', dateAdded: '2026-11-02' }
-          ],
-          selections: [
-            { submissionId: 'ITSU-LAC-D4E5F6', fullName: 'Kofi Mensah', indexNumber: '0721000002', selectedColour: 'White', selectedSize: 'XL', submittedAt: '2026-11-02 11:20:00', status: 'CONFIRMED' },
-            { submissionId: 'ITSU-LAC-G7H8I9', fullName: 'Ama Serwaa', indexNumber: '0721000003', selectedColour: 'Blue', selectedSize: 'M', submittedAt: '2026-11-02 12:45:00', status: 'CONFIRMED' }
-          ],
+          students: [],
+          selections: [],
           admin: {
             email: 'anthonymaclean100@gmail.com',
             password: 'ITSU2026',
@@ -189,22 +171,18 @@
             return { verified: false, alreadySubmitted: true, submission: existing, message: 'Your Lacoste selection has already been recorded.' };
           }
 
-          let student = db.students.find(s => s.indexNumber.toUpperCase() === normIdx);
-          if (!student) {
-            // For smooth offline testing, if index is not found in register, automatically register as PAID student:
-            student = {
-              fullName: fullName.trim(),
-              indexNumber: normIdx,
-              paymentStatus: 'PAID',
-              paymentReference: 'REF-' + Math.random().toString(36).substring(2, 8).toUpperCase(),
-              dateAdded: new Date().toISOString().split('T')[0]
-            };
-            db.students.push(student);
-            saveDb(db);
-          }
+          const student = db.students.find(s => {
+            if (String(s.indexNumber || '').trim().toUpperCase() !== normIdx) return false;
+            const sName = String(s.fullName || '').trim().toLowerCase();
+            if (sName === normName) return true;
+            const inputWords = normName.split(/\s+/).filter(w => w.length > 1);
+            const sheetWords = sName.split(/\s+/).filter(w => w.length > 1);
+            const matchCount = inputWords.filter(w => sheetWords.includes(w)).length;
+            return inputWords.length > 0 && matchCount >= Math.min(2, inputWords.length);
+          });
 
-          if (student.paymentStatus !== 'PAID') {
-            return { verified: false, message: "We couldn't verify dues payment for this index number. Please contact the ITSU Treasurer." };
+          if (!student || student.paymentStatus !== 'PAID') {
+            return { verified: false, message: "We couldn't verify your details. Please check your name and index number or contact the ITSU Treasurer." };
           }
 
           return {
