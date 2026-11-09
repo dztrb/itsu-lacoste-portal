@@ -1,0 +1,3000 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>ITSU Lacoste Portal (Local Preview & Simulation)</title>
+  
+  <!-- Inter Google Font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            primary: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              200: '#bfdbfe',
+              300: '#93c5fd',
+              400: '#60a5fa',
+              500: '#3b82f6',
+              600: '#2563eb', // Royal Blue
+              700: '#1d4ed8',
+              800: '#1e40af', // TTU Navy/Blue
+              900: '#1e3a8a',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- React 18 & Babel Standalone -->
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      background-color: #f8fafc;
+      color: #0f172a;
+    }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+  </style>
+
+  <!-- In-Memory Mock Backend Adapter for Local Browser Preview -->
+  <script>
+    (function() {
+      // Local Database Seed for Standalone Preview
+      const DB_KEY = 'itsu_mock_db_v1';
+      function getDb() {
+        const stored = localStorage.getItem(DB_KEY);
+        if (stored) {
+          try { return JSON.parse(stored); } catch (e) {}
+        }
+        const initial = {
+          settings: {
+            portalName: 'ITSU Lacoste Verification & Collection Portal',
+            submissionStatus: 'OPEN',
+            availableColours: ['Blue', 'White'],
+            availableSizes: ['S', 'M', 'L', 'XL', 'XXL', 'XXXL'],
+            maxSubmissions: 1
+          },
+          students: [
+            { fullName: 'Anthony Maclean', indexNumber: '0721000001', paymentStatus: 'PAID', paymentReference: 'REF-CS-2026-001', dateAdded: '2026-11-01' },
+            { fullName: 'Kofi Mensah', indexNumber: '0721000002', paymentStatus: 'PAID', paymentReference: 'REF-CS-2026-002', dateAdded: '2026-11-01' },
+            { fullName: 'Ama Serwaa', indexNumber: '0721000003', paymentStatus: 'PAID', paymentReference: 'REF-CS-2026-003', dateAdded: '2026-11-01' },
+            { fullName: 'Kwame Owusu', indexNumber: '0721000004', paymentStatus: 'PAID', paymentReference: 'REF-CS-2026-004', dateAdded: '2026-11-01' },
+            { fullName: 'Abena Osei', indexNumber: '0721000005', paymentStatus: 'PAID', paymentReference: 'REF-CS-2026-005', dateAdded: '2026-11-01' },
+            { fullName: 'Yaw Boakye', indexNumber: '0721000006', paymentStatus: 'PAID', paymentReference: 'REF-CS-2026-006', dateAdded: '2026-11-01' },
+            { fullName: 'Akosua Boateng', indexNumber: '0721000007', paymentStatus: 'PAID', paymentReference: 'REF-CS-2026-007', dateAdded: '2026-11-01' },
+            { fullName: 'Emmanuel Frimpong', indexNumber: '0721000008', paymentStatus: 'PAID', paymentReference: 'REF-CS-2026-008', dateAdded: '2026-11-01' },
+            { fullName: 'Priscilla Darko', indexNumber: '0721000009', paymentStatus: 'PAID', paymentReference: 'REF-CS-2026-009', dateAdded: '2026-11-01' },
+            { fullName: 'Samuel Appiah', indexNumber: '0721000010', paymentStatus: 'PAID', paymentReference: 'REF-CS-2026-010', dateAdded: '2026-11-01' },
+            { fullName: 'Grace Addo', indexNumber: '0721000011', paymentStatus: 'PAID', paymentReference: 'REF-CS-2026-011', dateAdded: '2026-11-01' },
+            { fullName: 'Michael Quaye', indexNumber: '0721000012', paymentStatus: 'PAID', paymentReference: 'REF-CS-2026-012', dateAdded: '2026-11-01' },
+            { fullName: 'Benjamin Cudjoe', indexNumber: '0721000016', paymentStatus: 'UNPAID', paymentReference: 'PENDING', dateAdded: '2026-11-02' }
+          ],
+          selections: [
+            { submissionId: 'ITSU-LAC-A1B2C3', fullName: 'Anthony Maclean', indexNumber: '0721000001', selectedColour: 'Blue', selectedSize: 'L', submittedAt: '2026-11-02 10:14:00', status: 'CONFIRMED' },
+            { submissionId: 'ITSU-LAC-D4E5F6', fullName: 'Kofi Mensah', indexNumber: '0721000002', selectedColour: 'White', selectedSize: 'XL', submittedAt: '2026-11-02 11:20:00', status: 'CONFIRMED' },
+            { submissionId: 'ITSU-LAC-G7H8I9', fullName: 'Ama Serwaa', indexNumber: '0721000003', selectedColour: 'Blue', selectedSize: 'M', submittedAt: '2026-11-02 12:45:00', status: 'CONFIRMED' }
+          ],
+          admin: {
+            email: 'anthonymaclean100@gmail.com',
+            password: 'ITSU@Treasurer2026!',
+            mustChangePassword: true
+          },
+          auditLogs: [
+            { logId: 'LOG-INIT', timestamp: new Date().toISOString(), user: 'SYSTEM', action: 'SYSTEM_INITIALIZED', details: 'Database initialized', status: 'SUCCESS' }
+          ]
+        };
+        localStorage.setItem(DB_KEY, JSON.stringify(initial));
+        return initial;
+      }
+
+      function saveDb(db) {
+        localStorage.setItem(DB_KEY, JSON.stringify(db));
+      }
+
+      window.MockBackend = {
+        getPortalSettings() {
+          const db = getDb();
+          return db.settings;
+        },
+
+        verifyStudent(fullName, indexNumber) {
+          const db = getDb();
+          const normIdx = String(indexNumber || '').trim().toUpperCase();
+          const normName = String(fullName || '').trim().toLowerCase();
+
+          if (db.settings.submissionStatus !== 'OPEN') {
+            return { verified: false, isClosed: true, message: 'Submissions are currently closed. Please contact the ITSU Treasurer for assistance.' };
+          }
+
+          const existing = db.selections.find(s => s.indexNumber.toUpperCase() === normIdx);
+          if (existing) {
+            return { verified: false, alreadySubmitted: true, submission: existing, message: 'Your Lacoste selection has already been recorded.' };
+          }
+
+          const student = db.students.find(s => s.indexNumber.toUpperCase() === normIdx);
+          if (!student || student.paymentStatus !== 'PAID') {
+            return { verified: false, message: "We couldn't verify your details. Please check your name and index number or contact the ITSU Treasurer." };
+          }
+
+          // Check name contains or matches
+          if (!student.fullName.toLowerCase().includes(normName) && !normName.includes(student.fullName.toLowerCase())) {
+            return { verified: false, message: "We couldn't verify your details. Please check your name and index number or contact the ITSU Treasurer." };
+          }
+
+          return {
+            verified: true,
+            student: { fullName: student.fullName, indexNumber: student.indexNumber },
+            token: btoa(`${student.indexNumber}|${student.fullName}|${Date.now() + 1800000}`),
+            availableColours: db.settings.availableColours,
+            availableSizes: db.settings.availableSizes
+          };
+        },
+
+        submitSelection(token, colour, size) {
+          const db = getDb();
+          let payload;
+          try { payload = atob(token).split('|'); } catch(e) { throw new Error('Invalid token'); }
+          const [indexNumber, fullName] = payload;
+
+          if (db.settings.submissionStatus !== 'OPEN') {
+            throw new Error('Submissions are closed.');
+          }
+
+          const existing = db.selections.find(s => s.indexNumber === indexNumber);
+          if (existing) {
+            throw new Error('Your Lacoste selection has already been recorded.');
+          }
+
+          const subId = 'ITSU-LAC-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+          const submittedAt = new Date().toISOString().replace('T', ' ').substring(0, 19);
+
+          const newSub = {
+            submissionId: subId,
+            fullName: fullName,
+            indexNumber: indexNumber,
+            selectedColour: colour,
+            selectedSize: size,
+            submittedAt: submittedAt,
+            status: 'CONFIRMED'
+          };
+          db.selections.push(newSub);
+          db.auditLogs.unshift({
+            logId: 'LOG-' + Math.random().toString(36).substring(2, 7).toUpperCase(),
+            timestamp: new Date().toISOString(),
+            user: indexNumber,
+            action: 'SUBMISSION_CONFIRMED',
+            details: JSON.stringify({ colour, size, subId }),
+            status: 'SUCCESS'
+          });
+          saveDb(db);
+
+          return {
+            success: true,
+            submissionId: subId,
+            fullName: fullName,
+            indexNumber: indexNumber,
+            selectedColour: colour,
+            selectedSize: size,
+            submittedAt: submittedAt
+          };
+        },
+
+        adminLogin(email, password) {
+          const db = getDb();
+          const normEmail = (email || '').trim().toLowerCase();
+          if (normEmail !== db.admin.email.toLowerCase() || password !== db.admin.password) {
+            throw new Error('Invalid email or password.');
+          }
+          const token = 'MOCK-SESSION-' + Math.random().toString(36).substring(2);
+          db.auditLogs.unshift({
+            logId: 'LOG-' + Math.random().toString(36).substring(2, 7).toUpperCase(),
+            timestamp: new Date().toISOString(),
+            user: normEmail,
+            action: 'LOGIN_SUCCESS',
+            details: 'Treasurer authenticated',
+            status: 'SUCCESS'
+          });
+          saveDb(db);
+          return {
+            success: true,
+            sessionToken: token,
+            email: normEmail,
+            mustChangePassword: db.admin.mustChangePassword
+          };
+        },
+
+        adminLogout(token) {
+          return { success: true };
+        },
+
+        changeAdminPassword(sessionToken, arg2, arg3) {
+          const db = getDb();
+          let currentPassword = arg3 !== undefined ? arg2 : null;
+          let newPassword = arg3 !== undefined ? arg3 : arg2;
+          if (currentPassword && currentPassword !== db.admin.password) {
+            throw new Error('Current password is incorrect.');
+          }
+          db.admin.password = newPassword;
+          db.admin.mustChangePassword = false;
+          db.auditLogs.unshift({
+            logId: 'LOG-PWD',
+            timestamp: new Date().toISOString(),
+            user: db.admin.email,
+            action: 'PASSWORD_CHANGED',
+            details: 'Treasurer password updated',
+            status: 'SUCCESS'
+          });
+          saveDb(db);
+          return { success: true };
+        },
+
+        getDashboardStats(sessionToken) {
+          const db = getDb();
+          const paidStudents = db.students.filter(s => s.paymentStatus === 'PAID');
+          const totalPaid = paidStudents.length;
+          const totalSub = db.selections.length;
+          const pending = Math.max(0, totalPaid - totalSub);
+          const completion = totalPaid > 0 ? Math.round((totalSub / totalPaid) * 100) : 0;
+
+          let blueCount = 0;
+          let whiteCount = 0;
+          const sizeCounts = { S: 0, M: 0, L: 0, XL: 0, XXL: 0, XXXL: 0 };
+          const matrix = {
+            S: { Blue: 0, White: 0, Total: 0 },
+            M: { Blue: 0, White: 0, Total: 0 },
+            L: { Blue: 0, White: 0, Total: 0 },
+            XL: { Blue: 0, White: 0, Total: 0 },
+            XXL: { Blue: 0, White: 0, Total: 0 },
+            XXXL: { Blue: 0, White: 0, Total: 0 }
+          };
+
+          db.selections.forEach(s => {
+            const c = (s.selectedColour || '').toLowerCase();
+            const sz = (s.selectedSize || '').toUpperCase();
+            if (c === 'blue') blueCount++;
+            if (c === 'white') whiteCount++;
+            if (sizeCounts[sz] !== undefined) sizeCounts[sz]++;
+            if (matrix[sz]) {
+              if (c === 'blue') matrix[sz].Blue++;
+              if (c === 'white') matrix[sz].White++;
+              matrix[sz].Total++;
+            }
+          });
+
+          return {
+            overview: {
+              totalPaidStudents: totalPaid,
+              totalSubmissions: totalSub,
+              pendingStudents: pending,
+              completionPercentage: completion,
+              submissionStatus: db.settings.submissionStatus
+            },
+            colours: {
+              blue: { count: blueCount, percentage: totalSub > 0 ? Math.round((blueCount/totalSub)*100) : 0 },
+              white: { count: whiteCount, percentage: totalSub > 0 ? Math.round((whiteCount/totalSub)*100) : 0 }
+            },
+            sizes: sizeCounts,
+            matrix: matrix,
+            recentSubmissions: db.selections.slice(-10).reverse().map(s => ({
+              submissionId: s.submissionId,
+              fullName: s.fullName,
+              indexNumber: s.indexNumber,
+              colour: s.selectedColour,
+              size: s.selectedSize,
+              submittedAt: s.submittedAt
+            }))
+          };
+        },
+
+        getStudentSelections(sessionToken, filters) {
+          const db = getDb();
+          const selMap = new Map();
+          db.selections.forEach(s => selMap.set(s.indexNumber, s));
+
+          let list = db.students.map(st => {
+            const sel = selMap.get(st.indexNumber);
+            return {
+              fullName: st.fullName,
+              indexNumber: st.indexNumber,
+              paymentStatus: st.paymentStatus,
+              paymentReference: st.paymentReference,
+              submissionId: sel ? sel.submissionId : '-',
+              selectedColour: sel ? sel.selectedColour : '-',
+              selectedSize: sel ? sel.selectedSize : '-',
+              submittedAt: sel ? sel.submittedAt : '-',
+              submissionStatus: sel ? 'Submitted' : 'Pending'
+            };
+          });
+
+          if (filters && filters.search) {
+            const q = filters.search.toLowerCase();
+            list = list.filter(r => r.fullName.toLowerCase().includes(q) || r.indexNumber.toLowerCase().includes(q));
+          }
+          if (filters && filters.colour && filters.colour !== 'ALL') {
+            list = list.filter(r => r.selectedColour.toLowerCase() === filters.colour.toLowerCase());
+          }
+          if (filters && filters.size && filters.size !== 'ALL') {
+            list = list.filter(r => r.selectedSize.toUpperCase() === filters.size.toUpperCase());
+          }
+          if (filters && filters.status && filters.status !== 'ALL') {
+            list = list.filter(r => r.submissionStatus.toLowerCase() === filters.status.toLowerCase());
+          }
+          return list;
+        },
+
+        getPendingStudents(sessionToken) {
+          const db = getDb();
+          const subSet = new Set(db.selections.map(s => s.indexNumber));
+          return db.students
+            .filter(st => st.paymentStatus === 'PAID' && !subSet.has(st.indexNumber))
+            .map(st => ({
+              fullName: st.fullName,
+              indexNumber: st.indexNumber,
+              paymentStatus: st.paymentStatus,
+              paymentReference: st.paymentReference,
+              selectionStatus: 'Pending'
+            }));
+        },
+
+        addPaidStudent(sessionToken, studentData) {
+          const db = getDb();
+          const exists = db.students.some(s => s.indexNumber === studentData.indexNumber);
+          if (exists) throw new Error('Student index number already registered.');
+          db.students.push({
+            fullName: studentData.fullName,
+            indexNumber: studentData.indexNumber,
+            paymentStatus: 'PAID',
+            paymentReference: studentData.paymentReference || 'MANUAL-REF',
+            dateAdded: new Date().toISOString().split('T')[0]
+          });
+          saveDb(db);
+          return { success: true };
+        },
+
+        updateStudentSelection(sessionToken, indexNumber, selection) {
+          const db = getDb();
+          let sel = db.selections.find(s => s.indexNumber === indexNumber);
+          if (sel) {
+            sel.selectedColour = selection.colour;
+            sel.selectedSize = selection.size;
+            sel.status = 'CORRECTED';
+          } else {
+            const st = db.students.find(s => s.indexNumber === indexNumber);
+            db.selections.push({
+              submissionId: 'ITSU-LAC-ADM-' + Math.random().toString(36).substring(2, 6).toUpperCase(),
+              fullName: st ? st.fullName : 'Student',
+              indexNumber: indexNumber,
+              selectedColour: selection.colour,
+              selectedSize: selection.size,
+              submittedAt: new Date().toISOString(),
+              status: 'CONFIRMED (Admin)'
+            });
+          }
+          saveDb(db);
+          return { success: true };
+        },
+
+        deleteStudentSelection(sessionToken, indexNumber, reason) {
+          const db = getDb();
+          const idx = db.selections.findIndex(s => s.indexNumber === indexNumber);
+          if (idx !== -1) {
+            db.selections.splice(idx, 1);
+            saveDb(db);
+          }
+          return { success: true };
+        },
+
+        setSubmissionStatus(sessionToken, status) {
+          const db = getDb();
+          db.settings.submissionStatus = status;
+          saveDb(db);
+          return { success: true, submissionStatus: status };
+        },
+
+        getAuditLogs(sessionToken) {
+          const db = getDb();
+          return db.auditLogs;
+        },
+
+        exportReport(sessionToken, reportType, format) {
+          const db = getDb();
+          const sel = db.selections;
+          return {
+            reportType: reportType,
+            title: 'Report: ' + reportType,
+            institution: 'Takoradi Technical University',
+            department: 'Department of Computer Science',
+            union: 'Information Technology Students Union (ITSU)',
+            generatedAt: new Date().toISOString(),
+            generatedBy: db.admin.email,
+            summary: { 'Total Records': sel.length },
+            headers: ['#', 'Submission ID', 'Full Name', 'Index Number', 'Colour', 'Size', 'Date'],
+            rows: sel.map((s, idx) => [idx + 1, s.submissionId, s.fullName, s.indexNumber, s.selectedColour, s.selectedSize, s.submittedAt])
+          };
+        }
+      };
+    })();
+  </script>
+</head>
+<body class="min-h-screen flex flex-col antialiased selection:bg-blue-600 selection:text-white">
+
+  <!-- Local Preview Helper Notice -->
+  <div class="bg-primary-900 text-white text-[11px] py-1 px-4 text-center border-b border-primary-800">
+    💡 <b>Interactive Local Preview Mode</b> • Simulating Google Apps Script backend with local database • 
+    Treasurer Login: <code class="bg-primary-800 px-1 py-0.5 rounded">anthonymaclean100@gmail.com</code> / 
+    Password: <code class="bg-primary-800 px-1 py-0.5 rounded">ITSU@Treasurer2026!</code>
+  </div>
+
+  <div id="root" class="flex-grow flex flex-col"></div>
+
+  <!-- Re-use the exact Index.html script body -->
+  <script type="text/babel">
+    const { useState, useEffect, useMemo, useRef } = React;
+
+    // --- ICONS HELPER ---
+    // Safely render Lucide icon SVG via DOM helper
+    function Icon({ name, className = "w-5 h-5", size = 20 }) {
+      const spanRef = useRef(null);
+      useEffect(() => {
+        if (window.lucide && spanRef.current) {
+          spanRef.current.innerHTML = `<i data-lucide="${name}" class="${className}"></i>`;
+          window.lucide.createIcons({
+            attrs: { class: className },
+            nameAttr: 'data-lucide',
+            root: spanRef.current
+          });
+        }
+      }, [name, className]);
+      return <span ref={spanRef} className="inline-flex items-center justify-center align-middle" />;
+    }
+
+    // --- API SERVICE (Google Apps Script / Mock Bridge) ---
+    const ApiService = {
+      isAppsScript: typeof google !== 'undefined' && google.script && google.script.run,
+
+      call(funcName, ...args) {
+        return new Promise((resolve, reject) => {
+          if (this.isAppsScript) {
+            google.script.run
+              .withSuccessHandler(res => resolve(res))
+              .withFailureHandler(err => reject(err instanceof Error ? err : new Error(err.message || String(err))))
+              [funcName](...args);
+          } else {
+            // Local simulation adapter for standalone preview
+            if (window.MockBackend && typeof window.MockBackend[funcName] === 'function') {
+              setTimeout(() => {
+                try {
+                  const res = window.MockBackend[funcName](...args);
+                  resolve(res);
+                } catch (e) {
+                  reject(e);
+                }
+              }, 300); // 300ms realistic network latency
+            } else {
+              reject(new Error(`Function ${funcName} not found.`));
+            }
+          }
+        });
+      }
+    };
+
+    // --- LOCAL STORAGE PERSISTENCE FOR SESSION ---
+    const SESSION_STORAGE_KEY = 'itsu_treasurer_session';
+
+    // ==========================================
+    // COMPONENT: Toast Notifications
+    // ==========================================
+    function Toast({ toast, onClose }) {
+      if (!toast) return null;
+      const isError = toast.type === 'error';
+      const isSuccess = toast.type === 'success';
+
+      return (
+        <div className={`fixed bottom-5 right-5 z-50 flex items-center gap-3 px-4 py-3 rounded-lg shadow-lg border text-sm transition-all duration-300 ${
+          isError 
+            ? 'bg-red-50 border-red-200 text-red-800' 
+            : isSuccess 
+              ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
+              : 'bg-slate-900 border-slate-800 text-white'
+        }`}>
+          <Icon name={isError ? "alert-circle" : isSuccess ? "check-circle-2" : "info"} className="w-5 h-5 flex-shrink-0" />
+          <span className="font-medium">{toast.message}</span>
+          <button onClick={onClose} className="ml-2 text-slate-400 hover:text-slate-600 focus:outline-none">
+            <Icon name="x" className="w-4 h-4" />
+          </button>
+        </div>
+      );
+    }
+
+    // ==========================================
+    // COMPONENT: Header / Brand Banner
+    // ==========================================
+    function AppHeader({ onOpenTreasurer, onOpenPortal, activeView, submissionStatus }) {
+      return (
+        <header className="bg-white border-b border-slate-200 sticky top-0 z-30">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between h-16">
+              
+              {/* Institution & Portal Title */}
+              <div className="flex items-center gap-3 cursor-pointer" onClick={onOpenPortal}>
+                <div className="w-10 h-10 rounded-lg bg-primary-800 text-white flex items-center justify-center font-bold text-lg shadow-sm">
+                  <span>IT</span>
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-primary-800 bg-primary-50 px-2 py-0.5 rounded border border-primary-200">
+                      TTU • Computer Science
+                    </span>
+                    {submissionStatus && (
+                      <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wide flex items-center gap-1 ${
+                        submissionStatus === 'OPEN' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
+                      }`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${submissionStatus === 'OPEN' ? 'bg-emerald-600' : 'bg-rose-600'}`}></span>
+                        Submissions {submissionStatus}
+                      </span>
+                    )}
+                  </div>
+                  <h1 className="text-sm sm:text-base font-bold text-slate-900 leading-tight">
+                    ITSU Lacoste Collection Portal
+                  </h1>
+                </div>
+              </div>
+
+              {/* Navigation Actions */}
+              <div className="flex items-center gap-2">
+                {activeView === 'treasurer' ? (
+                  <button
+                    onClick={onOpenPortal}
+                    className="flex items-center gap-1.5 text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 px-3 py-2 rounded-md transition"
+                  >
+                    <Icon name="external-link" className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">Student Portal</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={onOpenTreasurer}
+                    className="flex items-center gap-1.5 text-xs font-medium text-primary-800 hover:text-primary-900 bg-primary-50 hover:bg-primary-100 border border-primary-200 px-3 py-2 rounded-md transition"
+                  >
+                    <Icon name="shield-check" className="w-3.5 h-3.5" />
+                    <span>Treasurer Portal</span>
+                  </button>
+                )}
+              </div>
+
+            </div>
+          </div>
+        </header>
+      );
+    }
+
+    // ==========================================
+    // COMPONENT: Student Portal Flow
+    // ==========================================
+    function StudentPortal({ settings, onNotify }) {
+      const [step, setStep] = useState('welcome'); // 'welcome' | 'verify' | 'select' | 'review' | 'confirmed'
+      const [fullName, setFullName] = useState('');
+      const [indexNumber, setIndexNumber] = useState('');
+      const [isLoading, setIsLoading] = useState(false);
+      const [errorMessage, setErrorMessage] = useState('');
+      
+      const [verifiedStudent, setVerifiedStudent] = useState(null);
+      const [studentToken, setStudentToken] = useState('');
+      const [selectedColour, setSelectedColour] = useState('');
+      const [selectedSize, setSelectedSize] = useState('');
+      const [submissionResult, setSubmissionResult] = useState(null);
+      const [alreadySubmittedData, setAlreadySubmittedData] = useState(null);
+
+      // Handle Verification
+      const handleVerify = async (e) => {
+        e.preventDefault();
+        setErrorMessage('');
+        
+        if (!fullName.trim() || !indexNumber.trim()) {
+          setErrorMessage('Please enter both your full name and index number.');
+          return;
+        }
+
+        setIsLoading(true);
+        try {
+          const res = await ApiService.call('verifyStudent', fullName.trim(), indexNumber.trim());
+          if (res.verified) {
+            setVerifiedStudent(res.student);
+            setStudentToken(res.token);
+            setStep('select');
+          } else if (res.alreadySubmitted) {
+            setAlreadySubmittedData(res.submission);
+            setStep('already_submitted');
+          } else {
+            setErrorMessage(res.message || "We couldn't verify your details. Please check your name and index number or contact the ITSU Treasurer.");
+          }
+        } catch (err) {
+          setErrorMessage(err.message || "An unexpected error occurred. Please try again.");
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      // Handle Submission
+      const handleSubmit = async () => {
+        if (!selectedColour || !selectedSize) {
+          onNotify({ message: 'Please select both a colour and size.', type: 'error' });
+          return;
+        }
+
+        setIsLoading(true);
+        try {
+          const res = await ApiService.call('submitSelection', studentToken, selectedColour, selectedSize);
+          if (res.success) {
+            setSubmissionResult(res);
+            setStep('confirmed');
+            onNotify({ message: 'Lacoste selection submitted successfully!', type: 'success' });
+          } else {
+            onNotify({ message: res.message || 'Submission failed.', type: 'error' });
+          }
+        } catch (err) {
+          onNotify({ message: err.message || 'Error saving your selection.', type: 'error' });
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      // Reset
+      const handleStartOver = () => {
+        setStep('welcome');
+        setFullName('');
+        setIndexNumber('');
+        setVerifiedStudent(null);
+        setStudentToken('');
+        setSelectedColour('');
+        setSelectedSize('');
+        setSubmissionResult(null);
+        setErrorMessage('');
+      };
+
+      // ------------------------------------------
+      // 1. WELCOME SCREEN
+      // ------------------------------------------
+      if (step === 'welcome') {
+        return (
+          <div className="flex-grow flex items-center justify-center p-4">
+            <div className="max-w-md w-full bg-white rounded-xl border border-slate-200 shadow-sm p-6 sm:p-8 text-center">
+              
+              <div className="w-16 h-16 bg-primary-50 border border-primary-100 rounded-2xl flex items-center justify-center mx-auto mb-5 text-primary-800">
+                <Icon name="shirt" className="w-8 h-8" />
+              </div>
+
+              <span className="text-xs font-semibold uppercase tracking-wider text-primary-800 bg-primary-50 px-3 py-1 rounded-full border border-primary-200">
+                Official Selection Portal
+              </span>
+
+              <h2 className="text-2xl font-bold text-slate-900 mt-3 mb-2">
+                ITSU LACOSTE COLLECTION
+              </h2>
+
+              <p className="text-slate-600 text-sm leading-relaxed mb-6">
+                Welcome to the official ITSU Lacoste selection portal. Verify your student details to select your preferred Lacoste colour and size.
+              </p>
+
+              {settings && settings.submissionStatus === 'CLOSED' ? (
+                <div className="bg-rose-50 border border-rose-200 rounded-lg p-4 text-left mb-6">
+                  <div className="flex gap-3">
+                    <Icon name="alert-triangle" className="w-5 h-5 text-rose-600 flex-shrink-0" />
+                    <div>
+                      <h4 className="text-sm font-semibold text-rose-900">Submissions Closed</h4>
+                      <p className="text-xs text-rose-700 mt-0.5">
+                        Submissions are currently closed. Please contact the ITSU Treasurer for assistance.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setStep('verify')}
+                  className="w-full bg-primary-800 hover:bg-primary-900 text-white font-semibold py-3.5 px-6 rounded-lg shadow-sm transition flex items-center justify-center gap-2 group"
+                >
+                  <span>CONTINUE</span>
+                  <Icon name="arrow-right" className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                </button>
+              )}
+
+              <div className="mt-8 pt-6 border-t border-slate-100 flex items-center justify-center gap-4 text-xs text-slate-400">
+                <span>• Department of Computer Science</span>
+                <span>• Takoradi Technical University</span>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      // ------------------------------------------
+      // 2. VERIFICATION SCREEN
+      // ------------------------------------------
+      if (step === 'verify') {
+        return (
+          <div className="flex-grow flex items-center justify-center p-4">
+            <div className="max-w-md w-full bg-white rounded-xl border border-slate-200 shadow-sm p-6 sm:p-8">
+              
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h2 className="text-xl font-bold text-slate-900">Student Verification</h2>
+                  <p className="text-xs text-slate-500 mt-0.5">Enter your full name and student index number</p>
+                </div>
+                <button onClick={() => setStep('welcome')} className="text-slate-400 hover:text-slate-600">
+                  <Icon name="arrow-left" className="w-5 h-5" />
+                </button>
+              </div>
+
+              {errorMessage && (
+                <div className="bg-rose-50 border border-rose-200 rounded-lg p-3.5 mb-5 flex items-start gap-3 text-rose-900 text-xs sm:text-sm">
+                  <Icon name="alert-circle" className="w-5 h-5 text-rose-600 flex-shrink-0 mt-0.5" />
+                  <div>{errorMessage}</div>
+                </div>
+              )}
+
+              <form onSubmit={handleVerify} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                    Full Name (As registered)
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Anthony Maclean"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                    Index Number
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. 0721000001"
+                    value={indexNumber}
+                    onChange={(e) => setIndexNumber(e.target.value)}
+                    className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm uppercase font-mono"
+                  />
+                </div>
+
+                <div className="pt-2">
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="w-full bg-primary-800 hover:bg-primary-900 disabled:bg-slate-300 text-white font-semibold py-3 px-4 rounded-lg shadow-sm transition flex items-center justify-center gap-2"
+                  >
+                    {isLoading ? (
+                      <>
+                        <Icon name="loader-2" className="w-4 h-4 animate-spin" />
+                        <span>Verifying Eligibility...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Verify & Continue</span>
+                        <Icon name="arrow-right" className="w-4 h-4" />
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+
+              <div className="mt-6 pt-5 border-t border-slate-100 text-center">
+                <p className="text-xs text-slate-500">
+                  Only paid members on the departmental register can submit.
+                </p>
+              </div>
+
+            </div>
+          </div>
+        );
+      }
+
+      // ------------------------------------------
+      // ALREADY SUBMITTED NOTICE
+      // ------------------------------------------
+      if (step === 'already_submitted') {
+        return (
+          <div className="flex-grow flex items-center justify-center p-4">
+            <div className="max-w-md w-full bg-white rounded-xl border border-slate-200 shadow-sm p-6 sm:p-8 text-center">
+              
+              <div className="w-14 h-14 bg-amber-50 border border-amber-200 rounded-full flex items-center justify-center mx-auto mb-4 text-amber-600">
+                <Icon name="check-check" className="w-7 h-7" />
+              </div>
+
+              <h3 className="text-xl font-bold text-slate-900 mb-2">Already Submitted</h3>
+              <p className="text-slate-600 text-sm mb-6">
+                Your Lacoste selection has already been recorded in the register.
+              </p>
+
+              {alreadySubmittedData && (
+                <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 text-left text-xs space-y-2 mb-6">
+                  <div className="flex justify-between py-1 border-b border-slate-200">
+                    <span className="text-slate-500">Student Name:</span>
+                    <span className="font-semibold text-slate-900">{alreadySubmittedData.fullName}</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-slate-200">
+                    <span className="text-slate-500">Index Number:</span>
+                    <span className="font-mono font-semibold text-slate-900">{alreadySubmittedData.indexNumber}</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-slate-200">
+                    <span className="text-slate-500">Selected Colour:</span>
+                    <span className="font-semibold text-slate-900">{alreadySubmittedData.selectedColour}</span>
+                  </div>
+                  <div className="flex justify-between py-1 border-b border-slate-200">
+                    <span className="text-slate-500">Selected Size:</span>
+                    <span className="font-semibold text-slate-900">{alreadySubmittedData.selectedSize}</span>
+                  </div>
+                  <div className="flex justify-between py-1">
+                    <span className="text-slate-500">Reference:</span>
+                    <span className="font-mono text-primary-800 font-bold">{alreadySubmittedData.submissionId}</span>
+                  </div>
+                </div>
+              )}
+
+              <p className="text-xs text-slate-500 mb-6">
+                If you need to make a correction, please contact the ITSU Treasurer directly with your payment reference.
+              </p>
+
+              <button
+                onClick={handleStartOver}
+                className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2.5 px-4 rounded-lg transition text-sm"
+              >
+                Return to Home
+              </button>
+            </div>
+          </div>
+        );
+      }
+
+      // ------------------------------------------
+      // 3. SELECTION SCREEN (Colour & Size)
+      // ------------------------------------------
+      if (step === 'select') {
+        const availableColours = ['Blue', 'White'];
+        const availableSizes = ['S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
+
+        return (
+          <div className="flex-grow flex items-center justify-center p-4">
+            <div className="max-w-xl w-full bg-white rounded-xl border border-slate-200 shadow-sm p-6 sm:p-8">
+              
+              {/* Verified Student Header */}
+              <div className="bg-primary-50 border border-primary-100 rounded-lg p-3.5 mb-6 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-primary-800 text-white flex items-center justify-center text-xs font-bold">
+                    ✓
+                  </div>
+                  <div>
+                    <h3 className="text-xs font-semibold uppercase tracking-wider text-primary-900">
+                      {verifiedStudent.fullName}
+                    </h3>
+                    <p className="text-xs text-primary-700 font-mono">
+                      Index: {verifiedStudent.indexNumber} • <span className="font-semibold text-emerald-700">Verified Paid</span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                {/* Colour Selection */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                      1. Select Lacoste Colour <span className="text-rose-500">*</span>
+                    </label>
+                    <span className="text-xs text-slate-500">Choose 1 colour</span>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    {/* Blue Option */}
+                    <button
+                      type="button"
+                      onClick={() => setSelectedColour('Blue')}
+                      className={`relative p-4 rounded-xl border-2 text-left transition flex flex-col items-center justify-center gap-2 ${
+                        selectedColour === 'Blue'
+                          ? 'border-primary-800 bg-primary-50/50 shadow-sm'
+                          : 'border-slate-200 hover:border-slate-300 bg-white'
+                      }`}
+                    >
+                      <div className="w-12 h-12 rounded-full bg-blue-700 border-2 border-white shadow flex items-center justify-center text-white font-bold">
+                        {selectedColour === 'Blue' && <Icon name="check" className="w-6 h-6 stroke-[3]" />}
+                      </div>
+                      <div className="text-center">
+                        <span className="font-bold text-slate-900 text-sm block">Royal Blue</span>
+                        <span className="text-[11px] text-slate-500">ITSU Official Blue</span>
+                      </div>
+                    </button>
+
+                    {/* White Option */}
+                    <button
+                      type="button"
+                      onClick={() => setSelectedColour('White')}
+                      className={`relative p-4 rounded-xl border-2 text-left transition flex flex-col items-center justify-center gap-2 ${
+                        selectedColour === 'White'
+                          ? 'border-primary-800 bg-primary-50/50 shadow-sm'
+                          : 'border-slate-200 hover:border-slate-300 bg-white'
+                      }`}
+                    >
+                      <div className="w-12 h-12 rounded-full bg-white border-2 border-slate-300 shadow flex items-center justify-center text-primary-800 font-bold">
+                        {selectedColour === 'White' && <Icon name="check" className="w-6 h-6 stroke-[3]" />}
+                      </div>
+                      <div className="text-center">
+                        <span className="font-bold text-slate-900 text-sm block">Classic White</span>
+                        <span className="text-[11px] text-slate-500">ITSU Official White</span>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Size Selection */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                      2. Select Lacoste Size <span className="text-rose-500">*</span>
+                    </label>
+                    <span className="text-xs text-slate-500">Standard unisex sizing</span>
+                  </div>
+
+                  <div className="grid grid-cols-3 sm:grid-cols-6 gap-2.5">
+                    {availableSizes.map(sz => (
+                      <button
+                        key={sz}
+                        type="button"
+                        onClick={() => setSelectedSize(sz)}
+                        className={`py-3 px-2 rounded-lg border text-center transition font-semibold text-sm ${
+                          selectedSize === sz
+                            ? 'border-primary-800 bg-primary-800 text-white shadow-sm'
+                            : 'border-slate-200 hover:border-slate-300 bg-white text-slate-800'
+                        }`}
+                      >
+                        {sz}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Action Button */}
+                <div className="pt-4 border-t border-slate-100 flex items-center justify-between gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setStep('verify')}
+                    className="px-4 py-2.5 text-xs font-semibold text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-lg transition"
+                  >
+                    Back
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={!selectedColour || !selectedSize}
+                    onClick={() => setStep('review')}
+                    className="flex-1 bg-primary-800 hover:bg-primary-900 disabled:bg-slate-200 disabled:text-slate-400 text-white font-semibold py-2.5 px-4 rounded-lg shadow-sm transition flex items-center justify-center gap-2 text-sm"
+                  >
+                    <span>Review Selection</span>
+                    <Icon name="arrow-right" className="w-4 h-4" />
+                  </button>
+                </div>
+
+              </div>
+
+            </div>
+          </div>
+        );
+      }
+
+      // ------------------------------------------
+      // 4. REVIEW SCREEN
+      // ------------------------------------------
+      if (step === 'review') {
+        return (
+          <div className="flex-grow flex items-center justify-center p-4">
+            <div className="max-w-md w-full bg-white rounded-xl border border-slate-200 shadow-sm p-6 sm:p-8">
+              
+              <h2 className="text-xl font-bold text-slate-900 mb-1">Confirm Your Selection</h2>
+              <p className="text-xs text-slate-500 mb-5">Please double-check your choices before submitting.</p>
+
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 space-y-4 mb-6">
+                <div>
+                  <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">Student Name</span>
+                  <span className="text-sm font-bold text-slate-900">{verifiedStudent.fullName}</span>
+                </div>
+
+                <div>
+                  <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">Index Number</span>
+                  <span className="text-sm font-mono font-bold text-slate-900">{verifiedStudent.indexNumber}</span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 pt-3 border-t border-slate-200">
+                  <div>
+                    <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">Selected Colour</span>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className={`w-3.5 h-3.5 rounded-full border ${selectedColour === 'Blue' ? 'bg-blue-600' : 'bg-white border-slate-400'}`}></span>
+                      <span className="text-sm font-bold text-slate-900">{selectedColour}</span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">Selected Size</span>
+                    <span className="inline-block mt-1 px-2.5 py-0.5 rounded bg-slate-200 text-slate-900 font-bold text-sm">
+                      {selectedSize}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-800 mb-6 flex items-start gap-2">
+                <Icon name="info" className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                <span>You can only submit your selection once. Any subsequent changes require direct Treasurer intervention.</span>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setStep('select')}
+                  disabled={isLoading}
+                  className="px-4 py-3 text-xs font-semibold text-slate-700 bg-slate-100 hover:bg-slate-200 rounded-lg transition"
+                >
+                  Go Back
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleSubmit}
+                  disabled={isLoading}
+                  className="flex-1 bg-primary-800 hover:bg-primary-900 disabled:bg-slate-300 text-white font-semibold py-3 px-4 rounded-lg shadow-sm transition flex items-center justify-center gap-2 text-sm"
+                >
+                  {isLoading ? (
+                    <>
+                      <Icon name="loader-2" className="w-4 h-4 animate-spin" />
+                      <span>Recording Selection...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Confirm & Submit</span>
+                      <Icon name="check" className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
+              </div>
+
+            </div>
+          </div>
+        );
+      }
+
+      // ------------------------------------------
+      // 5. CONFIRMATION SCREEN
+      // ------------------------------------------
+      if (step === 'confirmed' && submissionResult) {
+        return (
+          <div className="flex-grow flex items-center justify-center p-4">
+            <div className="max-w-md w-full bg-white rounded-xl border border-slate-200 shadow-sm p-6 sm:p-8 text-center">
+              
+              <div className="w-16 h-16 bg-emerald-50 border border-emerald-200 rounded-full flex items-center justify-center mx-auto mb-4 text-emerald-600">
+                <Icon name="check-circle-2" className="w-10 h-10" />
+              </div>
+
+              <h2 className="text-xl font-bold text-slate-900 mb-1">Submission Successful!</h2>
+              <p className="text-xs text-slate-500 mb-6">
+                Your Lacoste selection has been submitted successfully.
+              </p>
+
+              <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 text-left text-xs space-y-3 mb-6">
+                <div className="flex justify-between items-center py-1 border-b border-slate-200">
+                  <span className="text-slate-500">Submission Reference:</span>
+                  <span className="font-mono font-bold text-primary-800 bg-primary-50 px-2 py-0.5 rounded border border-primary-200">
+                    {submissionResult.submissionId}
+                  </span>
+                </div>
+                <div className="flex justify-between py-1 border-b border-slate-200">
+                  <span className="text-slate-500">Student Name:</span>
+                  <span className="font-semibold text-slate-900">{submissionResult.fullName}</span>
+                </div>
+                <div className="flex justify-between py-1 border-b border-slate-200">
+                  <span className="text-slate-500">Index Number:</span>
+                  <span className="font-mono font-semibold text-slate-900">{submissionResult.indexNumber}</span>
+                </div>
+                <div className="flex justify-between py-1 border-b border-slate-200">
+                  <span className="text-slate-500">Selected Colour:</span>
+                  <span className="font-semibold text-slate-900">{submissionResult.selectedColour}</span>
+                </div>
+                <div className="flex justify-between py-1">
+                  <span className="text-slate-500">Selected Size:</span>
+                  <span className="font-bold text-slate-900">{submissionResult.selectedSize}</span>
+                </div>
+              </div>
+
+              <p className="text-xs text-slate-500 leading-relaxed mb-6">
+                Please take a screenshot of this page or note down your reference code. Present this during distribution.
+              </p>
+
+              <button
+                type="button"
+                onClick={handleStartOver}
+                className="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold py-2.5 px-4 rounded-lg transition text-xs"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        );
+      }
+
+      return null;
+    }
+
+    // ==========================================
+    // COMPONENT: Treasurer Login Modal
+    // ==========================================
+    function TreasurerLoginModal({ isOpen, onClose, onLoginSuccess, onNotify }) {
+      const [email, setEmail] = useState('anthonymaclean100@gmail.com');
+      const [password, setPassword] = useState('');
+      const [isLoading, setIsLoading] = useState(false);
+      const [error, setError] = useState('');
+
+      if (!isOpen) return null;
+
+      const handleLogin = async (e) => {
+        e.preventDefault();
+        setError('');
+        setIsLoading(true);
+
+        try {
+          const res = await ApiService.call('adminLogin', email.trim(), password);
+          if (res.success) {
+            onLoginSuccess(res);
+            onClose();
+          } else {
+            setError(res.message || 'Login failed.');
+          }
+        } catch (err) {
+          setError(err.message || 'Authentication error.');
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      return (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-2xl max-w-md w-full p-6 sm:p-8 relative">
+            <button
+              onClick={onClose}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"
+            >
+              <Icon name="x" className="w-5 h-5" />
+            </button>
+
+            <div className="text-center mb-6">
+              <div className="w-12 h-12 rounded-xl bg-primary-800 text-white flex items-center justify-center mx-auto mb-3 shadow">
+                <Icon name="lock" className="w-6 h-6" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900">Treasurer Authentication</h3>
+              <p className="text-xs text-slate-500 mt-1">
+                Department of Computer Science • Administrative Access
+              </p>
+            </div>
+
+            {error && (
+              <div className="bg-rose-50 border border-rose-200 rounded-lg p-3 mb-4 text-xs text-rose-800 flex items-start gap-2">
+                <Icon name="alert-circle" className="w-4 h-4 text-rose-600 flex-shrink-0 mt-0.5" />
+                <span>{error}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                  Authorized Email
+                </label>
+                <input
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  required
+                  placeholder="••••••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
+                />
+              </div>
+
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full bg-primary-800 hover:bg-primary-900 disabled:bg-slate-300 text-white font-semibold py-2.5 px-4 rounded-lg shadow-sm transition flex items-center justify-center gap-2 text-sm"
+                >
+                  {isLoading ? (
+                    <>
+                      <Icon name="loader-2" className="w-4 h-4 animate-spin" />
+                      <span>Authenticating...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Icon name="shield-check" className="w-4 h-4" />
+                      <span>Sign In to Dashboard</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+
+            <div className="mt-6 pt-4 border-t border-slate-100 text-center">
+              <span className="text-[11px] text-slate-400">
+                Protected administrative gateway. Unauthorized attempts are logged.
+              </span>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ==========================================
+    // COMPONENT: Password Change Modal (First Login or Manual)
+    // ==========================================
+    function ChangePasswordModal({ isOpen, onClose, sessionToken, isForced, onPasswordChanged, onNotify }) {
+      const [currentPassword, setCurrentPassword] = useState('');
+      const [newPassword, setNewPassword] = useState('');
+      const [confirmPassword, setConfirmPassword] = useState('');
+      const [isLoading, setIsLoading] = useState(false);
+      const [error, setError] = useState('');
+
+      if (!isOpen) return null;
+
+      const handleSubmit = async (e) => {
+        e.preventDefault();
+        setError('');
+
+        if (newPassword.length < 8) {
+          setError('New password must be at least 8 characters long.');
+          return;
+        }
+
+        if (newPassword !== confirmPassword) {
+          setError('New password and confirmation do not match.');
+          return;
+        }
+
+        setIsLoading(true);
+        try {
+          const res = await ApiService.call('changeAdminPassword', sessionToken, currentPassword, newPassword);
+          if (res.success) {
+            onNotify({ message: 'Password updated successfully!', type: 'success' });
+            onPasswordChanged();
+            onClose();
+          } else {
+            setError(res.message || 'Failed to update password.');
+          }
+        } catch (err) {
+          setError(err.message || 'Password update failed.');
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      return (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-2xl max-w-md w-full p-6 relative">
+            {!isForced && (
+              <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+                <Icon name="x" className="w-5 h-5" />
+              </button>
+            )}
+
+            <div className="mb-4">
+              <h3 className="text-base font-bold text-slate-900">
+                {isForced ? 'Password Change Required' : 'Change Administrator Password'}
+              </h3>
+              <p className="text-xs text-slate-500 mt-0.5">
+                {isForced 
+                  ? 'First-time login detected. You must set a new secure password before proceeding.'
+                  : 'Enter your current password and choose a new secure password.'
+                }
+              </p>
+            </div>
+
+            {error && (
+              <div className="bg-rose-50 border border-rose-200 rounded-lg p-2.5 mb-4 text-xs text-rose-800">
+                {error}
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-3">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Current Password</label>
+                <input
+                  type="password"
+                  required
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-primary-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">New Password (Min 8 chars)</label>
+                <input
+                  type="password"
+                  required
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-primary-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Confirm New Password</label>
+                <input
+                  type="password"
+                  required
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-primary-500 focus:outline-none"
+                />
+              </div>
+
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full bg-primary-800 hover:bg-primary-900 text-white font-semibold py-2.5 px-4 rounded-lg transition text-xs flex items-center justify-center gap-2"
+                >
+                  {isLoading ? 'Updating...' : 'Save New Password'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      );
+    }
+
+    // ==========================================
+    // COMPONENT: Add Paid Student Modal
+    // ==========================================
+    function AddStudentModal({ isOpen, onClose, sessionToken, onStudentAdded, onNotify }) {
+      const [fullName, setFullName] = useState('');
+      const [indexNumber, setIndexNumber] = useState('');
+      const [paymentRef, setPaymentRef] = useState('');
+      const [isLoading, setIsLoading] = useState(false);
+      const [error, setError] = useState('');
+
+      if (!isOpen) return null;
+
+      const handleAdd = async (e) => {
+        e.preventDefault();
+        setError('');
+        setIsLoading(true);
+
+        try {
+          const res = await ApiService.call('addPaidStudent', sessionToken, {
+            fullName: fullName.trim(),
+            indexNumber: indexNumber.trim(),
+            paymentStatus: 'PAID',
+            paymentReference: paymentRef.trim() || undefined
+          });
+
+          if (res.success) {
+            onNotify({ message: 'Student added to register successfully!', type: 'success' });
+            onStudentAdded();
+            onClose();
+          } else {
+            setError(res.message || 'Failed to add student.');
+          }
+        } catch (err) {
+          setError(err.message || 'Failed to add student.');
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      return (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-2xl max-w-md w-full p-6 relative">
+            <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+              <Icon name="x" className="w-5 h-5" />
+            </button>
+
+            <h3 className="text-base font-bold text-slate-900 mb-1">Add Paid Student</h3>
+            <p className="text-xs text-slate-500 mb-4">Register a verified paid student for Lacoste collection.</p>
+
+            {error && (
+              <div className="bg-rose-50 border border-rose-200 rounded-lg p-2.5 mb-4 text-xs text-rose-800">
+                {error}
+              </div>
+            )}
+
+            <form onSubmit={handleAdd} className="space-y-3">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Full Name</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Kwabena Mensah"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-primary-500 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Index Number</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. 0721000099"
+                  value={indexNumber}
+                  onChange={(e) => setIndexNumber(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-primary-500 focus:outline-none uppercase font-mono"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Payment Reference (Receipt / Bank / MoMo)</label>
+                <input
+                  type="text"
+                  placeholder="e.g. REC-2026-99"
+                  value={paymentRef}
+                  onChange={(e) => setPaymentRef(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-primary-500 focus:outline-none"
+                />
+              </div>
+
+              <div className="pt-2 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="px-3 py-2 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="px-4 py-2 text-xs font-semibold text-white bg-primary-800 hover:bg-primary-900 rounded-lg flex items-center gap-1.5"
+                >
+                  {isLoading ? 'Adding...' : 'Add Student'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      );
+    }
+
+    // ==========================================
+    // COMPONENT: Correct Selection Modal
+    // ==========================================
+    function CorrectSelectionModal({ isOpen, onClose, student, sessionToken, onSelectionUpdated, onNotify }) {
+      const [colour, setColour] = useState('Blue');
+      const [size, setSize] = useState('L');
+      const [reason, setReason] = useState('');
+      const [isLoading, setIsLoading] = useState(false);
+      const [error, setError] = useState('');
+
+      useEffect(() => {
+        if (student) {
+          if (student.selectedColour && student.selectedColour !== '-') setColour(student.selectedColour);
+          if (student.selectedSize && student.selectedSize !== '-') setSize(student.selectedSize);
+        }
+      }, [student]);
+
+      if (!isOpen || !student) return null;
+
+      const handleUpdate = async (e) => {
+        e.preventDefault();
+        setError('');
+        setIsLoading(true);
+
+        try {
+          const res = await ApiService.call('updateStudentSelection', sessionToken, student.indexNumber, {
+            colour: colour,
+            size: size,
+            reason: reason || 'Treasurer Manual Correction'
+          });
+
+          if (res.success) {
+            onNotify({ message: 'Selection updated successfully!', type: 'success' });
+            onSelectionUpdated();
+            onClose();
+          } else {
+            setError(res.message || 'Failed to update selection.');
+          }
+        } catch (err) {
+          setError(err.message || 'Failed to update selection.');
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      return (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-2xl max-w-md w-full p-6 relative">
+            <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600">
+              <Icon name="x" className="w-5 h-5" />
+            </button>
+
+            <h3 className="text-base font-bold text-slate-900 mb-1">Correct Student Selection</h3>
+            <p className="text-xs text-slate-500 mb-3">
+              Editing for: <span className="font-semibold text-slate-800">{student.fullName}</span> ({student.indexNumber})
+            </p>
+
+            {error && (
+              <div className="bg-rose-50 border border-rose-200 rounded-lg p-2.5 mb-3 text-xs text-rose-800">
+                {error}
+              </div>
+            )}
+
+            <form onSubmit={handleUpdate} className="space-y-3">
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Colour</label>
+                <select
+                  value={colour}
+                  onChange={(e) => setColour(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-primary-500 focus:outline-none"
+                >
+                  <option value="Blue">Blue</option>
+                  <option value="White">White</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Size</label>
+                <select
+                  value={size}
+                  onChange={(e) => setSize(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-primary-500 focus:outline-none"
+                >
+                  <option value="S">S</option>
+                  <option value="M">M</option>
+                  <option value="L">L</option>
+                  <option value="XL">XL</option>
+                  <option value="XXL">XXL</option>
+                  <option value="XXXL">XXXL</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-700 mb-1">Reason for Change (Audit Log)</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Student requested size change due to fit"
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-primary-500 focus:outline-none"
+                />
+              </div>
+
+              <div className="pt-2 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="px-3 py-2 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="px-4 py-2 text-xs font-semibold text-white bg-primary-800 hover:bg-primary-900 rounded-lg flex items-center gap-1.5"
+                >
+                  {isLoading ? 'Updating...' : 'Save Correction'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      );
+    }
+
+    // ==========================================
+    // COMPONENT: Treasurer Dashboard
+    // ==========================================
+    function TreasurerDashboard({ session, onLogout, onNotify }) {
+      const [activeTab, setActiveTab] = useState('overview'); // overview, students, selections, pending, analytics, reports, settings, audit
+      const [sidebarOpen, setSidebarOpen] = useState(false);
+      
+      const [stats, setStats] = useState(null);
+      const [studentRecords, setStudentRecords] = useState([]);
+      const [pendingStudents, setPendingStudents] = useState([]);
+      const [auditLogs, setAuditLogs] = useState([]);
+      const [portalSettings, setPortalSettings] = useState(null);
+      
+      const [isLoading, setIsLoading] = useState(false);
+      const [isStatsLoading, setIsStatsLoading] = useState(false);
+
+      // Filters
+      const [searchQuery, setSearchQuery] = useState('');
+      const [filterColour, setFilterColour] = useState('ALL');
+      const [filterSize, setFilterSize] = useState('ALL');
+      const [filterStatus, setFilterStatus] = useState('ALL');
+
+      // Modals
+      const [showAddStudentModal, setShowAddStudentModal] = useState(false);
+      const [correctModalStudent, setCorrectModalStudent] = useState(null);
+      const [showPasswordChangeModal, setShowPasswordChangeModal] = useState(session && session.mustChangePassword);
+
+      // Fetch Dashboard Stats
+      const loadStats = async () => {
+        setIsStatsLoading(true);
+        try {
+          const res = await ApiService.call('getDashboardStats', session.sessionToken);
+          setStats(res);
+        } catch (err) {
+          onNotify({ message: 'Error loading dashboard statistics: ' + err.message, type: 'error' });
+        } finally {
+          setIsStatsLoading(false);
+        }
+      };
+
+      // Fetch Student Records
+      const loadStudentRecords = async () => {
+        setIsLoading(true);
+        try {
+          const res = await ApiService.call('getStudentSelections', session.sessionToken, {
+            search: searchQuery,
+            colour: filterColour,
+            size: filterSize,
+            status: filterStatus
+          });
+          setStudentRecords(res);
+        } catch (err) {
+          onNotify({ message: 'Error loading student records: ' + err.message, type: 'error' });
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      // Fetch Pending Students
+      const loadPendingStudents = async () => {
+        setIsLoading(true);
+        try {
+          const res = await ApiService.call('getPendingStudents', session.sessionToken);
+          setPendingStudents(res);
+        } catch (err) {
+          onNotify({ message: 'Error loading pending students: ' + err.message, type: 'error' });
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      // Fetch Audit Logs
+      const loadAuditLogs = async () => {
+        setIsLoading(true);
+        try {
+          const res = await ApiService.call('getAuditLogs', session.sessionToken);
+          setAuditLogs(res);
+        } catch (err) {
+          onNotify({ message: 'Error loading audit logs: ' + err.message, type: 'error' });
+        } finally {
+          setIsLoading(false);
+        }
+      };
+
+      // Fetch Settings
+      const loadSettings = async () => {
+        try {
+          const res = await ApiService.call('getPortalSettings');
+          setPortalSettings(res);
+        } catch (err) {
+          console.error(err);
+        }
+      };
+
+      // Initial Data Loading
+      useEffect(() => {
+        loadStats();
+        loadSettings();
+      }, []);
+
+      // Tab switch effect
+      useEffect(() => {
+        if (activeTab === 'students' || activeTab === 'selections') {
+          loadStudentRecords();
+        } else if (activeTab === 'pending') {
+          loadPendingStudents();
+        } else if (activeTab === 'audit') {
+          loadAuditLogs();
+        } else if (activeTab === 'overview' || activeTab === 'analytics') {
+          loadStats();
+        }
+      }, [activeTab]);
+
+      // Toggle Submissions Open / Closed
+      const handleToggleSubmissions = async () => {
+        const newStatus = (stats?.overview?.submissionStatus === 'OPEN') ? 'CLOSED' : 'OPEN';
+        try {
+          const res = await ApiService.call('setSubmissionStatus', session.sessionToken, newStatus);
+          if (res.success) {
+            onNotify({ message: `Submissions are now ${newStatus}!`, type: 'success' });
+            loadStats();
+            loadSettings();
+          }
+        } catch (err) {
+          onNotify({ message: 'Failed to update submission status: ' + err.message, type: 'error' });
+        }
+      };
+
+      // Reset / Delete Submission
+      const handleResetSubmission = async (indexNumber) => {
+        if (!confirm(`Are you sure you want to reset the submission for student ${indexNumber}? They will be able to submit again.`)) return;
+
+        try {
+          const res = await ApiService.call('deleteStudentSelection', session.sessionToken, indexNumber, 'Treasurer Reset Action');
+          if (res.success) {
+            onNotify({ message: 'Submission reset successfully.', type: 'success' });
+            loadStudentRecords();
+            loadStats();
+          }
+        } catch (err) {
+          onNotify({ message: 'Failed to reset submission: ' + err.message, type: 'error' });
+        }
+      };
+
+      // Helper to generate file downloads (CSV, Excel XML, Docx, PDF)
+      const downloadFile = (filename, content, mimeType) => {
+        const blob = new Blob([content], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      };
+
+      // Export Report Action
+      const handleExportReport = async (reportType, format) => {
+        try {
+          onNotify({ message: `Generating ${format.toUpperCase()} report...`, type: 'info' });
+          const rep = await ApiService.call('exportReport', session.sessionToken, reportType, format);
+
+          const safeTitle = rep.title.replace(/[^a-zA-Z0-9_-]/g, '_');
+          const dateSlug = new Date().toISOString().split('T')[0];
+
+          if (format === 'csv') {
+            // Build CSV string with UTF-8 BOM
+            let csvStr = '\uFEFF';
+            csvStr += `"${rep.institution}"\r\n`;
+            csvStr += `"${rep.department} - ${rep.union}"\r\n`;
+            csvStr += `"${rep.title}"\r\n`;
+            csvStr += `"Generated: ${rep.generatedAt}"\r\n\r\n`;
+            csvStr += rep.headers.map(h => `"${h}"`).join(',') + '\r\n';
+            rep.rows.forEach(r => {
+              csvStr += r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',') + '\r\n';
+            });
+            downloadFile(`${safeTitle}_${dateSlug}.csv`, csvStr, 'text/csv;charset=utf-8;');
+            onNotify({ message: 'CSV report downloaded!', type: 'success' });
+
+          } else if (format === 'xlsx') {
+            // Build Excel XML spreadsheet (Opens cleanly in Microsoft Excel)
+            let xml = `<?xml version="1.0"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">
+ <Styles>
+  <Style ss:ID="Header">
+   <Font ss:Bold="1" ss:Color="#FFFFFF" ss:FontName="Calibri" ss:Size="11"/>
+   <Interior ss:Color="#1E3A8A" ss:Pattern="Solid"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#000000"/>
+   </Borders>
+  </Style>
+  <Style ss:ID="Title">
+   <Font ss:Bold="1" ss:Size="14" ss:Color="#0F172A" ss:FontName="Calibri"/>
+  </Style>
+  <Style ss:ID="SubTitle">
+   <Font ss:Italic="1" ss:Size="10" ss:Color="#64748B" ss:FontName="Calibri"/>
+  </Style>
+  <Style ss:ID="Cell">
+   <Font ss:FontName="Calibri" ss:Size="11"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#E2E8F0"/>
+   </Borders>
+  </Style>
+ </Styles>
+ <Worksheet ss:Name="Report">
+  <Table>
+   <Row><Cell ss:StyleID="Title"><Data ss:Type="String">${rep.institution} - ${rep.department}</Data></Cell></Row>
+   <Row><Cell ss:StyleID="Title"><Data ss:Type="String">${rep.title}</Data></Cell></Row>
+   <Row><Cell ss:StyleID="SubTitle"><Data ss:Type="String">Generated: ${rep.generatedAt} | By: ${rep.generatedBy}</Data></Cell></Row>
+   <Row></Row>
+   <Row>
+    ${rep.headers.map(h => `<Cell ss:StyleID="Header"><Data ss:Type="String">${h}</Data></Cell>`).join('')}
+   </Row>
+   ${rep.rows.map(row => `
+    <Row>
+      ${row.map(cell => `<Cell ss:StyleID="Cell"><Data ss:Type="String">${String(cell)}</Data></Cell>`).join('')}
+    </Row>
+   `).join('')}
+  </Table>
+ </Worksheet>
+</Workbook>`;
+            downloadFile(`${safeTitle}_${dateSlug}.xlsx`, xml, 'application/vnd.ms-excel');
+            onNotify({ message: 'Excel workbook downloaded!', type: 'success' });
+
+          } else if (format === 'docx') {
+            // Build Microsoft Word HTML formatted document
+            const docContent = `
+<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+<head><title>${rep.title}</title>
+<style>
+  body { font-family: Arial, sans-serif; font-size: 11pt; color: #1e293b; }
+  h1 { font-size: 16pt; color: #1e3a8a; margin-bottom: 2px; }
+  h2 { font-size: 13pt; color: #0f172a; margin-top: 0; }
+  .meta { font-size: 9pt; color: #64748b; margin-bottom: 20px; }
+  table { border-collapse: collapse; width: 100%; margin-top: 15px; }
+  th { background-color: #1e3a8a; color: white; border: 1px solid #1e3a8a; padding: 6px 10px; text-align: left; font-size: 10pt; }
+  td { border: 1px solid #cbd5e1; padding: 6px 10px; font-size: 10pt; }
+  tr:nth-child(even) { background-color: #f8fafc; }
+  .summary-box { background: #f1f5f9; border: 1px solid #cbd5e1; padding: 10px; margin-bottom: 15px; }
+</style>
+</head>
+<body>
+  <h1>${rep.institution}</h1>
+  <h2>${rep.department} • ${rep.union}</h2>
+  <h3>${rep.title}</h3>
+  <div class="meta">Generated: ${rep.generatedAt} | Authorized Treasurer: ${rep.generatedBy}</div>
+  
+  <div class="summary-box">
+    <strong>Executive Summary:</strong><br/>
+    ${Object.entries(rep.summary || {}).map(([k, v]) => `• <b>${k}:</b> ${v}<br/>`).join('')}
+  </div>
+
+  <table>
+    <thead>
+      <tr>${rep.headers.map(h => `<th>${h}</th>`).join('')}</tr>
+    </thead>
+    <tbody>
+      ${rep.rows.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`).join('')}
+    </tbody>
+  </table>
+</body>
+</html>`;
+            downloadFile(`${safeTitle}_${dateSlug}.docx`, docContent, 'application/vnd.ms-word');
+            onNotify({ message: 'Word document downloaded!', type: 'success' });
+
+          } else if (format === 'pdf') {
+            // Create a clean printable popup / view that triggers instant PDF printing
+            const printWin = window.open('', '_blank');
+            printWin.document.write(`
+              <html>
+              <head>
+                <title>${rep.title} - ITSU</title>
+                <style>
+                  body { font-family: 'Inter', Arial, sans-serif; padding: 30px; color: #0f172a; }
+                  .header { border-bottom: 2px solid #1e3a8a; padding-bottom: 15px; margin-bottom: 20px; }
+                  h1 { margin: 0; font-size: 20px; color: #1e3a8a; text-transform: uppercase; }
+                  h2 { margin: 4px 0 0; font-size: 14px; font-weight: 500; color: #475569; }
+                  .rep-title { font-size: 16px; font-weight: bold; margin-top: 15px; color: #0f172a; }
+                  .meta { font-size: 11px; color: #64748b; margin-top: 4px; }
+                  table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 11px; }
+                  th { background: #1e3a8a; color: white; text-align: left; padding: 8px 10px; font-weight: 600; }
+                  td { padding: 8px 10px; border-bottom: 1px solid #e2e8f0; }
+                  tr:nth-child(even) td { background-color: #f8fafc; }
+                  .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 15px; }
+                  .summary-card { background: #f1f5f9; padding: 10px; border-radius: 4px; border-left: 3px solid #1e3a8a; }
+                  .summary-card span { font-size: 10px; color: #64748b; text-transform: uppercase; display: block; }
+                  .summary-card strong { font-size: 13px; color: #0f172a; }
+                  @media print {
+                    @page { margin: 15mm; size: auto; }
+                    body { padding: 0; }
+                  }
+                </style>
+              </head>
+              <body>
+                <div class="header">
+                  <h1>${rep.institution}</h1>
+                  <h2>${rep.department} • ${rep.union}</h2>
+                  <div class="rep-title">${rep.title}</div>
+                  <div class="meta">Report Generated: ${rep.generatedAt} | Authorized Treasurer: ${rep.generatedBy}</div>
+                </div>
+
+                <div class="summary-grid">
+                  ${Object.entries(rep.summary || {}).map(([k, v]) => `
+                    <div class="summary-card">
+                      <span>${k}</span>
+                      <strong>${v}</strong>
+                    </div>
+                  `).join('')}
+                </div>
+
+                <table>
+                  <thead>
+                    <tr>${rep.headers.map(h => `<th>${h}</th>`).join('')}</tr>
+                  </thead>
+                  <tbody>
+                    ${rep.rows.map(r => `<tr>${r.map(c => `<td>${c}</td>`).join('')}</tr>`).join('')}
+                  </tbody>
+                </table>
+                <script>
+                  window.onload = function() {
+                    window.print();
+                  };
+                <\/script>
+              </body>
+              </html>
+            `);
+            printWin.document.close();
+            onNotify({ message: 'Print preview opened. Select "Save as PDF" to save.', type: 'info' });
+          }
+
+        } catch (err) {
+          onNotify({ message: 'Report export failed: ' + err.message, type: 'error' });
+        }
+      };
+
+      return (
+        <div className="flex-grow flex flex-col md:flex-row min-h-[calc(100vh-4rem)] bg-slate-50">
+          
+          {/* =========================================
+              SIDEBAR (Desktop & Collapsible Mobile)
+             ========================================= */}
+          <aside className={`
+            fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-slate-200 flex flex-col transition-transform duration-200 ease-in-out md:static md:translate-x-0
+            ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+          `}>
+            {/* Header info */}
+            <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+              <div>
+                <span className="text-[10px] font-bold text-primary-800 uppercase tracking-wider block">Admin Panel</span>
+                <h3 className="text-sm font-bold text-slate-900">ITSU Management</h3>
+              </div>
+              <button onClick={() => setSidebarOpen(false)} className="md:hidden text-slate-400 hover:text-slate-600">
+                <Icon name="x" className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Nav Links */}
+            <nav className="flex-grow p-3 space-y-1 overflow-y-auto">
+              {[
+                { id: 'overview', label: 'Overview', icon: 'layout-dashboard' },
+                { id: 'students', label: 'Student Records', icon: 'users' },
+                { id: 'selections', label: 'Lacoste Selections', icon: 'shirt' },
+                { id: 'pending', label: 'Pending Students', icon: 'clock', badge: stats?.overview?.pendingStudents },
+                { id: 'analytics', label: 'Analytics', icon: 'pie-chart' },
+                { id: 'reports', label: 'Reports & Exports', icon: 'file-text' },
+                { id: 'settings', label: 'Settings', icon: 'settings' },
+                { id: 'audit', label: 'Audit Logs', icon: 'shield-alert' },
+              ].map(item => (
+                <button
+                  key={item.id}
+                  onClick={() => { setActiveTab(item.id); setSidebarOpen(false); }}
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold transition ${
+                    activeTab === item.id
+                      ? 'bg-primary-50 text-primary-900 border border-primary-200'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Icon name={item.icon} className={`w-4 h-4 ${activeTab === item.id ? 'text-primary-800' : 'text-slate-400'}`} />
+                    <span>{item.label}</span>
+                  </div>
+                  {item.badge !== undefined && item.badge > 0 && (
+                    <span className="bg-amber-100 text-amber-800 text-[10px] px-2 py-0.5 rounded-full font-bold">
+                      {item.badge}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </nav>
+
+            {/* Profile Footer */}
+            <div className="p-3 border-t border-slate-100 bg-slate-50/50">
+              <div className="flex items-center gap-3 px-2 py-1.5 mb-2">
+                <div className="w-8 h-8 rounded-full bg-primary-800 text-white flex items-center justify-center font-bold text-xs">
+                  TM
+                </div>
+                <div className="overflow-hidden">
+                  <div className="text-xs font-bold text-slate-900 truncate">Anthony Maclean</div>
+                  <div className="text-[10px] text-slate-500 truncate">{session.email}</div>
+                </div>
+              </div>
+
+              <div className="flex gap-1.5">
+                <button
+                  onClick={() => setShowPasswordChangeModal(true)}
+                  title="Change Password"
+                  className="flex-1 text-[11px] font-medium text-slate-600 hover:text-slate-900 bg-white border border-slate-200 py-1.5 rounded text-center transition"
+                >
+                  Password
+                </button>
+                <button
+                  onClick={onLogout}
+                  title="Sign Out"
+                  className="px-2.5 text-[11px] font-medium text-rose-700 hover:text-rose-800 bg-rose-50 border border-rose-200 py-1.5 rounded transition flex items-center justify-center gap-1"
+                >
+                  <Icon name="log-out" className="w-3.5 h-3.5" />
+                  <span>Logout</span>
+                </button>
+              </div>
+            </div>
+          </aside>
+
+          {/* Backdrop for mobile sidebar */}
+          {sidebarOpen && (
+            <div onClick={() => setSidebarOpen(false)} className="fixed inset-0 z-30 bg-slate-900/40 md:hidden" />
+          )}
+
+          {/* =========================================
+              MAIN CONTENT AREA
+             ========================================= */}
+          <main className="flex-1 flex flex-col overflow-y-auto">
+            
+            {/* Top Toolbar */}
+            <div className="bg-white border-b border-slate-200 px-4 sm:px-6 py-3 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setSidebarOpen(true)}
+                  className="md:hidden text-slate-500 hover:text-slate-700"
+                >
+                  <Icon name="menu" className="w-5 h-5" />
+                </button>
+                <div>
+                  <h2 className="text-base sm:text-lg font-bold text-slate-900 capitalize">
+                    {activeTab.replace('_', ' ')}
+                  </h2>
+                  <span className="text-[11px] text-slate-500">Takoradi Technical University ITSU Portal</span>
+                </div>
+              </div>
+
+              {/* Status and Action Buttons */}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handleToggleSubmissions}
+                  className={`text-xs font-semibold px-3 py-1.5 rounded-lg border transition flex items-center gap-1.5 ${
+                    stats?.overview?.submissionStatus === 'OPEN'
+                      ? 'bg-emerald-50 text-emerald-800 border-emerald-200 hover:bg-emerald-100'
+                      : 'bg-rose-50 text-rose-800 border-rose-200 hover:bg-rose-100'
+                  }`}
+                >
+                  <span className={`w-2 h-2 rounded-full ${stats?.overview?.submissionStatus === 'OPEN' ? 'bg-emerald-600' : 'bg-rose-600'}`}></span>
+                  <span>Submissions: {stats?.overview?.submissionStatus || 'OPEN'}</span>
+                  <span className="text-[10px] underline ml-1">Toggle</span>
+                </button>
+
+                <button
+                  onClick={() => { loadStats(); if (activeTab === 'students') loadStudentRecords(); }}
+                  disabled={isStatsLoading}
+                  className="p-1.5 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-lg border border-slate-200 transition"
+                  title="Refresh Live Data"
+                >
+                  <Icon name="rotate-cw" className={`w-4 h-4 ${isStatsLoading ? 'animate-spin' : ''}`} />
+                </button>
+              </div>
+            </div>
+
+            {/* TAB CONTENTS */}
+            <div className="p-4 sm:p-6 space-y-6">
+
+              {/* ------------------------------------
+                  1. OVERVIEW TAB
+                 ------------------------------------ */}
+              {activeTab === 'overview' && (
+                <div className="space-y-6">
+                  
+                  {/* Metric Cards */}
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div className="bg-white p-4 sm:p-5 rounded-xl border border-slate-200 shadow-sm">
+                      <div className="flex items-center justify-between text-slate-400 mb-2">
+                        <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">Total Paid</span>
+                        <Icon name="check-circle" className="w-5 h-5 text-emerald-600" />
+                      </div>
+                      <div className="text-2xl sm:text-3xl font-extrabold text-slate-900">
+                        {stats?.overview?.totalPaidStudents ?? 0}
+                      </div>
+                      <span className="text-[11px] text-slate-400 mt-1 block">Eligible students on register</span>
+                    </div>
+
+                    <div className="bg-white p-4 sm:p-5 rounded-xl border border-slate-200 shadow-sm">
+                      <div className="flex items-center justify-between text-slate-400 mb-2">
+                        <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">Submitted</span>
+                        <Icon name="shirt" className="w-5 h-5 text-primary-600" />
+                      </div>
+                      <div className="text-2xl sm:text-3xl font-extrabold text-primary-900">
+                        {stats?.overview?.totalSubmissions ?? 0}
+                      </div>
+                      <span className="text-[11px] text-slate-400 mt-1 block">Confirmed selections</span>
+                    </div>
+
+                    <div className="bg-white p-4 sm:p-5 rounded-xl border border-slate-200 shadow-sm">
+                      <div className="flex items-center justify-between text-slate-400 mb-2">
+                        <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">Pending</span>
+                        <Icon name="clock" className="w-5 h-5 text-amber-500" />
+                      </div>
+                      <div className="text-2xl sm:text-3xl font-extrabold text-amber-600">
+                        {stats?.overview?.pendingStudents ?? 0}
+                      </div>
+                      <span className="text-[11px] text-slate-400 mt-1 block">Yet to select Lacoste</span>
+                    </div>
+
+                    <div className="bg-white p-4 sm:p-5 rounded-xl border border-slate-200 shadow-sm">
+                      <div className="flex items-center justify-between text-slate-400 mb-2">
+                        <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">Completion</span>
+                        <Icon name="percent" className="w-5 h-5 text-primary-700" />
+                      </div>
+                      <div className="text-2xl sm:text-3xl font-extrabold text-slate-900">
+                        {stats?.overview?.completionPercentage ?? 0}%
+                      </div>
+                      <div className="w-full bg-slate-100 rounded-full h-1.5 mt-2 overflow-hidden">
+                        <div 
+                          className="bg-primary-800 h-1.5 rounded-full transition-all duration-500" 
+                          style={{ width: `${stats?.overview?.completionPercentage || 0}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Colour Preferences Live Comparison */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    
+                    {/* Blue Summary Card */}
+                    <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-blue-700 text-white flex items-center justify-center shadow">
+                          <Icon name="shirt" className="w-6 h-6" />
+                        </div>
+                        <div>
+                          <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Blue Lacoste</span>
+                          <div className="text-2xl font-bold text-slate-900 mt-0.5">
+                            {stats?.colours?.blue?.count ?? 0} <span className="text-xs font-normal text-slate-500">units</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-lg font-bold text-blue-700">
+                          {stats?.colours?.blue?.percentage ?? 0}%
+                        </span>
+                        <span className="text-[11px] text-slate-400 block">of selections</span>
+                      </div>
+                    </div>
+
+                    {/* White Summary Card */}
+                    <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-white border-2 border-slate-300 text-slate-700 flex items-center justify-center shadow">
+                          <Icon name="shirt" className="w-6 h-6" />
+                        </div>
+                        <div>
+                          <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">White Lacoste</span>
+                          <div className="text-2xl font-bold text-slate-900 mt-0.5">
+                            {stats?.colours?.white?.count ?? 0} <span className="text-xs font-normal text-slate-500">units</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-lg font-bold text-slate-800">
+                          {stats?.colours?.white?.percentage ?? 0}%
+                        </span>
+                        <span className="text-[11px] text-slate-400 block">of selections</span>
+                      </div>
+                    </div>
+
+                  </div>
+
+                  {/* Size Matrix Table */}
+                  <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between">
+                      <div>
+                        <h3 className="text-sm font-bold text-slate-900">Colour by Size Breakdown</h3>
+                        <p className="text-xs text-slate-500 mt-0.5">Real-time inventory requirements for ordering</p>
+                      </div>
+                      <button
+                        onClick={() => handleExportReport('COLOUR_SIZE_BREAKDOWN', 'xlsx')}
+                        className="text-xs font-medium text-primary-800 hover:text-primary-900 bg-primary-50 px-3 py-1.5 rounded-lg border border-primary-200 flex items-center gap-1.5"
+                      >
+                        <Icon name="download" className="w-3.5 h-3.5" />
+                        <span>Export Matrix</span>
+                      </button>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left border-collapse text-xs sm:text-sm">
+                        <thead>
+                          <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[11px]">
+                            <th className="py-3 px-4">Size</th>
+                            <th className="py-3 px-4 text-center">Blue (Royal)</th>
+                            <th className="py-3 px-4 text-center">White</th>
+                            <th className="py-3 px-4 text-right">Total Units</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 font-medium">
+                          {['S', 'M', 'L', 'XL', 'XXL', 'XXXL'].map(sz => {
+                            const row = stats?.matrix?.[sz] || { Blue: 0, White: 0, Total: 0 };
+                            return (
+                              <tr key={sz} className="hover:bg-slate-50/50 transition">
+                                <td className="py-3 px-4 font-bold text-slate-900">{sz}</td>
+                                <td className="py-3 px-4 text-center text-blue-700 font-semibold">{row.Blue}</td>
+                                <td className="py-3 px-4 text-center text-slate-700 font-semibold">{row.White}</td>
+                                <td className="py-3 px-4 text-right font-bold text-slate-900">{row.Total}</td>
+                              </tr>
+                            );
+                          })}
+                          {/* Totals Row */}
+                          <tr className="bg-slate-100/80 font-bold border-t-2 border-slate-300 text-slate-900">
+                            <td className="py-3 px-4 uppercase tracking-wider text-xs">Grand Total</td>
+                            <td className="py-3 px-4 text-center text-blue-800">{stats?.colours?.blue?.count || 0}</td>
+                            <td className="py-3 px-4 text-center text-slate-800">{stats?.colours?.white?.count || 0}</td>
+                            <td className="py-3 px-4 text-right text-base text-primary-900">{stats?.overview?.totalSubmissions || 0}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* Recent 10 Submissions */}
+                  <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between">
+                      <h3 className="text-sm font-bold text-slate-900">Recent Submissions</h3>
+                      <button
+                        onClick={() => setActiveTab('selections')}
+                        className="text-xs text-primary-800 hover:text-primary-900 font-medium"
+                      >
+                        View all selections →
+                      </button>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left border-collapse text-xs">
+                        <thead>
+                          <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[10px]">
+                            <th className="py-2.5 px-4">Ref Code</th>
+                            <th className="py-2.5 px-4">Student</th>
+                            <th className="py-2.5 px-4">Index</th>
+                            <th className="py-2.5 px-4">Colour</th>
+                            <th className="py-2.5 px-4">Size</th>
+                            <th className="py-2.5 px-4 text-right">Submitted At</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {stats?.recentSubmissions?.length > 0 ? (
+                            stats.recentSubmissions.map((sub, idx) => (
+                              <tr key={idx} className="hover:bg-slate-50/50">
+                                <td className="py-2.5 px-4 font-mono font-semibold text-primary-800">{sub.submissionId}</td>
+                                <td className="py-2.5 px-4 font-medium text-slate-900">{sub.fullName}</td>
+                                <td className="py-2.5 px-4 font-mono text-slate-500">{sub.indexNumber}</td>
+                                <td className="py-2.5 px-4">
+                                  <span className={`inline-flex items-center gap-1 font-semibold ${sub.colour === 'Blue' ? 'text-blue-700' : 'text-slate-800'}`}>
+                                    <span className={`w-2 h-2 rounded-full ${sub.colour === 'Blue' ? 'bg-blue-600' : 'bg-slate-400'}`}></span>
+                                    {sub.colour}
+                                  </span>
+                                </td>
+                                <td className="py-2.5 px-4 font-bold text-slate-800">{sub.size}</td>
+                                <td className="py-2.5 px-4 text-right text-slate-400">{sub.submittedAt}</td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td colSpan="6" className="py-6 text-center text-slate-400">No submissions recorded yet.</td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                </div>
+              )}
+
+              {/* ------------------------------------
+                  2. STUDENT RECORDS TAB
+                 ------------------------------------ */}
+              {(activeTab === 'students' || activeTab === 'selections') && (
+                <div className="space-y-4">
+                  
+                  {/* Search and Filters Bar */}
+                  <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col md:flex-row gap-3 items-stretch md:items-center justify-between">
+                    
+                    {/* Search Input */}
+                    <div className="relative flex-1">
+                      <Icon name="search" className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                      <input
+                        type="text"
+                        placeholder="Search by student name or index number..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === 'Enter') loadStudentRecords(); }}
+                        className="w-full pl-9 pr-3 py-2 rounded-lg border border-slate-200 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-primary-500"
+                      />
+                    </div>
+
+                    {/* Filter Selects */}
+                    <div className="flex flex-wrap items-center gap-2">
+                      <select
+                        value={filterColour}
+                        onChange={(e) => { setFilterColour(e.target.value); }}
+                        className="px-3 py-2 rounded-lg border border-slate-200 text-xs focus:ring-2 focus:ring-primary-500 bg-white"
+                      >
+                        <option value="ALL">All Colours</option>
+                        <option value="Blue">Blue</option>
+                        <option value="White">White</option>
+                      </select>
+
+                      <select
+                        value={filterSize}
+                        onChange={(e) => { setFilterSize(e.target.value); }}
+                        className="px-3 py-2 rounded-lg border border-slate-200 text-xs focus:ring-2 focus:ring-primary-500 bg-white"
+                      >
+                        <option value="ALL">All Sizes</option>
+                        <option value="S">S</option>
+                        <option value="M">M</option>
+                        <option value="L">L</option>
+                        <option value="XL">XL</option>
+                        <option value="XXL">XXL</option>
+                        <option value="XXXL">XXXL</option>
+                      </select>
+
+                      <select
+                        value={filterStatus}
+                        onChange={(e) => { setFilterStatus(e.target.value); }}
+                        className="px-3 py-2 rounded-lg border border-slate-200 text-xs focus:ring-2 focus:ring-primary-500 bg-white"
+                      >
+                        <option value="ALL">All Status</option>
+                        <option value="Submitted">Submitted</option>
+                        <option value="Pending">Pending</option>
+                      </select>
+
+                      <button
+                        onClick={loadStudentRecords}
+                        className="px-3 py-2 rounded-lg bg-slate-900 text-white font-semibold text-xs hover:bg-slate-800 transition"
+                      >
+                        Filter
+                      </button>
+
+                      <button
+                        onClick={() => setShowAddStudentModal(true)}
+                        className="px-3 py-2 rounded-lg bg-primary-800 text-white font-semibold text-xs hover:bg-primary-900 transition flex items-center gap-1.5 ml-auto"
+                      >
+                        <Icon name="user-plus" className="w-3.5 h-3.5" />
+                        <span>Add Student</span>
+                      </button>
+                    </div>
+
+                  </div>
+
+                  {/* Student Records Table */}
+                  <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left border-collapse text-xs">
+                        <thead>
+                          <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[10px]">
+                            <th className="py-3 px-4">#</th>
+                            <th className="py-3 px-4">Full Name</th>
+                            <th className="py-3 px-4">Index Number</th>
+                            <th className="py-3 px-4">Payment</th>
+                            <th className="py-3 px-4">Colour</th>
+                            <th className="py-3 px-4">Size</th>
+                            <th className="py-3 px-4">Status</th>
+                            <th className="py-3 px-4 text-right">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {studentRecords.length > 0 ? (
+                            studentRecords.map((st, idx) => (
+                              <tr key={idx} className="hover:bg-slate-50/50 transition">
+                                <td className="py-2.5 px-4 text-slate-400">{idx + 1}</td>
+                                <td className="py-2.5 px-4 font-semibold text-slate-900">{st.fullName}</td>
+                                <td className="py-2.5 px-4 font-mono text-slate-600">{st.indexNumber}</td>
+                                <td className="py-2.5 px-4">
+                                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                                    st.paymentStatus === 'PAID' ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'
+                                  }`}>
+                                    {st.paymentStatus}
+                                  </span>
+                                </td>
+                                <td className="py-2.5 px-4">
+                                  {st.selectedColour !== '-' ? (
+                                    <span className={`font-semibold ${st.selectedColour === 'Blue' ? 'text-blue-700' : 'text-slate-800'}`}>
+                                      {st.selectedColour}
+                                    </span>
+                                  ) : <span className="text-slate-400">-</span>}
+                                </td>
+                                <td className="py-2.5 px-4 font-bold text-slate-800">
+                                  {st.selectedSize !== '-' ? st.selectedSize : <span className="text-slate-400 font-normal">-</span>}
+                                </td>
+                                <td className="py-2.5 px-4">
+                                  <span className={`inline-flex items-center gap-1 font-semibold ${
+                                    st.submissionStatus === 'Submitted' ? 'text-emerald-700' : 'text-amber-600'
+                                  }`}>
+                                    <span className={`w-1.5 h-1.5 rounded-full ${
+                                      st.submissionStatus === 'Submitted' ? 'bg-emerald-600' : 'bg-amber-500'
+                                    }`}></span>
+                                    {st.submissionStatus}
+                                  </span>
+                                </td>
+                                <td className="py-2.5 px-4 text-right">
+                                  <div className="flex items-center justify-end gap-1.5">
+                                    <button
+                                      onClick={() => setCorrectModalStudent(st)}
+                                      title="Edit / Correct Selection"
+                                      className="p-1 text-slate-500 hover:text-primary-800 hover:bg-slate-100 rounded"
+                                    >
+                                      <Icon name="edit-3" className="w-3.5 h-3.5" />
+                                    </button>
+                                    {st.submissionStatus === 'Submitted' && (
+                                      <button
+                                        onClick={() => handleResetSubmission(st.indexNumber)}
+                                        title="Reset Submission (Allow Resubmission)"
+                                        className="p-1 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded"
+                                      >
+                                        <Icon name="rotate-ccw" className="w-3.5 h-3.5" />
+                                      </button>
+                                    )}
+                                  </div>
+                                </td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td colSpan="8" className="py-8 text-center text-slate-400">
+                                {isLoading ? 'Loading student register...' : 'No student records found matching filters.'}
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                </div>
+              )}
+
+              {/* ------------------------------------
+                  3. PENDING STUDENTS TAB
+                 ------------------------------------ */}
+              {activeTab === 'pending' && (
+                <div className="space-y-4">
+                  
+                  {/* Pending Banner */}
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-amber-500 text-white flex items-center justify-center font-bold">
+                        <Icon name="clock" className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-bold text-amber-900">
+                          {pendingStudents.length} Paid Students Awaiting Selection
+                        </h3>
+                        <p className="text-xs text-amber-700 mt-0.5">
+                          These students are verified as paid but have not yet chosen their Lacoste colour and size.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 w-full sm:w-auto">
+                      <button
+                        onClick={() => handleExportReport('PENDING_STUDENTS', 'xlsx')}
+                        className="flex-1 sm:flex-initial px-3 py-2 bg-amber-600 hover:bg-amber-700 text-white font-semibold text-xs rounded-lg transition flex items-center justify-center gap-1.5 shadow-sm"
+                      >
+                        <Icon name="download" className="w-3.5 h-3.5" />
+                        <span>Export Pending List (Excel)</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Pending Table */}
+                  <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left border-collapse text-xs">
+                        <thead>
+                          <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[10px]">
+                            <th className="py-3 px-4">#</th>
+                            <th className="py-3 px-4">Full Name</th>
+                            <th className="py-3 px-4">Index Number</th>
+                            <th className="py-3 px-4">Payment Status</th>
+                            <th className="py-3 px-4">Payment Ref</th>
+                            <th className="py-3 px-4 text-right">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {pendingStudents.length > 0 ? (
+                            pendingStudents.map((st, idx) => (
+                              <tr key={idx} className="hover:bg-slate-50/50">
+                                <td className="py-2.5 px-4 text-slate-400">{idx + 1}</td>
+                                <td className="py-2.5 px-4 font-semibold text-slate-900">{st.fullName}</td>
+                                <td className="py-2.5 px-4 font-mono text-slate-600">{st.indexNumber}</td>
+                                <td className="py-2.5 px-4">
+                                  <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded">
+                                    {st.paymentStatus}
+                                  </span>
+                                </td>
+                                <td className="py-2.5 px-4 text-slate-500 font-mono">{st.paymentReference}</td>
+                                <td className="py-2.5 px-4 text-right">
+                                  <button
+                                    onClick={() => setCorrectModalStudent({ ...st, selectedColour: 'Blue', selectedSize: 'L' })}
+                                    className="px-2.5 py-1 text-xs font-semibold text-primary-800 bg-primary-50 hover:bg-primary-100 border border-primary-200 rounded"
+                                  >
+                                    Record for Student
+                                  </button>
+                                </td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td colSpan="6" className="py-8 text-center text-slate-400">
+                                {isLoading ? 'Scanning register...' : 'All paid students have successfully submitted their selections!'}
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                </div>
+              )}
+
+              {/* ------------------------------------
+                  4. ANALYTICS TAB
+                 ------------------------------------ */}
+              {activeTab === 'analytics' && (
+                <div className="space-y-6">
+                  
+                  {/* Colour Chart / Distribution */}
+                  <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                    <h3 className="text-sm font-bold text-slate-900 mb-4">Colour Preference Analytics</h3>
+                    
+                    <div className="space-y-4">
+                      {/* Blue Bar */}
+                      <div>
+                        <div className="flex justify-between text-xs font-semibold mb-1">
+                          <span className="text-blue-700 flex items-center gap-1.5">
+                            <span className="w-2.5 h-2.5 rounded-full bg-blue-700"></span>
+                            Royal Blue
+                          </span>
+                          <span className="text-slate-900">
+                            {stats?.colours?.blue?.count || 0} units ({stats?.colours?.blue?.percentage || 0}%)
+                          </span>
+                        </div>
+                        <div className="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
+                          <div 
+                            className="bg-blue-700 h-3 rounded-full transition-all duration-500"
+                            style={{ width: `${stats?.colours?.blue?.percentage || 0}%` }}
+                          ></div>
+                        </div>
+                      </div>
+
+                      {/* White Bar */}
+                      <div>
+                        <div className="flex justify-between text-xs font-semibold mb-1">
+                          <span className="text-slate-700 flex items-center gap-1.5">
+                            <span className="w-2.5 h-2.5 rounded-full bg-white border border-slate-400"></span>
+                            Classic White
+                          </span>
+                          <span className="text-slate-900">
+                            {stats?.colours?.white?.count || 0} units ({stats?.colours?.white?.percentage || 0}%)
+                          </span>
+                        </div>
+                        <div className="w-full bg-slate-100 rounded-full h-3 overflow-hidden">
+                          <div 
+                            className="bg-slate-400 h-3 rounded-full transition-all duration-500"
+                            style={{ width: `${stats?.colours?.white?.percentage || 0}%` }}
+                          ></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Size Distribution Bars */}
+                  <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                    <h3 className="text-sm font-bold text-slate-900 mb-4">Size Distribution Breakdown</h3>
+
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                      {['S', 'M', 'L', 'XL', 'XXL', 'XXXL'].map(sz => {
+                        const count = stats?.sizes?.[sz] || 0;
+                        const total = stats?.overview?.totalSubmissions || 1;
+                        const pct = Math.round((count / total) * 100);
+                        return (
+                          <div key={sz} className="bg-slate-50 border border-slate-200 rounded-lg p-3 text-center">
+                            <span className="text-xs font-bold text-slate-500 block">Size {sz}</span>
+                            <span className="text-xl font-extrabold text-slate-900 block my-1">{count}</span>
+                            <span className="text-[10px] text-slate-400 block">{pct}% of total</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                </div>
+              )}
+
+              {/* ------------------------------------
+                  5. REPORTS TAB
+                 ------------------------------------ */}
+              {activeTab === 'reports' && (
+                <div className="space-y-6">
+                  
+                  <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
+                    <h3 className="text-base font-bold text-slate-900 mb-1">Official Administrative Reports</h3>
+                    <p className="text-xs text-slate-500 mb-6">
+                      Export university-standard reports in Excel (.xlsx), Word (.docx), PDF, or CSV.
+                    </p>
+
+                    <div className="divide-y divide-slate-100">
+                      {[
+                        { id: 'COMPLETE_REGISTER', title: 'Complete Student Selection Register', desc: 'Full register of all student submissions with timestamps and colours.' },
+                        { id: 'BLUE_LACOSTE_LIST', title: 'Blue Lacoste Selections List', desc: 'Filtered list of all students ordering Royal Blue shirts.' },
+                        { id: 'WHITE_LACOSTE_LIST', title: 'White Lacoste Selections List', desc: 'Filtered list of all students ordering Classic White shirts.' },
+                        { id: 'SIZE_DISTRIBUTION', title: 'Size Distribution Report', desc: 'Quantity totals across S, M, L, XL, XXL, and XXXL.' },
+                        { id: 'COLOUR_SIZE_BREAKDOWN', title: 'Colour and Size Matrix Report', desc: 'Full cross-tabulation table for garment production.' },
+                        { id: 'PENDING_STUDENTS', title: 'Pending Students Register', desc: 'List of all eligible paid students who have not yet submitted.' },
+                        { id: 'OVERALL_SUMMARY', title: 'Overall Collection Executive Summary', desc: 'High-level metrics summary for Departmental Board / HOD review.' },
+                      ].map(rep => (
+                        <div key={rep.id} className="py-4 flex flex-col md:flex-row md:items-center justify-between gap-3">
+                          <div>
+                            <h4 className="text-sm font-bold text-slate-900">{rep.title}</h4>
+                            <p className="text-xs text-slate-500 mt-0.5">{rep.desc}</p>
+                          </div>
+
+                          {/* Format Buttons */}
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              onClick={() => handleExportReport(rep.id, 'xlsx')}
+                              className="px-2.5 py-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-md text-xs font-semibold flex items-center gap-1 transition"
+                            >
+                              <Icon name="file-spreadsheet" className="w-3.5 h-3.5" />
+                              <span>Excel</span>
+                            </button>
+
+                            <button
+                              onClick={() => handleExportReport(rep.id, 'docx')}
+                              className="px-2.5 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 rounded-md text-xs font-semibold flex items-center gap-1 transition"
+                            >
+                              <Icon name="file-text" className="w-3.5 h-3.5" />
+                              <span>Word</span>
+                            </button>
+
+                            <button
+                              onClick={() => handleExportReport(rep.id, 'pdf')}
+                              className="px-2.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200 rounded-md text-xs font-semibold flex items-center gap-1 transition"
+                            >
+                              <Icon name="printer" className="w-3.5 h-3.5" />
+                              <span>PDF</span>
+                            </button>
+
+                            <button
+                              onClick={() => handleExportReport(rep.id, 'csv')}
+                              className="px-2.5 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-700 border border-slate-200 rounded-md text-xs font-semibold flex items-center gap-1 transition"
+                            >
+                              <Icon name="download" className="w-3.5 h-3.5" />
+                              <span>CSV</span>
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                  </div>
+
+                </div>
+              )}
+
+              {/* ------------------------------------
+                  6. SETTINGS TAB
+                 ------------------------------------ */}
+              {activeTab === 'settings' && (
+                <div className="space-y-6">
+                  
+                  <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
+                    <h3 className="text-base font-bold text-slate-900">Portal Configuration</h3>
+                    
+                    <div className="space-y-4 text-xs sm:text-sm">
+                      <div className="flex items-center justify-between py-2 border-b border-slate-100">
+                        <div>
+                          <span className="font-semibold text-slate-800 block">Submissions Status</span>
+                          <span className="text-slate-500 text-xs">Allow or restrict student submissions</span>
+                        </div>
+                        <button
+                          onClick={handleToggleSubmissions}
+                          className={`px-3 py-1.5 rounded-lg font-bold text-xs ${
+                            stats?.overview?.submissionStatus === 'OPEN'
+                              ? 'bg-emerald-100 text-emerald-800'
+                              : 'bg-rose-100 text-rose-800'
+                          }`}
+                        >
+                          {stats?.overview?.submissionStatus === 'OPEN' ? 'OPEN' : 'CLOSED'}
+                        </button>
+                      </div>
+
+                      <div className="flex items-center justify-between py-2 border-b border-slate-100">
+                        <div>
+                          <span className="font-semibold text-slate-800 block">Available Colours</span>
+                          <span className="text-slate-500 text-xs">Configured garment colour variants</span>
+                        </div>
+                        <span className="font-mono text-slate-700">Blue, White</span>
+                      </div>
+
+                      <div className="flex items-center justify-between py-2 border-b border-slate-100">
+                        <div>
+                          <span className="font-semibold text-slate-800 block">Available Sizes</span>
+                          <span className="text-slate-500 text-xs">Standard sizes accepted</span>
+                        </div>
+                        <span className="font-mono text-slate-700">S, M, L, XL, XXL, XXXL</span>
+                      </div>
+
+                      <div className="flex items-center justify-between py-2 border-b border-slate-100">
+                        <div>
+                          <span className="font-semibold text-slate-800 block">Max Submissions Per Student</span>
+                          <span className="text-slate-500 text-xs">Strict duplicate protection</span>
+                        </div>
+                        <span className="font-mono font-bold text-slate-700">1</span>
+                      </div>
+
+                      <div className="pt-2">
+                        <button
+                          onClick={() => setShowPasswordChangeModal(true)}
+                          className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-semibold rounded-lg transition"
+                        >
+                          Update Administrator Password
+                        </button>
+                      </div>
+                    </div>
+
+                  </div>
+
+                </div>
+              )}
+
+              {/* ------------------------------------
+                  7. AUDIT LOGS TAB
+                 ------------------------------------ */}
+              {activeTab === 'audit' && (
+                <div className="space-y-4">
+                  
+                  <div className="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                    <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+                      <div>
+                        <h3 className="text-sm font-bold text-slate-900">System Audit Trail</h3>
+                        <p className="text-xs text-slate-500 mt-0.5">Immutable record of security events, edits, and exports</p>
+                      </div>
+                      <button
+                        onClick={loadAuditLogs}
+                        className="text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-100 px-3 py-1.5 rounded-lg"
+                      >
+                        Refresh Logs
+                      </button>
+                    </div>
+
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left border-collapse text-xs">
+                        <thead>
+                          <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-semibold uppercase tracking-wider text-[10px]">
+                            <th className="py-2.5 px-4">Log ID</th>
+                            <th className="py-2.5 px-4">Timestamp (GMT)</th>
+                            <th className="py-2.5 px-4">Actor</th>
+                            <th className="py-2.5 px-4">Action</th>
+                            <th className="py-2.5 px-4">Details</th>
+                            <th className="py-2.5 px-4 text-right">Status</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 font-mono text-[11px]">
+                          {auditLogs.length > 0 ? (
+                            auditLogs.map((log, idx) => (
+                              <tr key={idx} className="hover:bg-slate-50/50">
+                                <td className="py-2.5 px-4 text-slate-400">{log.logId}</td>
+                                <td className="py-2.5 px-4 text-slate-600">{log.timestamp}</td>
+                                <td className="py-2.5 px-4 font-semibold text-slate-900">{log.user}</td>
+                                <td className="py-2.5 px-4 font-semibold text-primary-800">{log.action}</td>
+                                <td className="py-2.5 px-4 text-slate-600 max-w-xs truncate" title={log.details}>{log.details}</td>
+                                <td className="py-2.5 px-4 text-right">
+                                  <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                                    log.status === 'SUCCESS' ? 'bg-emerald-100 text-emerald-800' :
+                                    log.status === 'WARNING' ? 'bg-amber-100 text-amber-800' : 'bg-slate-100 text-slate-700'
+                                  }`}>
+                                    {log.status}
+                                  </span>
+                                </td>
+                              </tr>
+                            ))
+                          ) : (
+                            <tr>
+                              <td colSpan="6" className="py-8 text-center text-slate-400 font-sans">
+                                {isLoading ? 'Loading audit records...' : 'No audit records found.'}
+                              </td>
+                            </tr>
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                </div>
+              )}
+
+            </div>
+
+          </main>
+
+          {/* Modals */}
+          <AddStudentModal
+            isOpen={showAddStudentModal}
+            onClose={() => setShowAddStudentModal(false)}
+            sessionToken={session.sessionToken}
+            onStudentAdded={() => { loadStudentRecords(); loadStats(); }}
+            onNotify={onNotify}
+          />
+
+          <CorrectSelectionModal
+            isOpen={!!correctModalStudent}
+            student={correctModalStudent}
+            onClose={() => setCorrectModalStudent(null)}
+            sessionToken={session.sessionToken}
+            onSelectionUpdated={() => { loadStudentRecords(); loadStats(); }}
+            onNotify={onNotify}
+          />
+
+          <ChangePasswordModal
+            isOpen={showPasswordChangeModal}
+            onClose={() => setShowPasswordChangeModal(false)}
+            sessionToken={session.sessionToken}
+            isForced={session?.mustChangePassword}
+            onPasswordChanged={() => { session.mustChangePassword = false; }}
+            onNotify={onNotify}
+          />
+
+        </div>
+      );
+    }
+
+    // ==========================================
+    // MAIN APP CONTROLLER
+    // ==========================================
+    function App() {
+      const [view, setView] = useState('portal'); // 'portal' | 'treasurer'
+      const [showLoginModal, setShowLoginModal] = useState(false);
+      const [treasurerSession, setTreasurerSession] = useState(() => {
+        try {
+          const saved = localStorage.getItem(SESSION_STORAGE_KEY);
+          return saved ? JSON.parse(saved) : null;
+        } catch (e) {
+          return null;
+        }
+      });
+      const [settings, setSettings] = useState(null);
+      const [toast, setToast] = useState(null);
+
+      // Load initial settings
+      useEffect(() => {
+        ApiService.call('getPortalSettings')
+          .then(res => setSettings(res))
+          .catch(err => console.warn('Could not fetch portal settings:', err));
+      }, []);
+
+      const showNotification = (notification) => {
+        setToast(notification);
+        setTimeout(() => setToast(null), 4000);
+      };
+
+      const handleLoginSuccess = (sessionData) => {
+        setTreasurerSession(sessionData);
+        try {
+          localStorage.setItem(SESSION_STORAGE_KEY, JSON.stringify(sessionData));
+        } catch (e) {}
+        setView('treasurer');
+        showNotification({ message: 'Welcome back, Treasurer!', type: 'success' });
+      };
+
+      const handleLogout = async () => {
+        if (treasurerSession?.sessionToken) {
+          try {
+            await ApiService.call('adminLogout', treasurerSession.sessionToken);
+          } catch (e) {}
+        }
+        setTreasurerSession(null);
+        try {
+          localStorage.removeItem(SESSION_STORAGE_KEY);
+        } catch (e) {}
+        setView('portal');
+        showNotification({ message: 'Logged out successfully.', type: 'info' });
+      };
+
+      const handleOpenTreasurer = () => {
+        if (treasurerSession) {
+          setView('treasurer');
+        } else {
+          setShowLoginModal(true);
+        }
+      };
+
+      return (
+        <div className="min-h-screen flex flex-col bg-slate-50 font-sans">
+          
+          {/* Header */}
+          <AppHeader
+            onOpenTreasurer={handleOpenTreasurer}
+            onOpenPortal={() => setView('portal')}
+            activeView={view}
+            submissionStatus={settings?.submissionStatus}
+          />
+
+          {/* Active View */}
+          {view === 'treasurer' && treasurerSession ? (
+            <TreasurerDashboard
+              session={treasurerSession}
+              onLogout={handleLogout}
+              onNotify={showNotification}
+            />
+          ) : (
+            <StudentPortal
+              settings={settings}
+              onNotify={showNotification}
+            />
+          )}
+
+          {/* Footer */}
+          <footer className="bg-white border-t border-slate-200 py-4 px-4 text-center text-xs text-slate-500">
+            <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
+              <div>
+                © {new Date().getFullYear()} Information Technology Students Union (ITSU) • Takoradi Technical University
+              </div>
+              <div className="flex items-center gap-3 text-slate-400">
+                <span>Department of Computer Science</span>
+                <span>•</span>
+                <button
+                  onClick={handleOpenTreasurer}
+                  className="hover:text-primary-800 transition"
+                >
+                  Treasurer Access
+                </button>
+              </div>
+            </div>
+          </footer>
+
+          {/* Treasurer Login Modal */}
+          <TreasurerLoginModal
+            isOpen={showLoginModal}
+            onClose={() => setShowLoginModal(false)}
+            onLoginSuccess={handleLoginSuccess}
+            onNotify={showNotification}
+          />
+
+          {/* Toast Container */}
+          <Toast toast={toast} onClose={() => setToast(null)} />
+
+        </div>
+      );
+    }
+
+    // Render the React application
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
