@@ -51,7 +51,7 @@
   <!-- React 18 & Babel Standalone for seamless execution -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
   <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js" crossorigin="anonymous"></script>
 
   <style>
     body {
@@ -883,11 +883,11 @@
         : (isBack ? POLO_BACK_BLUE_IMG : POLO_FRONT_BLUE_IMG);
 
       return (
-        <div className={elative flex items-center justify-center transition-all duration-500 select-none }>
+        <div className={`relative flex items-center justify-center transition-all duration-500 select-none ${className}`}>
           <img
-            key={${colour}-}
+            key={`${colour}-${view}`}
             src={imgSrc}
-            alt={Official ITSU  Lacoste Polo Shirt ()}
+            alt={`Official ITSU ${isWhite ? 'Classic White' : 'Royal Blue'} Lacoste Polo Shirt (${isBack ? 'Back Design' : 'Front Crest'})`}
             className="w-full h-full object-contain transition-all duration-300 select-none pointer-events-none drop-shadow-xl"
           />
         </div>
@@ -1233,14 +1233,22 @@
                     <button
                       type="button"
                       onClick={() => setSelectedView('front')}
-                      className={px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 flex items-center gap-1.5 }
+                      className={`px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 flex items-center gap-1.5 ${
+                        selectedView === 'front'
+                          ? 'bg-[#103E8C] text-white shadow-xs'
+                          : 'text-slate-500 hover:text-slate-800'
+                      }`}
                     >
                       <span>Front Crest</span>
                     </button>
                     <button
                       type="button"
                       onClick={() => setSelectedView('back')}
-                      className={px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 flex items-center gap-1.5 }
+                      className={`px-3.5 py-1 text-xs font-semibold rounded-full transition-all duration-150 flex items-center gap-1.5 ${
+                        selectedView === 'back'
+                          ? 'bg-[#103E8C] text-white shadow-xs'
+                          : 'text-slate-500 hover:text-slate-800'
+                      }`}
                     >
                       <span>Back Design</span>
                     </button>
