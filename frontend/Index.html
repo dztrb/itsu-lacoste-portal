@@ -1215,76 +1215,6 @@
       const [submissionResult, setSubmissionResult] = useState(null);
       const [alreadySubmittedData, setAlreadySubmittedData] = useState(null);
 
-      // Download Official Student Collection Slip (.html receipt pass)
-      const handleDownloadCollectionSlip = (sub) => {
-        if (!sub) return;
-        const isCollected = sub.collectionStatus === 'Collected' || String(sub.status || '').includes('COLLECTED');
-        const slipHtml = `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>ITSU Lacoste Collection Slip - ${sub.submissionId}</title>
-  <style>
-    * { box-sizing: border-box; }
-    body { margin: 0; padding: 24px; background: #f1f5f9; font-family: 'Segoe UI', Inter, Arial, sans-serif; color: #0f172a; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
-    .card { background: white; width: 100%; max-width: 440px; border-radius: 20px; overflow: hidden; box-shadow: 0 12px 32px rgba(10,31,68,0.12); border: 1px solid #e2e8f0; }
-    .header { background: #0A1F44; color: white; padding: 24px; text-align: center; }
-    .header-sub { font-size: 10px; text-transform: uppercase; letter-spacing: 0.14em; color: #93c5fd; font-weight: 700; }
-    .header-title { font-size: 18px; font-weight: 800; margin: 6px 0 2px; letter-spacing: 0.02em; }
-    .header-dept { font-size: 11px; color: #cbd5e1; }
-    .body { padding: 24px; }
-    .ref-box { background: #f8fafc; border: 1px dashed #94a3b8; border-radius: 12px; padding: 12px; text-align: center; margin-bottom: 18px; }
-    .ref-label { font-size: 10px; text-transform: uppercase; color: #64748b; font-weight: 700; letter-spacing: 0.08em; }
-    .ref-code { font-family: monospace; font-size: 20px; font-weight: 800; color: #103E8C; margin-top: 4px; letter-spacing: 0.05em; }
-    .row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
-    .row:last-child { border-bottom: none; }
-    .label { color: #64748b; font-weight: 500; }
-    .val { font-weight: 700; color: #0f172a; text-transform: uppercase; }
-    .badge { display: inline-block; padding: 3px 10px; border-radius: 999px; font-size: 11px; font-weight: 800; background: ${isCollected ? '#dcfce7' : '#dbeafe'}; color: ${isCollected ? '#166534' : '#1e40af'}; }
-    .footer { background: #f8fafc; padding: 16px 24px; text-align: center; border-top: 1px solid #e2e8f0; font-size: 11px; color: #64748b; }
-    .btn { margin-top: 12px; background: #103E8C; color: white; border: none; padding: 9px 18px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer; }
-    @media print { body { background: white; padding: 0; } .card { box-shadow: none; } .btn { display: none; } }
-  </style>
-</head>
-<body>
-  <div class="card">
-    <div class="header">
-      <div class="header-sub">Takoradi Technical University • ITSU</div>
-      <div class="header-title">LACOSTE COLLECTION PASS</div>
-      <div class="header-dept">Department of Computer Science</div>
-    </div>
-    <div class="body">
-      <div class="ref-box">
-        <div class="ref-label">Official Submission Reference</div>
-        <div class="ref-code">${sub.submissionId}</div>
-      </div>
-      <div class="row"><span class="label">Student Name</span><span class="val">${sub.fullName}</span></div>
-      <div class="row"><span class="label">Index Number</span><span class="val" style="font-family:monospace">${sub.indexNumber || verifiedStudent?.indexNumber || indexNumber}</span></div>
-      <div class="row"><span class="label">Selected Colour</span><span class="val">${sub.selectedColour === 'Blue' ? 'Royal Blue' : sub.selectedColour === 'White' ? 'Classic White' : sub.selectedColour}</span></div>
-      <div class="row"><span class="label">Selected Size</span><span class="val">${sub.selectedSize}</span></div>
-      <div class="row"><span class="label">Quantity</span><span class="val">1</span></div>
-      <div class="row"><span class="label">Collection Status</span><span class="badge">${isCollected ? 'COLLECTED' : 'READY FOR DISTRIBUTION'}</span></div>
-    </div>
-    <div class="footer">
-      Present this pass to the ITSU Treasurer during garment distribution.<br/>
-      <button class="btn" onclick="window.print()">Print / Save as PDF</button>
-    </div>
-  </div>
-</body>
-</html>`;
-        const blob = new Blob([slipHtml], { type: 'text/html;charset=utf-8' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `ITSU_Collection_Slip_${sub.submissionId}.html`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        onNotify({ message: 'Collection Slip downloaded!', type: 'success' });
-      };
-
       // Animated Front <-> Back Showcase on Step 2
       useEffect(() => {
         if (step !== 'select' || !autoRotate || isHoveringPolo) return;
@@ -1811,6 +1741,72 @@
                 </div>
               )}
 
+              {/* Interactive Size Guide Modal */}
+              {showSizeGuide && (
+                <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4" onClick={() => setShowSizeGuide(false)}>
+                  <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-md w-full p-5 sm:p-6 relative" onClick={e => e.stopPropagation()}>
+                    <button
+                      type="button"
+                      onClick={() => setShowSizeGuide(false)}
+                      className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"
+                    >
+                      <Icon name="x" className="w-5 h-5" />
+                    </button>
+                    <div className="flex items-center gap-2.5 mb-1">
+                      <div className="w-8 h-8 rounded-lg bg-blue-50 text-[#103E8C] flex items-center justify-center">
+                        <Icon name="ruler" className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <h3 className="text-sm sm:text-base font-bold text-slate-900">ITSU Lacoste Size Guide</h3>
+                        <p className="text-[11px] text-slate-500">Standard Unisex Piqué Polo Measurements</p>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 overflow-hidden rounded-xl border border-slate-200">
+                      <table className="w-full text-left border-collapse text-xs">
+                        <thead>
+                          <tr className="bg-slate-100 text-slate-700 font-bold text-[11px] uppercase">
+                            <th className="py-2 px-3">Size</th>
+                            <th className="py-2 px-3">Chest (in)</th>
+                            <th className="py-2 px-3">Length (in)</th>
+                            <th className="py-2 px-3">Recommended Fit</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100">
+                          {[
+                            { sz: 'S', chest: '36 – 38"', len: '27"', fit: 'Slim / Petite' },
+                            { sz: 'M', chest: '39 – 41"', len: '28"', fit: 'Regular Medium' },
+                            { sz: 'L', chest: '42 – 44"', len: '29"', fit: 'Standard Large' },
+                            { sz: 'XL', chest: '45 – 47"', len: '30"', fit: 'Relaxed Fit' },
+                            { sz: 'XXL', chest: '48 – 50"', len: '31"', fit: 'Broad / Plus' },
+                            { sz: 'XXXL', chest: '51 – 53"', len: '32"', fit: 'Extra Broad' },
+                          ].map(r => (
+                            <tr key={r.sz} className={selectedSize === r.sz ? 'bg-blue-50/80 font-semibold' : ''}>
+                              <td className="py-2 px-3 font-bold text-[#103E8C]">{r.sz}</td>
+                              <td className="py-2 px-3 text-slate-700">{r.chest}</td>
+                              <td className="py-2 px-3 text-slate-700">{r.len}</td>
+                              <td className="py-2 px-3 text-slate-500 text-[11px]">{r.fit}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <p className="text-[11px] text-slate-500 mt-3">
+                      Tip: If you prefer a looser fit, choose one size up from your usual shirt size.
+                    </p>
+
+                    <button
+                      type="button"
+                      onClick={() => setShowSizeGuide(false)}
+                      className="mt-4 w-full bg-[#103E8C] hover:bg-[#0B2E68] text-white font-semibold py-2.5 rounded-xl text-xs transition"
+                    >
+                      Got It
+                    </button>
+                  </div>
+                </div>
+              )}
+
             </div>
           </div>
         );
@@ -2030,28 +2026,17 @@
                 </div>
               </div>
 
-              <p className="text-xs text-slate-400 mb-5">
-                Save your official collection pass or take a screenshot for shirt distribution.
+              <p className="text-xs text-slate-400 mb-6">
+                Please save or take a screenshot of your reference ID for shirt collection.
               </p>
 
-              <div className="space-y-2.5">
-                <button
-                  type="button"
-                  onClick={() => handleDownloadCollectionSlip(submissionResult)}
-                  className="w-full bg-[#103E8C] hover:bg-[#0B2E68] text-white font-semibold py-3 px-4 rounded-xl transition text-xs flex items-center justify-center gap-2 shadow-xs"
-                >
-                  <Icon name="download" className="w-4 h-4" />
-                  <span>Download Collection Slip</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleStartOver}
-                  className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2.5 px-4 rounded-xl transition text-xs"
-                >
-                  Done
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={handleStartOver}
+                className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2.5 px-4 rounded-xl transition text-xs"
+              >
+                Done
+              </button>
             </div>
           </div>
         );
@@ -2105,29 +2090,16 @@
                 </div>
               )}
 
-              <p className="text-xs text-slate-500 mb-5">
+              <p className="text-xs text-slate-500 mb-6">
                 If you need a correction, please contact the ITSU Treasurer directly.
               </p>
 
-              <div className="space-y-2.5">
-                {alreadySubmittedData && (
-                  <button
-                    type="button"
-                    onClick={() => handleDownloadCollectionSlip(alreadySubmittedData)}
-                    className="w-full bg-[#103E8C] hover:bg-[#0B2E68] text-white font-semibold py-2.5 px-4 rounded-xl transition text-xs flex items-center justify-center gap-2 shadow-xs"
-                  >
-                    <Icon name="download" className="w-4 h-4" />
-                    <span>Download Collection Slip</span>
-                  </button>
-                )}
-
-                <button
-                  onClick={handleStartOver}
-                  className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2.5 px-4 rounded-xl transition text-xs"
-                >
-                  Return to Verification
-                </button>
-              </div>
+              <button
+                onClick={handleStartOver}
+                className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2.5 px-4 rounded-xl transition text-xs"
+              >
+                Return to Verification
+              </button>
             </div>
           </div>
         );
