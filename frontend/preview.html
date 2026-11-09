@@ -8,7 +8,7 @@
   <!-- Inter Google Font -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Lora:ital,wght@0,500;0,600;0,700;1,500&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap" rel="stylesheet">
   
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -18,6 +18,7 @@
         extend: {
           fontFamily: {
             sans: ['Inter', 'sans-serif'],
+            serif: ['Lora', 'Playfair Display', 'Georgia', 'serif'],
           },
           colors: {
             primary: {
@@ -594,7 +595,7 @@
     // COMPONENT: Student Portal Flow
     // ==========================================
     function StudentPortal({ settings, onNotify }) {
-      const [step, setStep] = useState('welcome'); // 'welcome' | 'verify' | 'select' | 'review' | 'confirmed'
+      const [step, setStep] = useState('verify'); // 'verify' | 'select' | 'review' | 'confirmed' | 'already_submitted'
       const [fullName, setFullName] = useState('');
       const [indexNumber, setIndexNumber] = useState('');
       const [isLoading, setIsLoading] = useState(false);
@@ -663,7 +664,7 @@
 
       // Reset
       const handleStartOver = () => {
-        setStep('welcome');
+        setStep('verify');
         setFullName('');
         setIndexNumber('');
         setVerifiedStudent(null);
@@ -674,208 +675,427 @@
         setErrorMessage('');
       };
 
-      // ------------------------------------------
-      // 1. WELCOME SCREEN
-      // ------------------------------------------
-      if (step === 'welcome') {
-        return (
-          <div className="flex-grow flex items-center justify-center p-4">
-            <div className="max-w-md w-full bg-white rounded-xl border border-slate-200 shadow-sm p-6 sm:p-8 text-center">
-              
-              <div className="w-16 h-16 bg-primary-50 border border-primary-100 rounded-2xl flex items-center justify-center mx-auto mb-5 text-primary-800">
-                <Icon name="shirt" className="w-8 h-8" />
+      return (
+        <div className="flex-grow flex flex-col lg:flex-row min-h-[calc(100vh-4rem)]">
+          
+          {/* =========================================
+              LEFT PANEL: Deep Navy Brand Showcase (Matches UI Direction)
+             ========================================= */}
+          <div className="w-full lg:w-1/2 bg-[#0A1F44] text-white p-8 sm:p-12 lg:p-16 flex flex-col justify-between">
+            {/* Top Indicator */}
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-white/90">
+                <Icon name="graduation-cap" className="w-4 h-4" />
               </div>
+              <span className="text-sm font-semibold tracking-wide text-white/90">Campus Connect</span>
+            </div>
 
-              <span className="text-xs font-semibold uppercase tracking-wider text-primary-800 bg-primary-50 px-3 py-1 rounded-full border border-primary-200">
-                Official Selection Portal
-              </span>
-
-              <h2 className="text-2xl font-bold text-slate-900 mt-3 mb-2">
-                ITSU LACOSTE COLLECTION
+            {/* Main Headline & Context */}
+            <div className="my-10 lg:my-auto max-w-lg">
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold text-white tracking-tight leading-[1.15] mb-4">
+                Your campus community, all in one place.
               </h2>
-
-              <p className="text-slate-600 text-sm leading-relaxed mb-6">
-                Welcome to the official ITSU Lacoste selection portal. Verify your student details to select your preferred Lacoste colour and size.
+              <p className="text-blue-100/80 text-sm sm:text-base leading-relaxed mb-8">
+                Department of Computer Science, Takoradi Technical University. Verify your student details to select your preferred Lacoste colour and size.
               </p>
 
-              {settings && settings.submissionStatus === 'CLOSED' ? (
-                <div className="bg-rose-50 border border-rose-200 rounded-lg p-4 text-left mb-6">
-                  <div className="flex gap-3">
-                    <Icon name="alert-triangle" className="w-5 h-5 text-rose-600 flex-shrink-0" />
+              {/* Bullet Features */}
+              <div className="space-y-3.5 text-xs sm:text-sm text-blue-100/90 font-normal">
+                <div className="flex items-center gap-3">
+                  <span className="text-white/40 font-mono text-sm">[]</span>
+                  <span>Real-time verification with paid student register</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-white/40 font-mono text-sm">[]</span>
+                  <span>Program announcements & Lacoste preferences</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-white/40 font-mono text-sm">[]</span>
+                  <span>Secure student-only access</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Tagline */}
+            <div className="text-xs text-blue-200/50 pt-6 border-t border-white/10">
+              Department of Computer Science • Takoradi Technical University
+            </div>
+          </div>
+
+          {/* =========================================
+              RIGHT PANEL: White Interactive Content Area
+             ========================================= */}
+          <div className="w-full lg:w-1/2 bg-white flex flex-col justify-center items-center p-6 sm:p-10 lg:p-16">
+            <div className="max-w-md w-full">
+
+              {/* ------------------------------------------
+                  STEP 1: VERIFICATION SCREEN (Welcome Back)
+                 ------------------------------------------ */}
+              {step === 'verify' && (
+                <div>
+                  <div className="mb-8">
+                    <h1 className="text-3xl font-serif font-bold text-slate-900 tracking-tight">
+                      Welcome back
+                    </h1>
+                    <p className="text-sm text-slate-500 mt-1">
+                      Sign in to your student portal
+                    </p>
+                  </div>
+
+                  {/* Closed Banner */}
+                  {settings && settings.submissionStatus === 'CLOSED' && (
+                    <div className="bg-rose-50 border border-rose-200 rounded-xl p-4 mb-6">
+                      <div className="flex gap-3">
+                        <Icon name="alert-triangle" className="w-5 h-5 text-rose-600 flex-shrink-0" />
+                        <div>
+                          <h4 className="text-sm font-semibold text-rose-900">Submissions Closed</h4>
+                          <p className="text-xs text-rose-700 mt-0.5">
+                            Submissions are currently closed. Please contact the ITSU Treasurer for assistance.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Verification Error Notice */}
+                  {errorMessage && (
+                    <div className="bg-rose-50 border border-rose-200 rounded-xl p-3.5 mb-5 flex items-start gap-2.5 text-rose-900 text-xs sm:text-sm">
+                      <Icon name="alert-circle" className="w-5 h-5 text-rose-600 flex-shrink-0 mt-0.5" />
+                      <div>{errorMessage}</div>
+                    </div>
+                  )}
+
+                  {/* Verification Form */}
+                  <form onSubmit={handleVerify} className="space-y-4">
                     <div>
-                      <h4 className="text-sm font-semibold text-rose-900">Submissions Closed</h4>
-                      <p className="text-xs text-rose-700 mt-0.5">
-                        Submissions are currently closed. Please contact the ITSU Treasurer for assistance.
-                      </p>
+                      <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                        Full Name
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. Anthony Maclean"
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#103E8C] focus:border-transparent text-sm transition text-slate-900 placeholder:text-slate-400"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
+                        Index Number
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. 0721000001"
+                        value={indexNumber}
+                        onChange={(e) => setIndexNumber(e.target.value)}
+                        className="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50/50 hover:bg-slate-50 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#103E8C] focus:border-transparent text-sm uppercase font-mono transition text-slate-900 placeholder:text-slate-400"
+                      />
+                    </div>
+
+                    <div className="pt-2">
+                      <button
+                        type="submit"
+                        disabled={isLoading || (settings && settings.submissionStatus === 'CLOSED')}
+                        className="w-full bg-[#103E8C] hover:bg-[#0B2E68] disabled:bg-slate-300 text-white font-medium py-3.5 px-6 rounded-xl shadow-sm transition flex items-center justify-center gap-2 text-sm"
+                      >
+                        {isLoading ? (
+                          <>
+                            <Icon name="loader-2" className="w-4 h-4 animate-spin" />
+                            <span>Verifying Eligibility...</span>
+                          </>
+                        ) : (
+                          <span>Sign in</span>
+                        )}
+                      </button>
+                    </div>
+                  </form>
+
+                  <div className="mt-8 text-center text-xs text-slate-500">
+                    Need assistance? <span className="text-[#103E8C] font-semibold">Contact ITSU Treasurer</span>
+                  </div>
+                </div>
+              )}
+
+              {/* ------------------------------------------
+                  STEP 2: COLOUR & SIZE SELECTION
+                 ------------------------------------------ */}
+              {step === 'select' && (
+                <div>
+                  <div className="mb-6">
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-[#103E8C] bg-blue-50 px-2.5 py-0.5 rounded border border-blue-200">
+                      Step 2 of 3
+                    </span>
+                    <h2 className="text-2xl font-serif font-bold text-slate-900 mt-2">
+                      Select Your Lacoste
+                    </h2>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Choose your preferred colour and size
+                    </p>
+                  </div>
+
+                  {/* Student Verified Info Tag */}
+                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 mb-6 flex items-center justify-between text-xs">
+                    <div>
+                      <span className="font-bold text-slate-900 block">{verifiedStudent.fullName}</span>
+                      <span className="font-mono text-slate-500">{verifiedStudent.indexNumber}</span>
+                    </div>
+                    <span className="text-emerald-700 bg-emerald-50 border border-emerald-200 font-semibold px-2 py-0.5 rounded-full text-[10px]">
+                      Verified Paid
+                    </span>
+                  </div>
+
+                  <div className="space-y-6">
+                    {/* Colours */}
+                    <div>
+                      <label className="text-xs font-bold text-slate-800 uppercase tracking-wider block mb-2">
+                        1. Select Colour
+                      </label>
+                      <div className="grid grid-cols-2 gap-3">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedColour('Blue')}
+                          className={`p-4 rounded-xl border-2 text-center transition flex flex-col items-center justify-center gap-2 ${
+                            selectedColour === 'Blue'
+                              ? 'border-[#103E8C] bg-blue-50/50 shadow-sm'
+                              : 'border-slate-200 hover:border-slate-300 bg-white'
+                          }`}
+                        >
+                          <div className="w-10 h-10 rounded-full bg-blue-700 flex items-center justify-center text-white shadow">
+                            {selectedColour === 'Blue' && <Icon name="check" className="w-5 h-5 stroke-[3]" />}
+                          </div>
+                          <div>
+                            <span className="font-bold text-slate-900 text-xs block">Royal Blue</span>
+                            <span className="text-[10px] text-slate-500">Official Blue</span>
+                          </div>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setSelectedColour('White')}
+                          className={`p-4 rounded-xl border-2 text-center transition flex flex-col items-center justify-center gap-2 ${
+                            selectedColour === 'White'
+                              ? 'border-[#103E8C] bg-blue-50/50 shadow-sm'
+                              : 'border-slate-200 hover:border-slate-300 bg-white'
+                          }`}
+                        >
+                          <div className="w-10 h-10 rounded-full bg-white border border-slate-300 flex items-center justify-center text-slate-800 shadow">
+                            {selectedColour === 'White' && <Icon name="check" className="w-5 h-5 stroke-[3]" />}
+                          </div>
+                          <div>
+                            <span className="font-bold text-slate-900 text-xs block">Classic White</span>
+                            <span className="text-[10px] text-slate-500">Official White</span>
+                          </div>
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Sizes */}
+                    <div>
+                      <label className="text-xs font-bold text-slate-800 uppercase tracking-wider block mb-2">
+                        2. Select Size
+                      </label>
+                      <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                        {['S', 'M', 'L', 'XL', 'XXL', 'XXXL'].map(sz => (
+                          <button
+                            key={sz}
+                            type="button"
+                            onClick={() => setSelectedSize(sz)}
+                            className={`py-2.5 rounded-lg border text-center transition font-semibold text-xs ${
+                              selectedSize === sz
+                                ? 'border-[#103E8C] bg-[#103E8C] text-white shadow-sm'
+                                : 'border-slate-200 hover:border-slate-300 bg-white text-slate-800'
+                            }`}
+                          >
+                            {sz}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Buttons */}
+                    <div className="pt-2 flex items-center gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setStep('verify')}
+                        className="px-4 py-3 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl"
+                      >
+                        Back
+                      </button>
+                      <button
+                        type="button"
+                        disabled={!selectedColour || !selectedSize}
+                        onClick={() => setStep('review')}
+                        className="flex-1 bg-[#103E8C] hover:bg-[#0B2E68] disabled:bg-slate-200 disabled:text-slate-400 text-white font-medium py-3 px-4 rounded-xl shadow-sm transition text-xs"
+                      >
+                        Continue to Review
+                      </button>
                     </div>
                   </div>
                 </div>
-              ) : (
-                <button
-                  onClick={() => setStep('verify')}
-                  className="w-full bg-primary-800 hover:bg-primary-900 text-white font-semibold py-3.5 px-6 rounded-lg shadow-sm transition flex items-center justify-center gap-2 group"
-                >
-                  <span>CONTINUE</span>
-                  <Icon name="arrow-right" className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                </button>
               )}
 
-              <div className="mt-8 pt-6 border-t border-slate-100 flex items-center justify-center gap-4 text-xs text-slate-400">
-                <span>• Department of Computer Science</span>
-                <span>• Takoradi Technical University</span>
-              </div>
-            </div>
-          </div>
-        );
-      }
-
-      // ------------------------------------------
-      // 2. VERIFICATION SCREEN
-      // ------------------------------------------
-      if (step === 'verify') {
-        return (
-          <div className="flex-grow flex items-center justify-center p-4">
-            <div className="max-w-md w-full bg-white rounded-xl border border-slate-200 shadow-sm p-6 sm:p-8">
-              
-              <div className="flex items-center justify-between mb-6">
+              {/* ------------------------------------------
+                  STEP 3: REVIEW CONFIRMATION
+                 ------------------------------------------ */}
+              {step === 'review' && (
                 <div>
-                  <h2 className="text-xl font-bold text-slate-900">Student Verification</h2>
-                  <p className="text-xs text-slate-500 mt-0.5">Enter your full name and student index number</p>
-                </div>
-                <button onClick={() => setStep('welcome')} className="text-slate-400 hover:text-slate-600">
-                  <Icon name="arrow-left" className="w-5 h-5" />
-                </button>
-              </div>
+                  <div className="mb-6">
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-[#103E8C] bg-blue-50 px-2.5 py-0.5 rounded border border-blue-200">
+                      Step 3 of 3
+                    </span>
+                    <h2 className="text-2xl font-serif font-bold text-slate-900 mt-2">
+                      Review Selection
+                    </h2>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Verify your details before final submission
+                    </p>
+                  </div>
 
-              {errorMessage && (
-                <div className="bg-rose-50 border border-rose-200 rounded-lg p-3.5 mb-5 flex items-start gap-3 text-rose-900 text-xs sm:text-sm">
-                  <Icon name="alert-circle" className="w-5 h-5 text-rose-600 flex-shrink-0 mt-0.5" />
-                  <div>{errorMessage}</div>
+                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-xs space-y-3 mb-6">
+                    <div className="flex justify-between py-1 border-b border-slate-200">
+                      <span className="text-slate-500">Student Name:</span>
+                      <span className="font-bold text-slate-900">{verifiedStudent.fullName}</span>
+                    </div>
+                    <div className="flex justify-between py-1 border-b border-slate-200">
+                      <span className="text-slate-500">Index Number:</span>
+                      <span className="font-mono font-bold text-slate-900">{verifiedStudent.indexNumber}</span>
+                    </div>
+                    <div className="flex justify-between py-1 border-b border-slate-200">
+                      <span className="text-slate-500">Selected Colour:</span>
+                      <span className="font-bold text-slate-900">{selectedColour}</span>
+                    </div>
+                    <div className="flex justify-between py-1">
+                      <span className="text-slate-500">Selected Size:</span>
+                      <span className="font-bold text-slate-900">{selectedSize}</span>
+                    </div>
+                  </div>
+
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-800 mb-6 flex items-start gap-2">
+                    <Icon name="info" className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" />
+                    <span>Selections are final and cannot be modified once submitted.</span>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setStep('select')}
+                      disabled={isLoading}
+                      className="px-4 py-3 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl"
+                    >
+                      Back
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleSubmit}
+                      disabled={isLoading}
+                      className="flex-1 bg-[#103E8C] hover:bg-[#0B2E68] text-white font-medium py-3 px-4 rounded-xl shadow-sm transition flex items-center justify-center gap-2 text-xs"
+                    >
+                      {isLoading ? 'Submitting...' : 'Confirm Selection'}
+                    </button>
+                  </div>
                 </div>
               )}
 
-              <form onSubmit={handleVerify} className="space-y-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-                    Full Name (As registered)
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Anthony Maclean"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm"
-                  />
-                </div>
+              {/* ------------------------------------------
+                  STEP 4: CONFIRMATION SUCCESS
+                 ------------------------------------------ */}
+              {step === 'confirmed' && submissionResult && (
+                <div className="text-center">
+                  <div className="w-14 h-14 bg-emerald-50 border border-emerald-200 rounded-full flex items-center justify-center mx-auto mb-4 text-emerald-600">
+                    <Icon name="check-circle-2" className="w-8 h-8" />
+                  </div>
 
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1.5">
-                    Index Number
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. 0721000001"
-                    value={indexNumber}
-                    onChange={(e) => setIndexNumber(e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent text-sm uppercase font-mono"
-                  />
-                </div>
+                  <h2 className="text-2xl font-serif font-bold text-slate-900 mb-1">
+                    Selection Confirmed!
+                  </h2>
+                  <p className="text-xs text-slate-500 mb-6">
+                    Your Lacoste selection has been submitted successfully.
+                  </p>
 
-                <div className="pt-2">
+                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-left text-xs space-y-2 mb-6">
+                    <div className="flex justify-between py-1 border-b border-slate-200">
+                      <span className="text-slate-500">Reference:</span>
+                      <span className="font-mono font-bold text-[#103E8C]">{submissionResult.submissionId}</span>
+                    </div>
+                    <div className="flex justify-between py-1 border-b border-slate-200">
+                      <span className="text-slate-500">Student:</span>
+                      <span className="font-semibold text-slate-900">{submissionResult.fullName}</span>
+                    </div>
+                    <div className="flex justify-between py-1 border-b border-slate-200">
+                      <span className="text-slate-500">Colour:</span>
+                      <span className="font-semibold text-slate-900">{submissionResult.selectedColour}</span>
+                    </div>
+                    <div className="flex justify-between py-1">
+                      <span className="text-slate-500">Size:</span>
+                      <span className="font-bold text-slate-900">{submissionResult.selectedSize}</span>
+                    </div>
+                  </div>
+
                   <button
-                    type="submit"
-                    disabled={isLoading}
-                    className="w-full bg-primary-800 hover:bg-primary-900 disabled:bg-slate-300 text-white font-semibold py-3 px-4 rounded-lg shadow-sm transition flex items-center justify-center gap-2"
+                    type="button"
+                    onClick={handleStartOver}
+                    className="w-full bg-slate-900 hover:bg-slate-800 text-white font-medium py-3 px-4 rounded-xl transition text-xs"
                   >
-                    {isLoading ? (
-                      <>
-                        <Icon name="loader-2" className="w-4 h-4 animate-spin" />
-                        <span>Verifying Eligibility...</span>
-                      </>
-                    ) : (
-                      <>
-                        <span>Verify & Continue</span>
-                        <Icon name="arrow-right" className="w-4 h-4" />
-                      </>
-                    )}
+                    Done
                   </button>
                 </div>
-              </form>
+              )}
 
-              <div className="mt-6 pt-5 border-t border-slate-100 text-center">
-                <p className="text-xs text-slate-500">
-                  Only paid members on the departmental register can submit.
-                </p>
-              </div>
+              {/* ------------------------------------------
+                  STEP: ALREADY SUBMITTED
+                 ------------------------------------------ */}
+              {step === 'already_submitted' && (
+                <div className="text-center">
+                  <div className="w-14 h-14 bg-amber-50 border border-amber-200 rounded-full flex items-center justify-center mx-auto mb-4 text-amber-600">
+                    <Icon name="check-check" className="w-7 h-7" />
+                  </div>
 
-            </div>
-          </div>
-        );
-      }
+                  <h3 className="text-2xl font-serif font-bold text-slate-900 mb-1">
+                    Already Submitted
+                  </h3>
+                  <p className="text-xs text-slate-500 mb-6">
+                    Your Lacoste selection has already been recorded.
+                  </p>
 
-      // ------------------------------------------
-      // ALREADY SUBMITTED NOTICE
-      // ------------------------------------------
-      if (step === 'already_submitted') {
-        return (
-          <div className="flex-grow flex items-center justify-center p-4">
-            <div className="max-w-md w-full bg-white rounded-xl border border-slate-200 shadow-sm p-6 sm:p-8 text-center">
-              
-              <div className="w-14 h-14 bg-amber-50 border border-amber-200 rounded-full flex items-center justify-center mx-auto mb-4 text-amber-600">
-                <Icon name="check-check" className="w-7 h-7" />
-              </div>
+                  {alreadySubmittedData && (
+                    <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 text-left text-xs space-y-2 mb-6">
+                      <div className="flex justify-between py-1 border-b border-slate-200">
+                        <span className="text-slate-500">Reference:</span>
+                        <span className="font-mono font-bold text-[#103E8C]">{alreadySubmittedData.submissionId}</span>
+                      </div>
+                      <div className="flex justify-between py-1 border-b border-slate-200">
+                        <span className="text-slate-500">Student Name:</span>
+                        <span className="font-semibold text-slate-900">{alreadySubmittedData.fullName}</span>
+                      </div>
+                      <div className="flex justify-between py-1 border-b border-slate-200">
+                        <span className="text-slate-500">Colour:</span>
+                        <span className="font-semibold text-slate-900">{alreadySubmittedData.selectedColour}</span>
+                      </div>
+                      <div className="flex justify-between py-1">
+                        <span className="text-slate-500">Size:</span>
+                        <span className="font-bold text-slate-900">{alreadySubmittedData.selectedSize}</span>
+                      </div>
+                    </div>
+                  )}
 
-              <h3 className="text-xl font-bold text-slate-900 mb-2">Already Submitted</h3>
-              <p className="text-slate-600 text-sm mb-6">
-                Your Lacoste selection has already been recorded in the register.
-              </p>
-
-              {alreadySubmittedData && (
-                <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 text-left text-xs space-y-2 mb-6">
-                  <div className="flex justify-between py-1 border-b border-slate-200">
-                    <span className="text-slate-500">Student Name:</span>
-                    <span className="font-semibold text-slate-900">{alreadySubmittedData.fullName}</span>
-                  </div>
-                  <div className="flex justify-between py-1 border-b border-slate-200">
-                    <span className="text-slate-500">Index Number:</span>
-                    <span className="font-mono font-semibold text-slate-900">{alreadySubmittedData.indexNumber}</span>
-                  </div>
-                  <div className="flex justify-between py-1 border-b border-slate-200">
-                    <span className="text-slate-500">Selected Colour:</span>
-                    <span className="font-semibold text-slate-900">{alreadySubmittedData.selectedColour}</span>
-                  </div>
-                  <div className="flex justify-between py-1 border-b border-slate-200">
-                    <span className="text-slate-500">Selected Size:</span>
-                    <span className="font-semibold text-slate-900">{alreadySubmittedData.selectedSize}</span>
-                  </div>
-                  <div className="flex justify-between py-1">
-                    <span className="text-slate-500">Reference:</span>
-                    <span className="font-mono text-primary-800 font-bold">{alreadySubmittedData.submissionId}</span>
-                  </div>
+                  <button
+                    onClick={handleStartOver}
+                    className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2.5 px-4 rounded-xl transition text-xs"
+                  >
+                    Return to Verification
+                  </button>
                 </div>
               )}
 
-              <p className="text-xs text-slate-500 mb-6">
-                If you need to make a correction, please contact the ITSU Treasurer directly with your payment reference.
-              </p>
-
-              <button
-                onClick={handleStartOver}
-                className="w-full bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-2.5 px-4 rounded-lg transition text-sm"
-              >
-                Return to Home
-              </button>
             </div>
           </div>
-        );
-      }
 
-      // ------------------------------------------
-      // 3. SELECTION SCREEN (Colour & Size)
-      // ------------------------------------------
-      if (step === 'select') {
+        </div>
+      );
+    }
         const availableColours = ['Blue', 'White'];
         const availableSizes = ['S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
 
