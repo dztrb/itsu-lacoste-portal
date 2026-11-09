@@ -2994,13 +2994,17 @@
       };
 
       // Tick / Untick Shirt Given Out (Collected Status)
-      const handleToggleCollection = async (indexNumber) => {
+      const handleToggleCollection = async (indexNumber, fullName = '', currentlyGiven = false) => {
+        const label = fullName ? `${fullName} (${indexNumber})` : indexNumber;
+        if (currentlyGiven) {
+          if (!confirm(`Undo "Given Out" status for ${label}?`)) return;
+        }
         try {
           const res = await ApiService.call('toggleCollectionStatus', session.sessionToken, indexNumber);
           if (res.success) {
             const isGiven = res.collectionStatus === 'Collected';
             onNotify({
-              message: isGiven ? `Marked ${indexNumber} as Given Out!` : `Marked ${indexNumber} as Not Given Out.`,
+              message: isGiven ? `Marked ${indexNumber} as Given Out!` : `Undid Given Out for ${indexNumber}.`,
               type: isGiven ? 'success' : 'info'
             });
             loadStudentRecords();
@@ -3861,7 +3865,7 @@
                                     {st.submissionStatus === 'Submitted' ? (
                                       <button
                                         type="button"
-                                        onClick={() => handleToggleCollection(st.indexNumber)}
+                                        onClick={() => handleToggleCollection(st.indexNumber, st.fullName, isGivenOut)}
                                         className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-semibold border transition cursor-pointer select-none ${
                                           isGivenOut
                                             ? 'bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100'
