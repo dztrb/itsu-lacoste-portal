@@ -815,35 +815,44 @@
         return (
           <div className="flex-grow flex flex-col lg:flex-row min-h-screen">
             
-            {/* Left Brand Panel: Deep Navy Campus Connect */}
+            {/* Left Brand Panel: ITSU Lacoste Verification After Payment */}
             <div className="w-full lg:w-1/2 bg-[#0A1F44] text-white p-8 sm:p-12 lg:p-16 flex flex-col justify-between">
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center text-white/90">
                   <Icon name="graduation-cap" className="w-4 h-4" />
                 </div>
-                <span className="text-sm font-semibold tracking-wide text-white/90">Campus Connect</span>
+                <span className="text-sm font-semibold tracking-wide text-white/90">ITSU • Takoradi Technical University</span>
               </div>
 
               <div className="my-10 lg:my-auto max-w-lg">
+                <span className="text-xs font-bold uppercase tracking-wider text-blue-300 bg-white/10 px-3 py-1 rounded-full inline-block mb-3 border border-white/10">
+                  Department of Computer Science
+                </span>
                 <h2 className="text-3xl sm:text-4xl lg:text-5xl font-serif font-bold text-white tracking-tight leading-[1.15] mb-4">
-                  Your campus community, all in one place.
+                  ITSU Lacoste Verification After Payment
                 </h2>
                 <p className="text-blue-100/80 text-sm sm:text-base leading-relaxed mb-8">
-                  Department of Computer Science, Takoradi Technical University. Verify your student details to select your preferred Lacoste colour and size.
+                  Welcome to the official Information Technology Students Union (ITSU) collection portal. Verify your student details to confirm your dues payment and choose your preferred Lacoste colour and size.
                 </p>
 
                 <div className="space-y-3.5 text-xs sm:text-sm text-blue-100/90 font-normal">
                   <div className="flex items-center gap-3">
-                    <span className="text-white/40 font-mono text-sm">[]</span>
-                    <span>Real-time verification with paid student register</span>
+                    <div className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center flex-shrink-0">
+                      <Icon name="check" className="w-3 h-3 stroke-[3]" />
+                    </div>
+                    <span>Real-time verification against the paid student register</span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="text-white/40 font-mono text-sm">[]</span>
-                    <span>Program announcements & Lacoste preferences</span>
+                    <div className="w-5 h-5 rounded-full bg-blue-500/20 text-blue-300 flex items-center justify-center flex-shrink-0">
+                      <Icon name="shirt" className="w-3 h-3" />
+                    </div>
+                    <span>Select your preferred colour (Royal Blue / Classic White) and size (S - XXXL)</span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="text-white/40 font-mono text-sm">[]</span>
-                    <span>Secure student-only access</span>
+                    <div className="w-5 h-5 rounded-full bg-indigo-500/20 text-indigo-300 flex items-center justify-center flex-shrink-0">
+                      <Icon name="shield-check" className="w-3 h-3" />
+                    </div>
+                    <span>One-time secure submission per student index number</span>
                   </div>
                 </div>
               </div>
@@ -858,10 +867,10 @@
               <div className="max-w-md w-full">
                 <div className="mb-8">
                   <h1 className="text-3xl font-serif font-bold text-slate-900 tracking-tight">
-                    Welcome back
+                    Student Verification
                   </h1>
                   <p className="text-sm text-slate-500 mt-1">
-                    Sign in to your student portal
+                    Enter your full name and index number to continue
                   </p>
                 </div>
 
@@ -927,7 +936,7 @@
                           <span>Verifying Eligibility...</span>
                         </>
                       ) : (
-                        <span>Sign in</span>
+                        <span>Verify & Continue</span>
                       )}
                     </button>
                   </div>
