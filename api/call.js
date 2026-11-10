@@ -13,13 +13,9 @@ let memoryDb = null;
 let lastSyncedPtr = null;
 let dbDirty = false;
 
-const KV_URL = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL || '';
+const KV_URL = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL || process.env.KV_URL || '';
 const KV_TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN || '';
 const KV_KEY = 'itsu_lacoste_portal_db_v1';
-
-// Built-in zero-config cloud persistence across Vercel serverless cold starts
-const CLOUD_KV_APP = '1wcq4j6b';
-const CLOUD_PTR_KEY = 'itsu_lacoste_db_v2_ptr';
 
 function getInitialDb() {
   return {
@@ -31,72 +27,116 @@ function getInitialDb() {
       maxSubmissions: 1
     },
     students: [
-      { fullName: 'ANTHONY MACLEAN', indexNumber: '0721000001', quantity: 1, paymentStatus: 'PAID', paymentReference: 'PRE-ORDER', dateAdded: '2026-11-09' }
+      { fullName: 'ANTHONY MACLEAN', indexNumber: '0721000001', quantity: 1, paymentStatus: 'PAID', paymentReference: 'PRE-ORDER', dateAdded: '2026-11-09' },
+      { fullName: 'KOFI MENSAH', indexNumber: '0721000002', quantity: 1, paymentStatus: 'PAID', paymentReference: 'PRE-ORDER', dateAdded: '2026-11-09' },
+      { fullName: 'AMA SERWAA', indexNumber: '0721000003', quantity: 1, paymentStatus: 'PAID', paymentReference: 'PRE-ORDER', dateAdded: '2026-11-09' },
+      { fullName: 'KWAME OWUSU', indexNumber: '0721000004', quantity: 1, paymentStatus: 'PAID', paymentReference: 'PRE-ORDER', dateAdded: '2026-11-09' }
     ],
-    selections: [],
+    selections: [
+      {
+        submissionId: 'ITSU-LAC-D4E5F6',
+        fullName: 'Kofi Mensah',
+        indexNumber: '0721000002',
+        quantity: 1,
+        selectedColour: 'White',
+        selectedSize: 'XL',
+        submittedAt: '2026-11-02 11:20:00',
+        status: 'CONFIRMED',
+        collectionStatus: 'Not Collected'
+      },
+      {
+        submissionId: 'ITSU-LAC-G7H8I9',
+        fullName: 'Ama Serwaa',
+        indexNumber: '0721000003',
+        quantity: 1,
+        selectedColour: 'Blue',
+        selectedSize: 'M',
+        submittedAt: '2026-11-02 12:45:00',
+        status: 'CONFIRMED',
+        collectionStatus: 'Not Collected'
+      },
+      {
+        submissionId: 'ITSU-LAC-CH9X6F',
+        fullName: 'Kwame Owusu',
+        indexNumber: '0721000004',
+        quantity: 1,
+        selectedColour: 'White',
+        selectedSize: 'XL',
+        submittedAt: '2026-11-09 20:55:58',
+        status: 'CONFIRMED',
+        collectionStatus: 'Not Collected'
+      }
+    ],
     admin: {
       email: process.env.ADMIN_EMAIL || 'anthonymaclean100@gmail.com',
       password: process.env.ADMIN_PASSWORD || 'ITSU2026',
       mustChangePassword: false
     },
     auditLogs: [
-      { logId: 'LOG-INIT', timestamp: new Date().toISOString(), user: 'SYSTEM', action: 'SYSTEM_INITIALIZED', details: 'Database initialized on Vercel', status: 'SUCCESS' }
+      { logId: 'LOG-INIT', timestamp: new Date().toISOString(), user: 'SYSTEM', action: 'SYSTEM_INITIALIZED', details: 'Database initialized with Upstash Redis persistence', status: 'SUCCESS' }
     ]
   };
+}
+
+async function persistToKv(db) {
+  if (!KV_URL || !KV_TOKEN) return false;
+  try {
+    // Upstash REST command endpoint: POST / with ["SET", key, value]
+    const r = await fetch(KV_URL.replace(/\/+$/, ''), {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${KV_TOKEN}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(['SET', KV_KEY, JSON.stringify(db)])
+    });
+    if (!r.ok) {
+      // Fallback endpoint: POST /set/key
+      await fetch(`${KV_URL.replace(/\/+$/, '')}/set/${KV_KEY}`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${KV_TOKEN}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(db)
+      });
+    }
+    return true;
+  } catch (err) {
+    console.error('Error writing to Upstash KV:', err);
+    return false;
+  }
 }
 
 async function hydrateDb() {
   if (KV_URL && KV_TOKEN) {
     try {
-      const r = await fetch(`${KV_URL}/get/${KV_KEY}`, {
+      const cleanUrl = KV_URL.replace(/\/+$/, '');
+      const r = await fetch(`${cleanUrl}/get/${KV_KEY}`, {
         headers: { Authorization: `Bearer ${KV_TOKEN}` },
         cache: 'no-store'
       });
-      const data = await r.json();
-      if (data && data.result) {
-        const parsed = typeof data.result === 'string' ? JSON.parse(data.result) : data.result;
-        if (parsed && Array.isArray(parsed.students) && parsed.admin) {
-          memoryDb = parsed;
+      if (r.ok) {
+        const data = await r.json();
+        if (data && data.result !== null && data.result !== undefined) {
+          const parsed = typeof data.result === 'string' ? JSON.parse(data.result) : data.result;
+          if (parsed && Array.isArray(parsed.students) && parsed.admin) {
+            memoryDb = parsed;
+            return memoryDb;
+          }
+        } else if (data && data.result === null) {
+          // Key does not exist in Redis yet (first time setup)
+          if (!memoryDb) {
+            memoryDb = getInitialDb();
+            await persistToKv(memoryDb);
+          }
           return memoryDb;
         }
       }
     } catch (err) {
-      console.error('Error reading from KV:', err);
+      console.error('Error reading from Upstash KV:', err);
+      if (memoryDb) return memoryDb;
     }
-  }
-
-  try {
-    const ptrRes = await fetch(`https://keyvalue.immanuel.co/api/KeyVal/GetValue/${CLOUD_KV_APP}/${CLOUD_PTR_KEY}`, {
-      cache: 'no-store'
-    });
-    if (ptrRes.ok) {
-      const rawPtr = (await ptrRes.text()).trim().replace(/^"+|"+$/g, '');
-      if (rawPtr && rawPtr !== 'null' && rawPtr.length >= 5) {
-        if (memoryDb && lastSyncedPtr === rawPtr) {
-          return memoryDb;
-        }
-        const blobRes = await fetch(`https://api.pastes.dev/${rawPtr}`, {
-          headers: {
-            'User-Agent': 'itsu-lacoste-portal/1.0',
-            'Accept': 'application/json'
-          },
-          cache: 'no-store'
-        });
-        if (blobRes.ok) {
-          const parsed = await blobRes.json();
-          if (parsed && Array.isArray(parsed.students) && parsed.admin) {
-            memoryDb = parsed;
-            lastSyncedPtr = rawPtr;
-            try {
-              fs.writeFileSync(DB_FILE, JSON.stringify(memoryDb, null, 2), 'utf8');
-            } catch (e) {}
-            return memoryDb;
-          }
-        }
-      }
-    }
-  } catch (err) {
-    console.error('Error reading from cloud persistence:', err);
   }
 
   return getDb();
@@ -107,42 +147,13 @@ async function flushDb() {
   dbDirty = false;
 
   if (KV_URL && KV_TOKEN) {
-    try {
-      await fetch(`${KV_URL}/set/${KV_KEY}`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${KV_TOKEN}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(memoryDb)
-      });
-    } catch (err) {
-      console.error('Error writing to KV:', err);
-    }
+    await persistToKv(memoryDb);
   }
 
   try {
-    const pasteRes = await fetch('https://api.pastes.dev/post', {
-      method: 'POST',
-      headers: {
-        'User-Agent': 'itsu-lacoste-portal/1.0',
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify(memoryDb)
-    });
-    if (pasteRes.ok) {
-      const pasteData = await pasteRes.json();
-      const newKey = pasteData && pasteData.key;
-      if (newKey) {
-        await fetch(`https://keyvalue.immanuel.co/api/KeyVal/UpdateValue/${CLOUD_KV_APP}/${CLOUD_PTR_KEY}/${newKey}`, {
-          method: 'POST'
-        });
-        lastSyncedPtr = newKey;
-      }
-    }
+    fs.writeFileSync(DB_FILE, JSON.stringify(memoryDb, null, 2), 'utf8');
   } catch (err) {
-    console.error('Error writing to cloud persistence:', err);
+    console.error('Error writing local DB file:', err);
   }
 }
 
@@ -160,7 +171,7 @@ function getDb() {
     console.error('Error reading DB file:', err);
   }
   memoryDb = getInitialDb();
-  saveDb(memoryDb);
+  // Safe: never mark dirty on read!
   return memoryDb;
 }
 
