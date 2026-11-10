@@ -1149,89 +1149,114 @@
     }
 
     // ==========================================
-    // COMPONENT: Portal Details & Guidelines Modal
+    // COMPONENT: Portal Details & Guidelines Modal (Minimalist Modern Design)
     // ==========================================
     function PortalDetailsModal({ isOpen, onClose }) {
       if (!isOpen) return null;
 
       return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl max-w-lg w-full shadow-2xl border border-slate-100 overflow-hidden transform transition-all flex flex-col max-h-[90vh]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-slate-900/40 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="relative bg-white rounded-3xl max-w-md w-full shadow-2xl border border-slate-100 overflow-hidden transform transition-all flex flex-col max-h-[90vh]">
             
-            {/* Header */}
-            <div className="bg-gradient-to-r from-[#103E8C] to-[#164FA8] text-white p-5 sm:p-6 flex items-start justify-between">
+            {/* Subtle Ambient Glow in background */}
+            <div className="absolute -top-16 -right-16 w-44 h-44 rounded-full bg-gradient-to-br from-blue-200/40 via-indigo-100/30 to-transparent blur-2xl pointer-events-none"></div>
+
+            {/* Header: Clean & Minimalist */}
+            <div className="relative z-10 px-6 pt-6 pb-4 flex items-start justify-between">
               <div>
-                <span className="inline-block text-[10px] font-bold tracking-wider uppercase bg-white/15 px-2.5 py-0.5 rounded-full mb-1 text-blue-100">
+                <span className="inline-block text-[10px] font-bold tracking-wider uppercase text-[#103E8C] bg-blue-50/80 border border-blue-100/70 px-2.5 py-0.5 rounded-full mb-1.5">
                   Department of Computer Science • TTU
                 </span>
-                <h3 className="text-xl sm:text-2xl font-bold tracking-tight">
-                  Lacoste Verification & Collection
+                <h3 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+                  Verification Guidelines
                 </h3>
-                <p className="text-xs text-blue-100/90 mt-0.5">
-                  Official Guidelines & Collection Information
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Official collection process & details
                 </p>
               </div>
               <button
                 type="button"
                 onClick={onClose}
-                className="text-white/80 hover:text-white p-1.5 rounded-full hover:bg-white/10 transition cursor-pointer"
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 hover:text-slate-800 transition flex items-center justify-center cursor-pointer active:scale-95"
               >
-                <Icon name="x" className="w-5 h-5" />
+                <Icon name="x" className="w-4 h-4" />
               </button>
             </div>
 
-            {/* Content */}
-            <div className="p-5 sm:p-6 space-y-4 overflow-y-auto text-sm text-slate-600 leading-relaxed">
-              <div className="bg-blue-50/70 border border-blue-100 rounded-2xl p-4 text-xs sm:text-sm text-slate-700">
-                <p className="font-semibold text-[#103E8C] mb-1">Welcome to the Official Lacoste Portal</p>
-                <p>
-                  This portal serves the Department of Computer Science, Takoradi Technical University. Verify your student details to confirm your dues payment and choose your preferred colour and size.
+            {/* Content Body */}
+            <div className="relative z-10 px-6 py-2 space-y-4 overflow-y-auto text-sm text-slate-600 leading-relaxed">
+              
+              {/* Welcome Banner Card */}
+              <div className="bg-slate-50/90 border border-slate-100 rounded-2xl p-4 text-xs sm:text-sm text-slate-600">
+                <p className="font-semibold text-slate-900 mb-1 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-[#103E8C]"></span>
+                  Official Lacoste Collection
+                </p>
+                <p className="text-slate-500 leading-relaxed text-xs">
+                  This portal verifies your payment against the Department of Computer Science pre-ordered student register so you can select your preferred polo color and size.
                 </p>
               </div>
 
+              {/* How Verification Works */}
               <div className="space-y-3 pt-1">
-                <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">How Verification Works</h4>
+                <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                  How It Works
+                </h4>
                 
-                <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Icon name="check" className="w-3.5 h-3.5 stroke-[2.5]" />
+                <div className="flex items-start gap-3 p-2.5 rounded-2xl hover:bg-slate-50/60 transition">
+                  <div className="w-9 h-9 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-100/80 flex items-center justify-center flex-shrink-0">
+                    <Icon name="check" className="w-4 h-4 stroke-[2.5]" />
                   </div>
                   <div>
-                    <span className="font-semibold text-slate-800 text-xs sm:text-sm block">Real-time Register Verification</span>
-                    <p className="text-xs text-slate-500">Your Full Name and Index Number are verified live against the official pre-ordered student payment register.</p>
+                    <span className="font-semibold text-slate-900 text-xs sm:text-sm block">
+                      Real-time Register Verification
+                    </span>
+                    <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
+                      Your Full Name and Index Number are verified live against the official student payment register.
+                    </p>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 rounded-full bg-blue-100 text-[#103E8C] flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Icon name="shirt" className="w-3.5 h-3.5" />
+                <div className="flex items-start gap-3 p-2.5 rounded-2xl hover:bg-slate-50/60 transition">
+                  <div className="w-9 h-9 rounded-2xl bg-blue-50 text-[#103E8C] border border-blue-100/80 flex items-center justify-center flex-shrink-0">
+                    <Icon name="shirt" className="w-4 h-4" />
                   </div>
                   <div>
-                    <span className="font-semibold text-slate-800 text-xs sm:text-sm block">Colour & Size Preference</span>
-                    <p className="text-xs text-slate-500">Select between Royal Blue and Classic White, in sizes ranging from S to XXXL, with real-time 3D polo preview.</p>
+                    <span className="font-semibold text-slate-900 text-xs sm:text-sm block">
+                      Colour & Size Preference
+                    </span>
+                    <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
+                      Choose between Royal Blue and Classic White (sizes S to XXXL) with interactive 3D polo preview.
+                    </p>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-3">
-                  <div className="w-6 h-6 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <Icon name="shield-check" className="w-3.5 h-3.5" />
+                <div className="flex items-start gap-3 p-2.5 rounded-2xl hover:bg-slate-50/60 transition">
+                  <div className="w-9 h-9 rounded-2xl bg-indigo-50 text-indigo-600 border border-indigo-100/80 flex items-center justify-center flex-shrink-0">
+                    <Icon name="shield-check" className="w-4 h-4" />
                   </div>
                   <div>
-                    <span className="font-semibold text-slate-800 text-xs sm:text-sm block">One-Time Secure Submission</span>
-                    <p className="text-xs text-slate-500">Each index number can submit one verified selection to guarantee fair allocation for all students.</p>
+                    <span className="font-semibold text-slate-900 text-xs sm:text-sm block">
+                      One-Time Secure Submission
+                    </span>
+                    <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
+                      Each index number can submit one verified selection to guarantee fair allocation for all students.
+                    </p>
                   </div>
                 </div>
               </div>
+
             </div>
 
-            {/* Footer */}
-            <div className="bg-slate-50 px-5 py-3 border-t border-slate-100 flex justify-end">
+            {/* Footer Button: Clean Pill */}
+            <div className="relative z-10 p-5 pt-3 border-t border-slate-100/80 bg-white">
               <button
                 type="button"
                 onClick={onClose}
-                className="px-5 py-2 rounded-xl bg-[#103E8C] text-white text-xs font-semibold hover:bg-[#0B2E68] transition cursor-pointer"
+                className="w-full py-3 px-5 rounded-2xl bg-[#103E8C] hover:bg-[#0B2E68] text-white text-sm font-semibold shadow-md shadow-blue-900/15 active:scale-95 transition cursor-pointer flex items-center justify-center gap-2"
               >
-                Got It
+                <span>Got It</span>
+                <Icon name="arrow-right" className="w-4 h-4" />
               </button>
             </div>
 
