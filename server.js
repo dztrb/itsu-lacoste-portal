@@ -56,6 +56,21 @@ async function requestHandler(req, res) {
       return;
     }
 
+    // Serve favicon if requested directly
+    if (req.url && (req.url.includes('favicon.ico') || req.url.includes('favicon.png'))) {
+      const favCandidates = [
+        path.join(__dirname, 'frontend', 'assets', 'favicon.png'),
+        path.join(process.cwd(), 'frontend', 'assets', 'favicon.png')
+      ];
+      for (const fav of favCandidates) {
+        if (fs.existsSync(fav)) {
+          const img = fs.readFileSync(fav);
+          res.writeHead(200, { 'Content-Type': 'image/png', 'Cache-Control': 'public, max-age=86400' });
+          return res.end(img);
+        }
+      }
+    }
+
     // Serve frontend/Index.html for GET requests
     const candidates = [
       INDEX_FILE,
