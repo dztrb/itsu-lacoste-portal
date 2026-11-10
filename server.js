@@ -17,7 +17,7 @@ async function requestHandler(req, res) {
       return res.end();
     }
 
-    if (req.method === 'POST' && (req.url === '/api/call' || req.url.startsWith('/api/call?'))) {
+    if (req.method === 'POST') {
       // If Vercel already parsed req.body, use it; otherwise read stream
       if (req.body !== undefined) {
         if (!res.status) {
