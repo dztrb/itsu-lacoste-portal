@@ -209,7 +209,11 @@
 
           return {
             verified: true,
-            student: { fullName: student.fullName, indexNumber: student.indexNumber },
+            student: {
+              fullName: student.fullName,
+              indexNumber: student.indexNumber,
+              quantity: Math.max(1, parseInt(student.quantity, 10) || 1)
+            },
             token: btoa(`${student.indexNumber}|${student.fullName}|${Date.now() + 1800000}`),
             availableColours: db.settings.availableColours,
             availableSizes: db.settings.availableSizes
@@ -236,6 +240,7 @@
             throw new Error('Your Lacoste selection has already been recorded.');
           }
 
+          const qty = Math.max(1, parseInt(registeredStudent.quantity, 10) || 1);
           const subId = 'ITSU-LAC-' + Math.random().toString(36).substring(2, 8).toUpperCase();
           const submittedAt = new Date().toISOString().replace('T', ' ').substring(0, 19);
 
@@ -245,6 +250,7 @@
             indexNumber: indexNumber,
             selectedColour: colour,
             selectedSize: size,
+            quantity: qty,
             submittedAt: submittedAt,
             status: 'CONFIRMED'
           };
@@ -254,7 +260,7 @@
             timestamp: new Date().toISOString(),
             user: indexNumber,
             action: 'SUBMISSION_CONFIRMED',
-            details: JSON.stringify({ colour, size, subId }),
+            details: JSON.stringify({ colour, size, quantity: qty, subId }),
             status: 'SUCCESS'
           });
           saveDb(db);
@@ -266,6 +272,7 @@
             indexNumber: indexNumber,
             selectedColour: colour,
             selectedSize: size,
+            quantity: qty,
             submittedAt: submittedAt
           };
         },
@@ -351,16 +358,19 @@
           db.selections.forEach(s => {
             const c = (s.selectedColour || '').toLowerCase();
             const sz = (s.selectedSize || '').toUpperCase();
-            if (c === 'blue') blueCount++;
-            if (c === 'white') whiteCount++;
+            const qty = Math.max(1, parseInt(s.quantity, 10) || 1);
+            if (c === 'blue') blueCount += qty;
+            if (c === 'white') whiteCount += qty;
             if (s.collectionStatus === 'Collected' || String(s.status || '').includes('COLLECTED')) collectedCount++;
-            if (sizeCounts[sz] !== undefined) sizeCounts[sz]++;
+            if (sizeCounts[sz] !== undefined) sizeCounts[sz] += qty;
             if (matrix[sz]) {
-              if (c === 'blue') matrix[sz].Blue++;
-              if (c === 'white') matrix[sz].White++;
-              matrix[sz].Total++;
+              if (c === 'blue') matrix[sz].Blue += qty;
+              if (c === 'white') matrix[sz].White += qty;
+              matrix[sz].Total += qty;
             }
           });
+
+          const totalUnits = blueCount + whiteCount;
 
           return {
             overview: {
@@ -373,8 +383,8 @@
               submissionStatus: db.settings.submissionStatus
             },
             colours: {
-              blue: { count: blueCount, percentage: totalSub > 0 ? Math.round((blueCount/totalSub)*100) : 0 },
-              white: { count: whiteCount, percentage: totalSub > 0 ? Math.round((whiteCount/totalSub)*100) : 0 }
+              blue: { count: blueCount, percentage: totalUnits > 0 ? Math.round((blueCount/totalUnits)*100) : 0 },
+              white: { count: whiteCount, percentage: totalUnits > 0 ? Math.round((whiteCount/totalUnits)*100) : 0 }
             },
             sizes: sizeCounts,
             matrix: matrix,
@@ -384,6 +394,7 @@
               indexNumber: s.indexNumber,
               colour: s.selectedColour,
               size: s.selectedSize,
+              quantity: Math.max(1, parseInt(s.quantity, 10) || 1),
               submittedAt: s.submittedAt,
               collectionStatus: s.collectionStatus || 'Not Collected'
             }))
@@ -398,9 +409,11 @@
           let list = db.students.map(st => {
             const sel = selMap.get(String(st.indexNumber || '').toUpperCase());
             const isCollected = sel && (sel.collectionStatus === 'Collected' || String(sel.status || '').includes('COLLECTED'));
+            const qty = Math.max(1, parseInt(st.quantity, 10) || (sel && parseInt(sel.quantity, 10)) || 1);
             return {
               fullName: st.fullName,
               indexNumber: st.indexNumber,
+              quantity: qty,
               paymentStatus: st.paymentStatus,
               paymentReference: st.paymentReference,
               submissionId: sel ? sel.submissionId : '-',
@@ -452,9 +465,11 @@
           const normIdx = String(studentData.indexNumber || '').trim().toUpperCase();
           const exists = db.students.some(s => String(s.indexNumber).trim().toUpperCase() === normIdx);
           if (exists) throw new Error('Student index number already registered.');
+          const qty = Math.max(1, parseInt(studentData.quantity, 10) || 1);
           db.students.push({
             fullName: String(studentData.fullName || '').trim().toUpperCase(),
             indexNumber: normIdx,
+            quantity: qty,
             paymentStatus: 'PAID',
             paymentReference: 'PRE-ORDER',
             dateAdded: new Date().toISOString().split('T')[0]
@@ -476,6 +491,7 @@
           studentsList.forEach(item => {
             const fullName = String(item.fullName || '').trim().toUpperCase();
             const indexNumber = String(item.indexNumber || '').trim().toUpperCase();
+            const qty = Math.max(1, parseInt(item.quantity, 10) || 1);
             if (!fullName || !indexNumber) return;
             if (existingSet.has(indexNumber)) {
               skipped++;
@@ -485,6 +501,7 @@
             db.students.push({
               fullName,
               indexNumber,
+              quantity: qty,
               paymentStatus: 'PAID',
               paymentReference: 'PRE-ORDER',
               dateAdded: today
@@ -501,6 +518,7 @@
           const oldNorm = String(oldIndexNumber || '').trim().toUpperCase();
           const newNorm = String(updatedData.indexNumber || '').trim().toUpperCase();
           const newName = String(updatedData.fullName || '').trim().toUpperCase();
+          const newQty = Math.max(1, parseInt(updatedData.quantity, 10) || 1);
           if (!newName || !newNorm) throw new Error('Full Name and Index Number are required.');
 
           const stIdx = db.students.findIndex(s => String(s.indexNumber || '').trim().toUpperCase() === oldNorm);
@@ -512,11 +530,13 @@
 
           db.students[stIdx].fullName = newName;
           db.students[stIdx].indexNumber = newNorm;
+          db.students[stIdx].quantity = newQty;
 
           const sel = db.selections.find(s => String(s.indexNumber || '').trim().toUpperCase() === oldNorm);
           if (sel) {
             sel.fullName = newName;
             sel.indexNumber = newNorm;
+            sel.quantity = newQty;
           }
 
           db.auditLogs.unshift({
@@ -1901,7 +1921,7 @@
                             ITSU LACOSTE
                           </h4>
                           <p className="text-xs text-slate-500 mt-1">
-                            Color: <span className="font-semibold text-slate-700">{selectedColour === 'Blue' ? 'Royal Blue' : 'Classic White'}</span> &nbsp;&nbsp;&nbsp;&nbsp; Size: <span className="font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded text-[11px]">{selectedSize}</span> &nbsp;&nbsp;&nbsp;&nbsp; Qty: <span className="font-medium text-slate-700">1</span>
+                            Color: <span className="font-semibold text-slate-700">{selectedColour === 'Blue' ? 'Royal Blue' : 'Classic White'}</span> &nbsp;&nbsp;&nbsp;&nbsp; Size: <span className="font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded text-[11px]">{selectedSize}</span> &nbsp;&nbsp;&nbsp;&nbsp; Qty: <span className="font-bold text-slate-900">{verifiedStudent.quantity || 1}</span>
                           </p>
                         </div>
                       </div>
@@ -1919,7 +1939,7 @@
                             {verifiedStudent.fullName.toUpperCase()}
                           </h4>
                           <p className="text-xs text-slate-500 mt-1">
-                            Index: <span className="font-mono font-bold text-slate-900">{verifiedStudent.indexNumber}</span> &nbsp;&nbsp;&nbsp;&nbsp; Dept: <span className="font-medium text-slate-700">Computer Science</span> &nbsp;&nbsp;&nbsp;&nbsp; Status: <span className="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full text-[11px]">PAID</span>
+                            Index: <span className="font-mono font-bold text-slate-900">{verifiedStudent.indexNumber}</span> &nbsp;&nbsp;&nbsp;&nbsp; Dept: <span className="font-medium text-slate-700">Computer Science</span> &nbsp;&nbsp;&nbsp;&nbsp; Status: <span className="font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full text-[11px]">PAID ({(verifiedStudent.quantity || 1) * 75}GHC)</span>
                           </p>
                         </div>
                       </div>
@@ -1950,7 +1970,7 @@
                     {/* Card 1: Subtotal */}
                     <div className="bg-white rounded-2xl p-4 shadow-[0_4px_25px_rgba(0,0,0,0.03)] border border-slate-100 flex items-center justify-between text-xs sm:text-sm">
                       <span className="text-slate-500 font-medium">Subtotal</span>
-                      <span className="font-bold text-slate-900">GH₵ 0.00</span>
+                      <span className="font-bold text-slate-900">{(verifiedStudent.quantity || 1) * 75}GHC</span>
                     </div>
 
                     {/* Card 2: Dues Allocation */}
@@ -1961,8 +1981,8 @@
 
                     {/* Card 3: Total */}
                     <div className="bg-white rounded-2xl p-4 shadow-[0_4px_25px_rgba(0,0,0,0.03)] border border-slate-100 flex items-center justify-between text-xs sm:text-sm">
-                      <span className="text-slate-900 font-bold">Total</span>
-                      <span className="font-bold text-[#103E8C] text-sm sm:text-base">1</span>
+                      <span className="text-slate-900 font-bold">Total Quantity</span>
+                      <span className="font-bold text-[#103E8C] text-sm sm:text-base">{verifiedStudent.quantity || 1} ({(verifiedStudent.quantity || 1) * 75}GHC)</span>
                     </div>
                   </div>
 
@@ -2365,6 +2385,8 @@
       const [mode, setMode] = useState('bulk'); // 'bulk' | 'single'
       const [fullName, setFullName] = useState('');
       const [indexNumber, setIndexNumber] = useState('');
+      const [singleQuantity, setSingleQuantity] = useState(1);
+      const [defaultBulkQuantity, setDefaultBulkQuantity] = useState(1);
       const [bulkText, setBulkText] = useState('');
       const [isLoading, setIsLoading] = useState(false);
       const [error, setError] = useState('');
@@ -2473,13 +2495,14 @@
           if (namePart && indexPart && !headerWords.test(namePart) && !headerWords.test(indexPart)) {
             results.push({
               fullName: namePart.trim().replace(/\s+/g, ' ').toUpperCase(),
-              indexNumber: normalizeIndex(indexPart)
+              indexNumber: normalizeIndex(indexPart),
+              quantity: Math.max(1, parseInt(defaultBulkQuantity, 10) || 1)
             });
           }
         });
 
         return results;
-      }, [bulkText]);
+      }, [bulkText, defaultBulkQuantity]);
 
       if (!isOpen) return null;
 
@@ -2551,6 +2574,7 @@
           const res = await ApiService.call('addPaidStudent', sessionToken, {
             fullName: fullName.trim().toUpperCase(),
             indexNumber: indexNumber.trim().toUpperCase(),
+            quantity: Math.max(1, parseInt(singleQuantity, 10) || 1),
             paymentStatus: 'PAID'
           });
 
@@ -2558,6 +2582,7 @@
             onNotify({ message: 'Student added to register successfully!', type: 'success' });
             setFullName('');
             setIndexNumber('');
+            setSingleQuantity(1);
             onStudentAdded();
             onClose();
           } else {
@@ -2674,6 +2699,27 @@
                   className="w-full px-3 py-2.5 rounded-xl border border-slate-300 text-xs font-mono focus:ring-2 focus:ring-primary-500 focus:outline-none"
                 />
 
+                {/* Default Quantity for Bulk Import */}
+                <div className="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-xl px-3 py-2">
+                  <div>
+                    <span className="text-xs font-semibold text-slate-700 block">Quantity Bought per Student</span>
+                    <span className="text-[10px] text-slate-500">1 Lacoste = 75GHC</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min="1"
+                      max="20"
+                      value={defaultBulkQuantity}
+                      onChange={(e) => setDefaultBulkQuantity(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                      className="w-16 px-2.5 py-1 rounded-lg border border-slate-300 text-xs font-bold text-center focus:ring-2 focus:ring-primary-500 focus:outline-none bg-white"
+                    />
+                    <span className="text-xs font-bold text-primary-800 bg-primary-50 border border-primary-200 px-2 py-1 rounded-lg">
+                      {(Number(defaultBulkQuantity) || 1) * 75}GHC
+                    </span>
+                  </div>
+                </div>
+
                 {/* Live Parsed Preview */}
                 <div className="bg-slate-50 border border-slate-200 rounded-xl p-3">
                   <div className="flex items-center justify-between text-[11px] font-semibold text-slate-600 mb-1.5">
@@ -2687,7 +2733,12 @@
                       {parsedBulkList.slice(0, 25).map((item, i) => (
                         <div key={i} className="py-1 flex items-center justify-between gap-2">
                           <span className="font-semibold text-slate-800 truncate">{i + 1}. {item.fullName}</span>
-                          <span className="font-mono text-slate-600 shrink-0">{item.indexNumber}</span>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className="font-mono text-slate-600">{item.indexNumber}</span>
+                            <span className="text-[10px] font-bold text-primary-800 bg-primary-50 px-1.5 py-0.5 rounded">
+                              {item.quantity || 1}x ({(item.quantity || 1) * 75}GHC)
+                            </span>
+                          </div>
                         </div>
                       ))}
                       {parsedBulkList.length > 25 && (
@@ -2747,6 +2798,24 @@
                   />
                 </div>
 
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-semibold text-slate-700">Quantity Bought (1 Lacoste = 75GHC)</label>
+                    <span className="text-xs font-bold text-primary-800 bg-primary-50 border border-primary-200 px-2 py-0.5 rounded-md">
+                      Subtotal: {(Number(singleQuantity) || 1) * 75}GHC
+                    </span>
+                  </div>
+                  <input
+                    type="number"
+                    min="1"
+                    max="20"
+                    required
+                    value={singleQuantity}
+                    onChange={(e) => setSingleQuantity(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                    className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm font-bold focus:ring-2 focus:ring-primary-500 focus:outline-none"
+                  />
+                </div>
+
                 <div className="pt-2 flex justify-end gap-2">
                   <button
                     type="button"
@@ -2776,6 +2845,7 @@
     function CorrectSelectionModal({ isOpen, onClose, student, sessionToken, onSelectionUpdated, onNotify }) {
       const [editName, setEditName] = useState('');
       const [editIndex, setEditIndex] = useState('');
+      const [editQuantity, setEditQuantity] = useState(1);
       const [colour, setColour] = useState('Blue');
       const [size, setSize] = useState('L');
       const [reason, setReason] = useState('');
@@ -2786,6 +2856,7 @@
         if (student) {
           setEditName(student.fullName || '');
           setEditIndex(student.indexNumber || '');
+          setEditQuantity(Math.max(1, parseInt(student.quantity, 10) || 1));
           if (student.selectedColour && student.selectedColour !== '-') setColour(student.selectedColour);
           if (student.selectedSize && student.selectedSize !== '-') setSize(student.selectedSize);
         }
@@ -2800,11 +2871,14 @@
 
         try {
           let targetIdx = student.indexNumber;
+          const nextQty = Math.max(1, parseInt(editQuantity, 10) || 1);
           if (editName.trim().toUpperCase() !== String(student.fullName || '').trim().toUpperCase() ||
-              editIndex.trim().toUpperCase() !== String(student.indexNumber || '').trim().toUpperCase()) {
+              editIndex.trim().toUpperCase() !== String(student.indexNumber || '').trim().toUpperCase() ||
+              nextQty !== (parseInt(student.quantity, 10) || 1)) {
             await ApiService.call('updatePaidStudent', sessionToken, student.indexNumber, {
               fullName: editName.trim().toUpperCase(),
-              indexNumber: editIndex.trim().toUpperCase()
+              indexNumber: editIndex.trim().toUpperCase(),
+              quantity: nextQty
             });
             targetIdx = editIndex.trim().toUpperCase();
           }
@@ -2871,13 +2945,13 @@
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-2.5">
+              <div className="grid grid-cols-3 gap-2.5">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">Colour</label>
                   <select
                     value={colour}
                     onChange={(e) => setColour(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-primary-500 focus:outline-none"
+                    className="w-full px-2.5 py-2 rounded-lg border border-slate-300 text-xs sm:text-sm focus:ring-2 focus:ring-primary-500 focus:outline-none"
                   >
                     <option value="Blue">Blue</option>
                     <option value="White">White</option>
@@ -2889,7 +2963,7 @@
                   <select
                     value={size}
                     onChange={(e) => setSize(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm focus:ring-2 focus:ring-primary-500 focus:outline-none"
+                    className="w-full px-2.5 py-2 rounded-lg border border-slate-300 text-xs sm:text-sm focus:ring-2 focus:ring-primary-500 focus:outline-none"
                   >
                     <option value="S">S</option>
                     <option value="M">M</option>
@@ -2898,6 +2972,20 @@
                     <option value="XXL">XXL</option>
                     <option value="XXXL">XXXL</option>
                   </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1">
+                    Qty ({(Number(editQuantity) || 1) * 75}GHC)
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="20"
+                    value={editQuantity}
+                    onChange={(e) => setEditQuantity(Math.max(1, parseInt(e.target.value, 10) || 1))}
+                    className="w-full px-2.5 py-2 rounded-lg border border-slate-300 text-xs sm:text-sm font-bold focus:ring-2 focus:ring-primary-500 focus:outline-none"
+                  />
                 </div>
               </div>
 
@@ -3907,6 +3995,7 @@
                             <th className="py-3 px-4">#</th>
                             <th className="py-3 px-4">Full Name</th>
                             <th className="py-3 px-4">Index Number</th>
+                            <th className="py-3 px-4">Qty</th>
                             <th className="py-3 px-4">Colour</th>
                             <th className="py-3 px-4">Size</th>
                             <th className="py-3 px-4">Selection</th>
@@ -3923,6 +4012,9 @@
                                   <td className="py-2.5 px-4 text-slate-400">{idx + 1}</td>
                                   <td className="py-2.5 px-4 font-semibold text-slate-900 uppercase">{st.fullName}</td>
                                   <td className="py-2.5 px-4 font-mono text-slate-600">{st.indexNumber}</td>
+                                  <td className="py-2.5 px-4 font-bold text-slate-800 whitespace-nowrap">
+                                    {st.quantity || 1} <span className="text-[10px] font-medium text-slate-400">({(st.quantity || 1) * 75}GHC)</span>
+                                  </td>
                                   <td className="py-2.5 px-4">
                                     {st.selectedColour !== '-' ? (
                                       <span className={`font-semibold ${st.selectedColour === 'Blue' ? 'text-blue-700' : 'text-slate-800'}`}>
@@ -4458,6 +4550,12 @@
                     <span className="text-slate-500">Shirt Order:</span>
                     <span className="font-bold text-[#103E8C]">
                       {handoutConfirmStudent.selectedColour === 'Blue' ? 'Royal Blue' : handoutConfirmStudent.selectedColour === 'White' ? 'Classic White' : handoutConfirmStudent.selectedColour} • Size {handoutConfirmStudent.selectedSize}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-500">Quantity Paid:</span>
+                    <span className="font-bold text-slate-900">
+                      {handoutConfirmStudent.quantity || 1} ({(handoutConfirmStudent.quantity || 1) * 75}GHC)
                     </span>
                   </div>
                 </div>

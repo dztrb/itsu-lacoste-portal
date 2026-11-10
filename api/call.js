@@ -149,10 +149,11 @@ const Backend = {
       };
     }
 
+    const qty = Math.max(1, parseInt(student.quantity, 10) || 1);
     const token = Buffer.from(`${student.indexNumber}|${student.fullName}|${Date.now() + 1800000}`).toString('base64');
     return {
       verified: true,
-      student: { fullName: student.fullName, indexNumber: student.indexNumber },
+      student: { fullName: student.fullName, indexNumber: student.indexNumber, quantity: qty },
       token,
       availableColours: db.settings.availableColours,
       availableSizes: db.settings.availableSizes
@@ -186,11 +187,13 @@ const Backend = {
 
     const subId = 'ITSU-LAC-' + Math.random().toString(36).substring(2, 8).toUpperCase();
     const submittedAt = new Date().toISOString().replace('T', ' ').substring(0, 19);
+    const qty = Math.max(1, parseInt(registeredStudent.quantity, 10) || 1);
 
     const newSub = {
       submissionId: subId,
       fullName: registeredStudent.fullName || fullName,
       indexNumber: normIdx,
+      quantity: qty,
       selectedColour: colour,
       selectedSize: size,
       submittedAt,
@@ -203,7 +206,7 @@ const Backend = {
       timestamp: new Date().toISOString(),
       user: normIdx,
       action: 'SUBMISSION_CONFIRMED',
-      details: JSON.stringify({ colour, size, subId }),
+      details: JSON.stringify({ colour, size, quantity: qty, subId }),
       status: 'SUCCESS'
     });
     saveDb(db);
@@ -213,6 +216,7 @@ const Backend = {
       submissionId: subId,
       fullName: newSub.fullName,
       indexNumber: normIdx,
+      quantity: qty,
       selectedColour: colour,
       selectedSize: size,
       submittedAt
@@ -300,16 +304,19 @@ const Backend = {
     db.selections.forEach(s => {
       const c = String(s.selectedColour || '').toLowerCase();
       const sz = String(s.selectedSize || '').toUpperCase();
-      if (c === 'blue') blueCount++;
-      if (c === 'white') whiteCount++;
+      const qty = Math.max(1, parseInt(s.quantity, 10) || 1);
+      if (c === 'blue') blueCount += qty;
+      if (c === 'white') whiteCount += qty;
       if (s.collectionStatus === 'Collected' || String(s.status || '').includes('COLLECTED')) collectedCount++;
-      if (sizeCounts[sz] !== undefined) sizeCounts[sz]++;
+      if (sizeCounts[sz] !== undefined) sizeCounts[sz] += qty;
       if (matrix[sz]) {
-        if (c === 'blue') matrix[sz].Blue++;
-        if (c === 'white') matrix[sz].White++;
-        matrix[sz].Total++;
+        if (c === 'blue') matrix[sz].Blue += qty;
+        if (c === 'white') matrix[sz].White += qty;
+        matrix[sz].Total += qty;
       }
     });
+
+    const totalUnits = blueCount + whiteCount;
 
     return {
       overview: {
@@ -322,8 +329,8 @@ const Backend = {
         submissionStatus: db.settings.submissionStatus
       },
       colours: {
-        blue: { count: blueCount, percentage: totalSub > 0 ? Math.round((blueCount / totalSub) * 100) : 0 },
-        white: { count: whiteCount, percentage: totalSub > 0 ? Math.round((whiteCount / totalSub) * 100) : 0 }
+        blue: { count: blueCount, percentage: totalUnits > 0 ? Math.round((blueCount / totalUnits) * 100) : 0 },
+        white: { count: whiteCount, percentage: totalUnits > 0 ? Math.round((whiteCount / totalUnits) * 100) : 0 }
       },
       sizes: sizeCounts,
       matrix,
@@ -331,6 +338,7 @@ const Backend = {
         submissionId: s.submissionId,
         fullName: s.fullName,
         indexNumber: s.indexNumber,
+        quantity: Math.max(1, parseInt(s.quantity, 10) || 1),
         colour: s.selectedColour,
         size: s.selectedSize,
         submittedAt: s.submittedAt,
@@ -347,9 +355,11 @@ const Backend = {
     let list = db.students.map(st => {
       const sel = selMap.get(String(st.indexNumber || '').toUpperCase());
       const isCollected = sel && (sel.collectionStatus === 'Collected' || String(sel.status || '').includes('COLLECTED'));
+      const qty = Math.max(1, parseInt(st.quantity || (sel && sel.quantity), 10) || 1);
       return {
         fullName: st.fullName,
         indexNumber: st.indexNumber,
+        quantity: qty,
         paymentStatus: st.paymentStatus,
         paymentReference: st.paymentReference,
         submissionId: sel ? sel.submissionId : '-',
@@ -401,9 +411,11 @@ const Backend = {
     const normIdx = String(studentData.indexNumber || '').trim().toUpperCase();
     const exists = db.students.some(s => String(s.indexNumber).trim().toUpperCase() === normIdx);
     if (exists) throw new Error('Student index number already registered.');
+    const qty = Math.max(1, parseInt(studentData.quantity, 10) || 1);
     db.students.push({
       fullName: String(studentData.fullName || '').trim().toUpperCase(),
       indexNumber: normIdx,
+      quantity: qty,
       paymentStatus: 'PAID',
       paymentReference: 'PRE-ORDER',
       dateAdded: new Date().toISOString().split('T')[0]
@@ -425,6 +437,7 @@ const Backend = {
     studentsList.forEach(item => {
       const fullName = String(item.fullName || '').trim().toUpperCase();
       const indexNumber = String(item.indexNumber || '').trim().toUpperCase();
+      const qty = Math.max(1, parseInt(item.quantity, 10) || 1);
       if (!fullName || !indexNumber) return;
       if (existingSet.has(indexNumber)) {
         skipped++;
@@ -434,6 +447,7 @@ const Backend = {
       db.students.push({
         fullName,
         indexNumber,
+        quantity: qty,
         paymentStatus: 'PAID',
         paymentReference: 'PRE-ORDER',
         dateAdded: today
@@ -459,13 +473,16 @@ const Backend = {
       throw new Error('Another student already has that index number.');
     }
 
+    const nextQty = updatedData.quantity !== undefined ? Math.max(1, parseInt(updatedData.quantity, 10) || 1) : (db.students[stIdx].quantity || 1);
     db.students[stIdx].fullName = newName;
     db.students[stIdx].indexNumber = newNorm;
+    db.students[stIdx].quantity = nextQty;
 
     const sel = db.selections.find(s => String(s.indexNumber || '').trim().toUpperCase() === oldNorm);
     if (sel) {
       sel.fullName = newName;
       sel.indexNumber = newNorm;
+      sel.quantity = nextQty;
     }
 
     db.auditLogs.unshift({
@@ -473,7 +490,7 @@ const Backend = {
       timestamp: new Date().toISOString(),
       user: db.admin.email,
       action: 'STUDENT_UPDATED',
-      details: JSON.stringify({ oldIndexNumber: oldNorm, newIndexNumber: newNorm, fullName: newName }),
+      details: JSON.stringify({ oldIndexNumber: oldNorm, newIndexNumber: newNorm, fullName: newName, quantity: nextQty }),
       status: 'SUCCESS'
     });
 
