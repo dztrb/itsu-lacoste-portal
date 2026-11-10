@@ -185,6 +185,25 @@ function saveDb(db) {
   }
 }
 
+function normalizeIndexNumber(idx) {
+  if (!idx) return '';
+  return String(idx)
+    .trim()
+    .toUpperCase()
+    .replace(/\s*\/\s*/g, '/')
+    .replace(/\s*-\s*/g, '/')
+    .replace(/\s+/g, '');
+}
+
+function normalizeName(name) {
+  if (!name) return '';
+  return String(name)
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, ' ')
+    .replace(/\s+/g, ' ');
+}
+
 const Backend = {
   getPortalSettings() {
     return getDb().settings;
@@ -192,14 +211,17 @@ const Backend = {
 
   verifyStudent(fullName, indexNumber) {
     const db = getDb();
-    const normIdx = String(indexNumber || '').trim().toUpperCase();
-    const normName = String(fullName || '').trim().toLowerCase();
+    const normIdx = normalizeIndexNumber(indexNumber);
+    const normName = normalizeName(fullName);
 
     if (db.settings.submissionStatus !== 'OPEN') {
       return { verified: false, isClosed: true, message: 'Submissions are currently closed. Please contact the ITSU Treasurer for assistance.' };
     }
 
-    const existing = db.selections.find(s => String(s.indexNumber || '').toUpperCase() === normIdx);
+    const existing = db.selections.find(s => {
+      const sIdx = normalizeIndexNumber(s.indexNumber);
+      return sIdx === normIdx || (normIdx.length >= 6 && sIdx.replace(/^0+/, '') === normIdx.replace(/^0+/, ''));
+    });
     if (existing) {
       return { verified: false, alreadySubmitted: true, submission: existing, message: 'Your Lacoste selection has already been recorded.' };
     }
@@ -212,16 +234,23 @@ const Backend = {
     }
 
     const student = db.students.find(s => {
-      if (String(s.indexNumber || '').trim().toUpperCase() !== normIdx) return false;
-      const sName = String(s.fullName || '').trim().toLowerCase().replace(/\s+/g, ' ');
-      const cleanInputName = normName.replace(/\s+/g, ' ');
-      if (!sName || !cleanInputName) return false;
-      if (sName === cleanInputName) return true;
-      const inputWords = cleanInputName.split(' ').filter(w => w.length > 1);
-      const sheetWords = sName.split(' ').filter(w => w.length > 1);
-      if (inputWords.length < 2) return false;
+      const sIdx = normalizeIndexNumber(s.indexNumber);
+      const isIdxMatch = sIdx === normIdx || (normIdx.length >= 6 && sIdx.replace(/^0+/, '') === normIdx.replace(/^0+/, ''));
+      if (!isIdxMatch) return false;
+
+      const sName = normalizeName(s.fullName);
+      if (!sName || !normName) return false;
+      if (sName === normName) return true;
+
+      const inputWords = normName.split(' ').filter(w => w.length > 0);
+      const sheetWords = sName.split(' ').filter(w => w.length > 0);
+      if (inputWords.length === 0) return false;
+
       const matchCount = inputWords.filter(w => sheetWords.includes(w)).length;
-      return matchCount === inputWords.length || matchCount >= Math.max(2, sheetWords.length);
+      if (inputWords.length === 1) {
+        return matchCount === 1;
+      }
+      return matchCount >= Math.min(inputWords.length, 2);
     });
 
     if (!student || student.paymentStatus !== 'PAID') {
@@ -532,27 +561,34 @@ const Backend = {
 
   updatePaidStudent(sessionToken, oldIndexNumber, updatedData) {
     const db = getDb();
-    const oldNorm = String(oldIndexNumber || '').trim().toUpperCase();
-    const newNorm = String(updatedData.indexNumber || '').trim().toUpperCase();
+    const oldNorm = normalizeIndexNumber(oldIndexNumber);
+    const newNorm = normalizeIndexNumber(updatedData.indexNumber);
     const newName = String(updatedData.fullName || '').trim().toUpperCase();
     if (!newName || !newNorm) throw new Error('Full Name and Index Number are required.');
 
-    const stIdx = db.students.findIndex(s => String(s.indexNumber || '').trim().toUpperCase() === oldNorm);
+    const stIdx = db.students.findIndex(s => {
+      const sIdx = normalizeIndexNumber(s.indexNumber);
+      return sIdx === oldNorm || (oldNorm.length >= 6 && sIdx.replace(/^0+/, '') === oldNorm.replace(/^0+/, ''));
+    });
     if (stIdx === -1) throw new Error('Student record not found.');
 
-    if (oldNorm !== newNorm && db.students.some((s, i) => i !== stIdx && String(s.indexNumber || '').trim().toUpperCase() === newNorm)) {
+    if (oldNorm !== newNorm && db.students.some((s, i) => i !== stIdx && normalizeIndexNumber(s.indexNumber) === newNorm)) {
       throw new Error('Another student already has that index number.');
     }
 
     const nextQty = updatedData.quantity !== undefined ? Math.max(1, parseInt(updatedData.quantity, 10) || 1) : (db.students[stIdx].quantity || 1);
+    const cleanIndexNumber = updatedData.indexNumber.trim().toUpperCase();
     db.students[stIdx].fullName = newName;
-    db.students[stIdx].indexNumber = newNorm;
+    db.students[stIdx].indexNumber = cleanIndexNumber;
     db.students[stIdx].quantity = nextQty;
 
-    const sel = db.selections.find(s => String(s.indexNumber || '').trim().toUpperCase() === oldNorm);
+    const sel = db.selections.find(s => {
+      const sIdx = normalizeIndexNumber(s.indexNumber);
+      return sIdx === oldNorm || (oldNorm.length >= 6 && sIdx.replace(/^0+/, '') === oldNorm.replace(/^0+/, ''));
+    });
     if (sel) {
       sel.fullName = newName;
-      sel.indexNumber = newNorm;
+      sel.indexNumber = cleanIndexNumber;
       sel.quantity = nextQty;
     }
 
@@ -561,7 +597,7 @@ const Backend = {
       timestamp: new Date().toISOString(),
       user: db.admin.email,
       action: 'STUDENT_UPDATED',
-      details: JSON.stringify({ oldIndexNumber: oldNorm, newIndexNumber: newNorm, fullName: newName, quantity: nextQty }),
+      details: JSON.stringify({ oldIndexNumber, newIndexNumber: cleanIndexNumber, fullName: newName, quantity: nextQty }),
       status: 'SUCCESS'
     });
 
@@ -571,9 +607,15 @@ const Backend = {
 
   deletePaidStudent(sessionToken, indexNumber) {
     const db = getDb();
-    const normIdx = String(indexNumber || '').trim().toUpperCase();
-    db.students = db.students.filter(s => String(s.indexNumber || '').trim().toUpperCase() !== normIdx);
-    db.selections = db.selections.filter(s => String(s.indexNumber || '').trim().toUpperCase() !== normIdx);
+    const normIdx = normalizeIndexNumber(indexNumber);
+    db.students = db.students.filter(s => {
+      const sIdx = normalizeIndexNumber(s.indexNumber);
+      return sIdx !== normIdx && !(normIdx.length >= 6 && sIdx.replace(/^0+/, '') === normIdx.replace(/^0+/, ''));
+    });
+    db.selections = db.selections.filter(s => {
+      const sIdx = normalizeIndexNumber(s.indexNumber);
+      return sIdx !== normIdx && !(normIdx.length >= 6 && sIdx.replace(/^0+/, '') === normIdx.replace(/^0+/, ''));
+    });
     db.auditLogs.unshift({
       logId: 'LOG-' + Math.random().toString(36).substring(2, 7).toUpperCase(),
       timestamp: new Date().toISOString(),
@@ -605,8 +647,11 @@ const Backend = {
 
   toggleCollectionStatus(sessionToken, indexNumber) {
     const db = getDb();
-    const normIdx = String(indexNumber || '').trim().toUpperCase();
-    const sel = db.selections.find(s => String(s.indexNumber || '').trim().toUpperCase() === normIdx);
+    const normIdx = normalizeIndexNumber(indexNumber);
+    const sel = db.selections.find(s => {
+      const sIdx = normalizeIndexNumber(s.indexNumber);
+      return sIdx === normIdx || (normIdx.length >= 6 && sIdx.replace(/^0+/, '') === normIdx.replace(/^0+/, ''));
+    });
     if (!sel) throw new Error('Student has not submitted a Lacoste selection yet.');
 
     const currentlyCollected = sel.collectionStatus === 'Collected' || String(sel.status || '').includes('COLLECTED');
@@ -620,7 +665,7 @@ const Backend = {
       timestamp: new Date().toISOString(),
       user: db.admin.email,
       action: nextStatus === 'Collected' ? 'SHIRT_COLLECTED' : 'COLLECTION_REVERTED',
-      details: `${sel.fullName} (${normIdx}) marked as ${nextStatus}`,
+      details: `${sel.fullName} (${indexNumber}) marked as ${nextStatus}`,
       status: 'SUCCESS'
     });
 
@@ -630,10 +675,16 @@ const Backend = {
 
   updateStudentSelection(sessionToken, indexNumber, selection) {
     const db = getDb();
-    const normIdx = String(indexNumber || '').trim().toUpperCase();
-    const st = db.students.find(s => String(s.indexNumber || '').trim().toUpperCase() === normIdx);
+    const normIdx = normalizeIndexNumber(indexNumber);
+    const st = db.students.find(s => {
+      const sIdx = normalizeIndexNumber(s.indexNumber);
+      return sIdx === normIdx || (normIdx.length >= 6 && sIdx.replace(/^0+/, '') === normIdx.replace(/^0+/, ''));
+    });
     const qty = st ? Math.max(1, parseInt(st.quantity, 10) || 1) : 1;
-    let sel = db.selections.find(s => String(s.indexNumber || '').trim().toUpperCase() === normIdx);
+    let sel = db.selections.find(s => {
+      const sIdx = normalizeIndexNumber(s.indexNumber);
+      return sIdx === normIdx || (normIdx.length >= 6 && sIdx.replace(/^0+/, '') === normIdx.replace(/^0+/, ''));
+    });
     if (sel) {
       sel.selectedColour = selection.colour;
       sel.selectedSize = selection.size;
@@ -643,7 +694,7 @@ const Backend = {
       db.selections.push({
         submissionId: 'ITSU-LAC-ADM-' + Math.random().toString(36).substring(2, 6).toUpperCase(),
         fullName: st ? st.fullName : 'Student',
-        indexNumber: normIdx,
+        indexNumber: st ? st.indexNumber : String(indexNumber).trim().toUpperCase(),
         quantity: qty,
         selectedColour: selection.colour,
         selectedSize: selection.size,
@@ -658,8 +709,11 @@ const Backend = {
 
   deleteStudentSelection(sessionToken, indexNumber) {
     const db = getDb();
-    const normIdx = String(indexNumber || '').trim().toUpperCase();
-    const idx = db.selections.findIndex(s => String(s.indexNumber || '').trim().toUpperCase() === normIdx);
+    const normIdx = normalizeIndexNumber(indexNumber);
+    const idx = db.selections.findIndex(s => {
+      const sIdx = normalizeIndexNumber(s.indexNumber);
+      return sIdx === normIdx || (normIdx.length >= 6 && sIdx.replace(/^0+/, '') === normIdx.replace(/^0+/, ''));
+    });
     if (idx !== -1) {
       db.selections.splice(idx, 1);
       saveDb(db);
