@@ -14,7 +14,7 @@ function doGet(e) {
   template.initialView = (e && e.parameter && e.parameter.view) ? e.parameter.view : 'portal';
 
   const output = template.evaluate();
-  output.setTitle('ITSU Lacoste Portal | Takoradi Technical University');
+  output.setTitle('lacoste verification');
   output.addMetaTag('viewport', 'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no');
   output.addMetaTag('theme-color', '#1E40AF');
   output.setXFrameOptionsMode(HtmlService.XFrameOptionsMode.ALLOWALL);
