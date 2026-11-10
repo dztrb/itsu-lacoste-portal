@@ -1,0 +1,6 @@
+{
+  "rewrites": [
+    { "source": "/api/call", "destination": "/api/call.js" },
+    { "source": "/(.*)", "destination": "/frontend/Index.html" }
+  ]
+}
