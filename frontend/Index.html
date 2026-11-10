@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>ITSU Lacoste Verification & Collection Portal | Takoradi Technical University</title>
   
   <!-- Fonts: Inter & Lora for elegant university portal typography -->
@@ -48,8 +48,8 @@
   <!-- Lucide Icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
 
-  <!-- SheetJS (True Binary .xlsx Excel Generator - Async so it never blocks page render) -->
-  <script async src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <!-- SheetJS (True Binary .xlsx Excel Reader & Writer) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
   <!-- React 18 & Babel Standalone for seamless execution -->
   <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
@@ -62,6 +62,13 @@
       -webkit-font-smoothing: antialiased;
       background-color: #f8fafc;
       color: #0f172a;
+      touch-action: manipulation;
+    }
+    /* Prevent mobile browser auto-zoom when tapping inputs, selects, or textareas */
+    @media screen and (max-width: 768px) {
+      input, select, textarea {
+        font-size: 16px !important;
+      }
     }
     /* Custom scrollbars */
     ::-webkit-scrollbar {
@@ -2363,60 +2370,110 @@
       const [error, setError] = useState('');
       const fileInputRef = useRef(null);
 
-      // Smart parser for bulk text (handles Excel tab-separated, CSV comma-separated, hyphen, or space-separated lines)
+      // Smart parser for bulk text (handles multi-column Excel rows, CSV, hyphen, or space-separated lines)
       const parsedBulkList = useMemo(() => {
         if (!bulkText.trim()) return [];
         const lines = bulkText.split(/\r?\n/);
         const results = [];
+        const ignoreWords = new Set([
+          'PAID', 'PENDING', 'SUBMITTED', 'CONFIRMED', 'COLLECTED', 'NOT COLLECTED',
+          'PRE-ORDER', 'BLUE', 'WHITE', 'ROYAL BLUE', 'CLASSIC WHITE',
+          'S', 'M', 'L', 'XL', 'XXL', 'XXXL', '-', 'N/A', 'NONE'
+        ]);
+        const headerWords = /^(#|s\/n|sn|no\.?|full\s*name|student\s*name|name|surname|first\s*name|other\s*names|index\s*number|index\s*no\.?|index|student\s*id|matric.*|status|payment.*|colour|color|size|date.*|ref.*|submission.*)$/i;
+
+        const normalizeIndex = (rawIdx) => {
+          const clean = String(rawIdx || '').trim().toUpperCase();
+          // Restore leading 0 if Excel stripped it from a 10-digit TTU index number (e.g. 721000001 -> 0721000001)
+          if (/^[1-9]\d{8}$/.test(clean)) {
+            return '0' + clean;
+          }
+          return clean;
+        };
+
+        const isIndexCandidate = (val) => {
+          const v = String(val || '').trim();
+          if (!v || /^itsu-lac-/i.test(v)) return false;
+          // Reject dates like 2026-11-09 or 10/11/2026
+          if (/^\d{4}[-\/]\d{1,2}[-\/]\d{1,2}/.test(v) || /^\d{1,2}[-\/]\d{1,2}[-\/]\d{2,4}/.test(v)) return false;
+          // Pure serial number (1 to 999) is not an index number
+          if (/^\d{1,3}$/.test(v)) return false;
+          // Must contain at least 4 digits OR alphanumeric code with at least 2 digits (e.g. 0721000001, BC/ITS/24/01)
+          const digitCount = (v.match(/\d/g) || []).length;
+          return digitCount >= 4 || (digitCount >= 2 && /[A-Za-z\/\-]/.test(v) && !/\s/.test(v));
+        };
+
+        const isNameCandidate = (val) => {
+          const v = String(val || '').trim();
+          if (!v || v.length < 2) return false;
+          if (ignoreWords.has(v.toUpperCase())) return false;
+          if (headerWords.test(v)) return false;
+          if (/^itsu-lac-/i.test(v)) return false;
+          if (/^\d+$/.test(v)) return false;
+          return /[A-Za-z]{2,}/.test(v);
+        };
 
         lines.forEach(rawLine => {
-          // Strip leading numbering like "1." or "1)" or "•"
-          let line = rawLine.trim().replace(/^\d+[\.\)\-\s]+\s*/, '').replace(/^[•\-\*]\s*/, '').trim();
+          let line = rawLine.trim().replace(/^[•\*]\s*/, '').trim();
           if (!line) return;
 
           let namePart = '';
           let indexPart = '';
 
-          // Split by Tab, Comma, Semicolon, Pipe, or " - "
           const delimiters = /\t|,|;|\||\s+-\s+/;
           if (delimiters.test(line)) {
-            const parts = line.split(delimiters).map(s => s.trim().replace(/^["']|["']$/g, '')).filter(Boolean);
-            if (parts.length >= 2) {
-              // Ignore header row if both look like headers
-              const lower0 = parts[0].toLowerCase();
-              const lower1 = parts[1].toLowerCase();
-              if ((lower0.includes('name') || lower0.includes('index')) && (lower1.includes('name') || lower1.includes('index'))) {
-                return;
-              }
-              // Detect which column has digits (Index Number) vs letters (Full Name)
-              const hasDigits0 = /\d{3,}/.test(parts[0]);
-              const hasDigits1 = /\d{3,}/.test(parts[1]);
-              if (hasDigits0 && !hasDigits1) {
-                indexPart = parts[0];
-                namePart = parts.slice(1).join(' ');
-              } else {
-                namePart = parts[0];
-                indexPart = parts[1];
+            const parts = line
+              .split(delimiters)
+              .map(s => s.trim().replace(/^["']|["']$/g, '').trim())
+              .filter(Boolean);
+
+            // Skip header rows
+            if (parts.length >= 2 && parts.filter(p => headerWords.test(p)).length >= 2) {
+              return;
+            }
+
+            const idxCell = parts.find(p => isIndexCandidate(p));
+            const nameCells = parts.filter(p => p !== idxCell && isNameCandidate(p));
+
+            if (idxCell && nameCells.length > 0) {
+              indexPart = idxCell;
+              namePart = nameCells.join(' ');
+            } else if (parts.length >= 2) {
+              // Fallback for 2-column rows stripped of leading serial number
+              const nonSerial = parts.filter(p => !/^\d{1,3}[\.\)]?$/.test(p) && !ignoreWords.has(p.toUpperCase()));
+              if (nonSerial.length >= 2) {
+                const d0 = (nonSerial[0].match(/\d/g) || []).length;
+                const d1 = (nonSerial[1].match(/\d/g) || []).length;
+                if (d0 > d1) {
+                  indexPart = nonSerial[0];
+                  namePart = nonSerial[1];
+                } else {
+                  namePart = nonSerial[0];
+                  indexPart = nonSerial[1];
+                }
               }
             }
           } else {
-            // Space-separated fallback: e.g. "Kwabena Mensah 0721000099" or "0721000099 Kwabena Mensah"
-            const tokens = line.split(/\s+/);
+            // Space-separated line: strip leading numbering like "1. " or "1) "
+            const cleanLine = line.replace(/^\d{1,3}[\.\)\-]+\s*/, '').replace(/^\d{1,3}\s+(?=[A-Za-z])/, '').trim();
+            const tokens = cleanLine.split(/\s+/).filter(Boolean);
             if (tokens.length >= 2) {
-              if (/\d{3,}/.test(tokens[tokens.length - 1])) {
-                indexPart = tokens[tokens.length - 1];
+              const lastTok = tokens[tokens.length - 1];
+              const firstTok = tokens[0];
+              if (isIndexCandidate(lastTok)) {
+                indexPart = lastTok;
                 namePart = tokens.slice(0, -1).join(' ');
-              } else if (/\d{3,}/.test(tokens[0])) {
-                indexPart = tokens[0];
+              } else if (isIndexCandidate(firstTok)) {
+                indexPart = firstTok;
                 namePart = tokens.slice(1).join(' ');
               }
             }
           }
 
-          if (namePart && indexPart) {
+          if (namePart && indexPart && !headerWords.test(namePart) && !headerWords.test(indexPart)) {
             results.push({
-              fullName: namePart.trim().toUpperCase(),
-              indexNumber: indexPart.trim().toUpperCase()
+              fullName: namePart.trim().replace(/\s+/g, ' ').toUpperCase(),
+              indexNumber: normalizeIndex(indexPart)
             });
           }
         });
@@ -2426,41 +2483,63 @@
 
       if (!isOpen) return null;
 
+      // Ensure SheetJS is loaded before parsing binary Excel files
+      const ensureXlsxLoaded = () => {
+        if (window.XLSX) return Promise.resolve(window.XLSX);
+        return new Promise((resolve, reject) => {
+          const s = document.createElement('script');
+          s.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+          s.onload = () => resolve(window.XLSX);
+          s.onerror = () => reject(new Error('Could not load Excel parser library.'));
+          document.head.appendChild(s);
+        });
+      };
+
       // Handle Excel (.xlsx/.xls) or CSV file upload into bulk list
-      const handleFileUpload = (e) => {
+      const handleFileUpload = async (e) => {
         const file = e.target.files && e.target.files[0];
         if (!file) return;
+        e.target.value = '';
         setError('');
 
-        const reader = new FileReader();
-        if (file.name.match(/\.(xlsx|xls)$/i) && window.XLSX) {
-          reader.onload = (evt) => {
-            try {
-              const data = new Uint8Array(evt.target.result);
-              const wb = window.XLSX.read(data, { type: 'array' });
-              const firstSheet = wb.Sheets[wb.SheetNames[0]];
-              const rows = window.XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: '' });
-              const lines = [];
+        try {
+          if (file.name.match(/\.(xlsx|xls)$/i)) {
+            const XLSXLib = await ensureXlsxLoaded();
+            const buffer = await file.arrayBuffer();
+            const data = new Uint8Array(buffer);
+            const wb = XLSXLib.read(data, { type: 'array' });
+            const lines = [];
+
+            wb.SheetNames.forEach(sheetName => {
+              const sheet = wb.Sheets[sheetName];
+              const rows = XLSXLib.utils.sheet_to_json(sheet, { header: 1, raw: false, defval: '' });
               rows.forEach(r => {
-                const nonEmpty = r.map(c => String(c ?? '').trim()).filter(Boolean);
+                if (!Array.isArray(r)) return;
+                const nonEmpty = r.map(c => String(c ?? '').trim().replace(/\r?\n/g, ' ')).filter(Boolean);
                 if (nonEmpty.length >= 2) {
-                  lines.push(`${nonEmpty[0]}\t${nonEmpty[1]}`);
+                  lines.push(nonEmpty.join('\t'));
                 }
               });
-              setBulkText(prev => (prev ? prev + '\n' : '') + lines.join('\n'));
-            } catch (err) {
-              setError('Could not read Excel file: ' + err.message);
+            });
+
+            if (lines.length === 0) {
+              setError('No rows with student Name and Index Number were found in that Excel file.');
+              return;
             }
-          };
-          reader.readAsArrayBuffer(file);
-        } else {
-          reader.onload = (evt) => {
-            const text = String(evt.target.result || '');
+            setBulkText(prev => (prev ? prev + '\n' : '') + lines.join('\n'));
+            onNotify({ message: `Loaded ${file.name} — review detected students below and click Import.`, type: 'success' });
+          } else {
+            const text = await file.text();
+            if (!text.trim()) {
+              setError('The selected file is empty.');
+              return;
+            }
             setBulkText(prev => (prev ? prev + '\n' : '') + text.trim());
-          };
-          reader.readAsText(file);
+            onNotify({ message: `Loaded ${file.name} — review detected students below and click Import.`, type: 'success' });
+          }
+        } catch (err) {
+          setError('Could not read file: ' + (err.message || String(err)));
         }
-        e.target.value = '';
       };
 
       const handleAddSingle = async (e) => {
