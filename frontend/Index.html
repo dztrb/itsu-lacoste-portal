@@ -753,9 +753,10 @@
       return <span ref={spanRef} className="inline-flex items-center justify-center align-middle" />;
     }
 
-    // --- API SERVICE (Google Apps Script / Mock Bridge) ---
+    // --- API SERVICE (Google Apps Script / Render Server / Local Mock Bridge) ---
     const ApiService = {
       isAppsScript: typeof google !== 'undefined' && google.script && google.script.run,
+      isWebServer: typeof window !== 'undefined' && (window.location.protocol === 'http:' || window.location.protocol === 'https:') && !(typeof google !== 'undefined' && google.script && google.script.run),
 
       call(funcName, ...args) {
         return new Promise((resolve, reject) => {
@@ -764,8 +765,22 @@
               .withSuccessHandler(res => resolve(res))
               .withFailureHandler(err => reject(err instanceof Error ? err : new Error(err.message || String(err))))
               [funcName](...args);
+          } else if (this.isWebServer) {
+            fetch('/api/call', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ funcName, args })
+            })
+              .then(async r => {
+                const data = await r.json();
+                if (!r.ok || data.error) {
+                  throw new Error(data.error || 'Server request failed');
+                }
+                resolve(data.result);
+              })
+              .catch(err => reject(err instanceof Error ? err : new Error(err.message || String(err))));
           } else {
-            // Local simulation adapter for standalone preview
+            // Local simulation adapter for standalone file:// preview
             if (window.MockBackend && typeof window.MockBackend[funcName] === 'function') {
               setTimeout(() => {
                 try {
