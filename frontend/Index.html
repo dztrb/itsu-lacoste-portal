@@ -1531,6 +1531,9 @@
                 <form onSubmit={handleVerify} className="space-y-4">
                   {/* Full Name */}
                   <div>
+                    <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">
+                      Full Name
+                    </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
                         <Icon name="user" className="w-4 h-4" />
@@ -1538,16 +1541,19 @@
                       <input
                         type="text"
                         required
-                        placeholder="Full Name (e.g. Anthony Maclean)"
+                        placeholder="E.G. ANTHONY MACLEAN"
                         value={fullName}
                         onChange={(e) => setFullName(e.target.value.toUpperCase())}
-                        className="w-full pl-11 pr-4 py-3.5 rounded-full border border-slate-200 bg-white hover:border-slate-300 focus:border-[#103E8C] focus:ring-4 focus:ring-blue-50 outline-none text-sm font-medium uppercase transition text-slate-900 placeholder:text-slate-400 placeholder:normal-case shadow-2xs"
+                        className="w-full pl-11 pr-4 py-3.5 rounded-full border border-slate-200 bg-white hover:border-slate-300 focus:border-[#103E8C] focus:ring-4 focus:ring-blue-50 outline-none text-sm font-medium uppercase transition text-slate-900 placeholder:text-slate-400 shadow-2xs"
                       />
                     </div>
                   </div>
 
                   {/* Index Number */}
                   <div>
+                    <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">
+                      Index Number
+                    </label>
                     <div className="relative">
                       <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
                         <Icon name="hash" className="w-4 h-4" />
@@ -1555,10 +1561,10 @@
                       <input
                         type="text"
                         required
-                        placeholder="Index Number (e.g. 0721000001)"
+                        placeholder="E.G. 0721000001"
                         value={indexNumber}
                         onChange={(e) => setIndexNumber(e.target.value)}
-                        className="w-full pl-11 pr-4 py-3.5 rounded-full border border-slate-200 bg-white hover:border-slate-300 focus:border-[#103E8C] focus:ring-4 focus:ring-blue-50 outline-none text-sm font-mono font-medium uppercase transition text-slate-900 placeholder:text-slate-400 placeholder:normal-case placeholder:font-sans shadow-2xs"
+                        className="w-full pl-11 pr-4 py-3.5 rounded-full border border-slate-200 bg-white hover:border-slate-300 focus:border-[#103E8C] focus:ring-4 focus:ring-blue-50 outline-none text-sm font-mono font-medium uppercase transition text-slate-900 placeholder:text-slate-400 shadow-2xs"
                       />
                     </div>
                   </div>
