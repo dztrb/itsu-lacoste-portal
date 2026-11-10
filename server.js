@@ -679,3 +679,4 @@ const server = http.createServer((req, res) => {
 server.listen(PORT, () => {
   console.log(`ITSU Lacoste Portal running on port ${PORT}`);
 });
+
