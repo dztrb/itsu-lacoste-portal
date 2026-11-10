@@ -56,8 +56,27 @@ async function requestHandler(req, res) {
       return;
     }
 
-    // Serve favicon if requested directly
-    if (req.url && (req.url.includes('favicon.ico') || req.url.includes('favicon.png'))) {
+    // Serve og-image.jpg or favicon if requested directly
+    const reqUrl = String(req.url || '');
+    if (reqUrl.includes('og-image.jpg')) {
+      const ogCandidates = [
+        path.join(__dirname, 'frontend', 'assets', 'og-image.jpg'),
+        path.join(process.cwd(), 'frontend', 'assets', 'og-image.jpg')
+      ];
+      for (const og of ogCandidates) {
+        if (fs.existsSync(og)) {
+          const img = fs.readFileSync(og);
+          res.writeHead(200, {
+            'Content-Type': 'image/jpeg',
+            'Content-Length': img.length,
+            'Cache-Control': 'public, max-age=86400'
+          });
+          return res.end(img);
+        }
+      }
+    }
+
+    if (reqUrl.includes('favicon.ico') || reqUrl.includes('favicon.png')) {
       const favCandidates = [
         path.join(__dirname, 'frontend', 'assets', 'favicon.png'),
         path.join(process.cwd(), 'frontend', 'assets', 'favicon.png')
@@ -65,7 +84,11 @@ async function requestHandler(req, res) {
       for (const fav of favCandidates) {
         if (fs.existsSync(fav)) {
           const img = fs.readFileSync(fav);
-          res.writeHead(200, { 'Content-Type': 'image/png', 'Cache-Control': 'public, max-age=86400' });
+          res.writeHead(200, {
+            'Content-Type': 'image/png',
+            'Content-Length': img.length,
+            'Cache-Control': 'public, max-age=86400'
+          });
           return res.end(img);
         }
       }
