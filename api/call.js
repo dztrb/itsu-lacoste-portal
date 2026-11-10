@@ -679,13 +679,16 @@ const Backend = {
 
     if (reportType === 'COMPLETE_REGISTER') {
       title = 'Complete Student Selection Register';
-      headers = ['#', 'Submission ID', 'Full Name', 'Index Number', 'Colour', 'Size', 'Submitted At', 'Collection Status'];
-      rows = sel.map((s, idx) => [idx + 1, s.submissionId, s.fullName, s.indexNumber, s.selectedColour, s.selectedSize, s.submittedAt, s.collectionStatus || 'Not Collected']);
+      headers = ['#', 'Submission ID', 'Full Name', 'Index Number', 'Qty', 'Amount', 'Colour', 'Size', 'Submitted At', 'Collection Status'];
+      rows = sel.map((s, idx) => {
+        const q = s.quantity || 1;
+        return [idx + 1, s.submissionId, s.fullName, s.indexNumber, q, `${q * 75}GHC`, s.selectedColour, s.selectedSize, s.submittedAt, s.collectionStatus || 'Not Collected'];
+      });
       summary = { 'Total Selections': sel.length, 'Collected': sel.filter(s => s.collectionStatus === 'Collected').length };
     } else if (reportType === 'COLLECTION_SIGNOFF') {
       title = 'Physical Distribution & Collection Sign-Off Sheet';
-      headers = ['#', 'Full Name', 'Index Number', 'Colour', 'Size', 'Ref ID', 'Collection Status', 'Student Signature'];
-      rows = sel.map((s, idx) => [idx + 1, s.fullName, s.indexNumber, s.selectedColour, s.selectedSize, s.submissionId, s.collectionStatus || 'Not Collected', s.collectionStatus === 'Collected' ? 'COLLECTED' : '__________________']);
+      headers = ['#', 'Full Name', 'Index Number', 'Qty', 'Colour', 'Size', 'Ref ID', 'Collection Status', 'Student Signature'];
+      rows = sel.map((s, idx) => [idx + 1, s.fullName, s.indexNumber, s.quantity || 1, s.selectedColour, s.selectedSize, s.submissionId, s.collectionStatus || 'Not Collected', s.collectionStatus === 'Collected' ? 'COLLECTED' : '__________________']);
       summary = { 'Total Eligible for Pickup': sel.length, 'Collected': sel.filter(s => s.collectionStatus === 'Collected').length, 'Awaiting Pickup': sel.filter(s => s.collectionStatus !== 'Collected').length };
     } else if (reportType === 'BLUE_LACOSTE_LIST') {
       title = 'Blue Lacoste Selections List';
