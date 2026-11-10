@@ -2325,89 +2325,127 @@
       };
 
       return (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl border border-slate-200 shadow-2xl max-w-md w-full p-6 sm:p-8 relative">
-            <button
-              onClick={onClose}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600"
-            >
-              <Icon name="x" className="w-5 h-5" />
-            </button>
+        <div className="fixed inset-0 z-50 bg-slate-50/95 backdrop-blur-md overflow-y-auto flex flex-col justify-between overflow-x-hidden animate-in fade-in duration-200">
+          {/* Soft Organic Curved Ambient Glow (matching student portal) */}
+          <div className="absolute -top-28 -right-20 w-72 h-72 sm:w-96 sm:h-96 md:w-[480px] md:h-[480px] rounded-full bg-gradient-to-br from-blue-200/50 via-indigo-100/35 to-transparent blur-3xl pointer-events-none"></div>
+          <div className="absolute top-1/3 -left-32 w-72 h-72 rounded-full bg-gradient-to-tr from-sky-100/50 to-transparent blur-2xl pointer-events-none"></div>
 
-            <div className="text-center mb-6">
-              <div className="w-12 h-12 rounded-xl bg-primary-800 text-white flex items-center justify-center mx-auto mb-3 shadow">
-                <Icon name="lock" className="w-6 h-6" />
-              </div>
-              <h3 className="text-lg font-bold text-slate-900">Treasurer Authentication</h3>
-              <p className="text-xs text-slate-500 mt-1">
-                Department of Computer Science • Administrative Access
-              </p>
-            </div>
+          {/* Central Main Content: Identical to Student Portal */}
+          <main className="relative z-10 flex-grow flex items-center justify-center px-5 sm:px-8 py-6 sm:py-10">
+            <div className="w-full max-w-sm sm:max-w-md bg-white/80 backdrop-blur-xs sm:bg-white sm:shadow-xl sm:border sm:border-slate-100/90 rounded-3xl p-5 sm:p-8 transition-all relative">
+              
+              {/* Top-Right Dismiss Button */}
+              <button
+                type="button"
+                onClick={onClose}
+                className="absolute top-5 right-5 w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-400 hover:text-slate-700 transition flex items-center justify-center cursor-pointer active:scale-95"
+                title="Back to Student Portal"
+              >
+                <Icon name="x" className="w-4 h-4" />
+              </button>
 
-            {error && (
-              <div className="bg-rose-50 border border-rose-200 rounded-lg p-3 mb-4 text-xs text-rose-800 flex items-start gap-2">
-                <Icon name="alert-circle" className="w-4 h-4 text-rose-600 flex-shrink-0 mt-0.5" />
-                <span>{error}</span>
-              </div>
-            )}
-
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                  Authorized Email
-                </label>
-                <input
-                  type="email"
-                  required
-                  autoComplete="off"
-                  placeholder="Enter authorized email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
-                />
+              {/* Title & Subtitle */}
+              <div className="mb-6 sm:mb-7">
+                <h1 className="text-3xl sm:text-4xl font-bold text-slate-900 tracking-tight">
+                  Treasurer Login
+                </h1>
+                <p className="text-xs sm:text-sm text-slate-500 mt-1.5 flex items-center gap-1.5 flex-wrap">
+                  <span>Authorized Administrative Gateway</span>
+                </p>
               </div>
 
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 uppercase tracking-wider mb-1">
-                  Password
-                </label>
-                <input
-                  type="password"
-                  required
-                  placeholder="••••••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-primary-500 text-sm"
-                />
-              </div>
+              {/* Error Banner */}
+              {error && (
+                <div className="bg-rose-50 border border-rose-200 rounded-2xl p-3.5 mb-5 flex items-start gap-2.5 text-rose-900 text-xs">
+                  <Icon name="alert-circle" className="w-4 h-4 text-rose-600 flex-shrink-0 mt-0.5" />
+                  <div>{error}</div>
+                </div>
+              )}
 
-              <div className="pt-2">
+              {/* Input Form with Rounded Pill Fields (Identical to Student Portal) */}
+              <form onSubmit={handleLogin} className="space-y-4">
+                {/* Authorized Email */}
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">
+                    Authorized Email
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
+                      <Icon name="mail" className="w-4 h-4" />
+                    </div>
+                    <input
+                      type="email"
+                      required
+                      autoComplete="off"
+                      placeholder="E.G. TREASURER@ITSU.COM"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full pl-11 pr-4 py-3.5 rounded-full border border-slate-200 bg-white hover:border-slate-300 focus:border-[#103E8C] focus:ring-4 focus:ring-blue-50 outline-none text-sm font-medium transition text-slate-900 placeholder:text-slate-400 shadow-2xs"
+                    />
+                  </div>
+                </div>
+
+                {/* Password */}
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-1.5 ml-1">
+                    Password
+                  </label>
+                  <div className="relative">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-400">
+                      <Icon name="lock" className="w-4 h-4" />
+                    </div>
+                    <input
+                      type="password"
+                      required
+                      placeholder="••••••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="w-full pl-11 pr-4 py-3.5 rounded-full border border-slate-200 bg-white hover:border-slate-300 focus:border-[#103E8C] focus:ring-4 focus:ring-blue-50 outline-none text-sm font-medium transition text-slate-900 placeholder:text-slate-400 shadow-2xs"
+                    />
+                  </div>
+                </div>
+
+                {/* Action Button: Styled like Student Portal Verify button */}
+                <div className="flex items-center justify-end pt-2">
+                  <button
+                    type="submit"
+                    disabled={isLoading}
+                    className="px-7 py-3 rounded-2xl bg-[#103E8C] hover:bg-[#0B2E68] disabled:bg-slate-300 text-white font-semibold text-sm shadow-md shadow-blue-900/15 hover:shadow-lg transition-all flex items-center gap-2 active:scale-95 cursor-pointer"
+                  >
+                    {isLoading ? (
+                      <>
+                        <Icon name="loader-2" className="w-4 h-4 animate-spin" />
+                        <span>Signing In...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Sign In</span>
+                        <Icon name="arrow-right" className="w-4 h-4" />
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+
+              {/* Footer Link to return back to Student Portal */}
+              <div className="mt-8 pt-5 border-t border-slate-100 text-center text-xs text-slate-500">
                 <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full bg-primary-800 hover:bg-primary-900 disabled:bg-slate-300 text-white font-semibold py-2.5 px-4 rounded-lg shadow-sm transition flex items-center justify-center gap-2 text-sm"
+                  type="button"
+                  onClick={onClose}
+                  className="text-[#103E8C] font-semibold hover:underline inline-flex items-center gap-1.5 cursor-pointer"
                 >
-                  {isLoading ? (
-                    <>
-                      <Icon name="loader-2" className="w-4 h-4 animate-spin" />
-                      <span>Authenticating...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Icon name="shield-check" className="w-4 h-4" />
-                      <span>Sign In to Dashboard</span>
-                    </>
-                  )}
+                  <Icon name="arrow-left" className="w-3.5 h-3.5" />
+                  <span>Back to Student Verification</span>
                 </button>
               </div>
-            </form>
 
-            <div className="mt-6 pt-4 border-t border-slate-100 text-center">
-              <span className="text-[11px] text-slate-400">
-                Protected administrative gateway. Unauthorized attempts are logged.
-              </span>
             </div>
-          </div>
+          </main>
+
+          {/* Bottom Brand Watermark */}
+          <footer className="relative z-10 py-3 text-center text-[11px] text-slate-400 font-medium">
+            ©NEIZERPEPRAH-LED ADM
+          </footer>
         </div>
       );
     }
