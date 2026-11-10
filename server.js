@@ -636,31 +636,31 @@ const Backend = {
   }
 };
 
-const server = http.createServer((req, res) => {
+const server = http.createServer(async (req, res) => {
   if (req.method === 'POST' && req.url === '/api/call') {
+    const apiHandler = require('./api/call');
     let body = '';
     req.on('data', chunk => {
       body += chunk.toString();
     });
-    req.on('end', () => {
-      try {
-        const { funcName, args = [] } = JSON.parse(body || '{}');
-        if (!funcName || typeof Backend[funcName] !== 'function') {
-          res.writeHead(400, { 'Content-Type': 'application/json' });
-          return res.end(JSON.stringify({ error: `Unknown function: ${funcName}` }));
-        }
-        const result = Backend[funcName](...args);
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ result }));
-      } catch (err) {
-        res.writeHead(400, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({ error: err.message || String(err) }));
-      }
+    req.on('end', async () => {
+      req.body = body;
+      res.status = (code) => {
+        res.statusCode = code;
+        return {
+          json: (obj) => {
+            res.setHeader('Content-Type', 'application/json');
+            res.end(JSON.stringify(obj));
+          },
+          end: () => res.end()
+        };
+      };
+      await apiHandler(req, res);
     });
     return;
   }
 
-  if (req.method === 'GET' && (req.url === '/' || req.url.startsWith('/?'))) {
+  if (req.method === 'GET' && (req.url === '/' || req.url.startsWith('/?') || req.url === '/frontend/Index.html')) {
     fs.readFile(INDEX_FILE, 'utf8', (err, html) => {
       if (err) {
         res.writeHead(500, { 'Content-Type': 'text/plain' });
@@ -676,7 +676,11 @@ const server = http.createServer((req, res) => {
   res.end();
 });
 
-server.listen(PORT, () => {
-  console.log(`ITSU Lacoste Portal running on port ${PORT}`);
-});
+if (!process.env.VERCEL) {
+  server.listen(PORT, () => {
+    console.log(`ITSU Lacoste Portal running on port ${PORT}`);
+  });
+}
+
+module.exports = server;
 
