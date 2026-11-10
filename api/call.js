@@ -10,9 +10,16 @@ if (!fs.existsSync(DATA_DIR)) {
 }
 
 let memoryDb = null;
+let lastSyncedPtr = null;
+let dbDirty = false;
+
 const KV_URL = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL || '';
 const KV_TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN || '';
 const KV_KEY = 'itsu_lacoste_portal_db_v1';
+
+// Built-in zero-config cloud persistence across Vercel serverless cold starts
+const CLOUD_KV_APP = '1wcq4j6b';
+const CLOUD_PTR_KEY = 'itsu_lacoste_db_v2_ptr';
 
 function getInitialDb() {
   return {
@@ -24,7 +31,7 @@ function getInitialDb() {
       maxSubmissions: 1
     },
     students: [
-      { fullName: 'ANTHONY MACLEAN', indexNumber: '0721000001', paymentStatus: 'PAID', paymentReference: 'PRE-ORDER', dateAdded: '2026-11-09' }
+      { fullName: 'ANTHONY MACLEAN', indexNumber: '0721000001', quantity: 1, paymentStatus: 'PAID', paymentReference: 'PRE-ORDER', dateAdded: '2026-11-09' }
     ],
     selections: [],
     admin: {
@@ -42,7 +49,8 @@ async function hydrateDb() {
   if (KV_URL && KV_TOKEN) {
     try {
       const r = await fetch(`${KV_URL}/get/${KV_KEY}`, {
-        headers: { Authorization: `Bearer ${KV_TOKEN}` }
+        headers: { Authorization: `Bearer ${KV_TOKEN}` },
+        cache: 'no-store'
       });
       const data = await r.json();
       if (data && data.result) {
@@ -56,11 +64,49 @@ async function hydrateDb() {
       console.error('Error reading from KV:', err);
     }
   }
+
+  try {
+    const ptrRes = await fetch(`https://keyvalue.immanuel.co/api/KeyVal/GetValue/${CLOUD_KV_APP}/${CLOUD_PTR_KEY}`, {
+      cache: 'no-store'
+    });
+    if (ptrRes.ok) {
+      const rawPtr = (await ptrRes.text()).trim().replace(/^"+|"+$/g, '');
+      if (rawPtr && rawPtr !== 'null' && rawPtr.length >= 5) {
+        if (memoryDb && lastSyncedPtr === rawPtr) {
+          return memoryDb;
+        }
+        const blobRes = await fetch(`https://api.pastes.dev/${rawPtr}`, {
+          headers: {
+            'User-Agent': 'itsu-lacoste-portal/1.0',
+            'Accept': 'application/json'
+          },
+          cache: 'no-store'
+        });
+        if (blobRes.ok) {
+          const parsed = await blobRes.json();
+          if (parsed && Array.isArray(parsed.students) && parsed.admin) {
+            memoryDb = parsed;
+            lastSyncedPtr = rawPtr;
+            try {
+              fs.writeFileSync(DB_FILE, JSON.stringify(memoryDb, null, 2), 'utf8');
+            } catch (e) {}
+            return memoryDb;
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.error('Error reading from cloud persistence:', err);
+  }
+
   return getDb();
 }
 
 async function flushDb() {
-  if (KV_URL && KV_TOKEN && memoryDb) {
+  if (!dbDirty || !memoryDb) return;
+  dbDirty = false;
+
+  if (KV_URL && KV_TOKEN) {
     try {
       await fetch(`${KV_URL}/set/${KV_KEY}`, {
         method: 'POST',
@@ -73,6 +119,30 @@ async function flushDb() {
     } catch (err) {
       console.error('Error writing to KV:', err);
     }
+  }
+
+  try {
+    const pasteRes = await fetch('https://api.pastes.dev/post', {
+      method: 'POST',
+      headers: {
+        'User-Agent': 'itsu-lacoste-portal/1.0',
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify(memoryDb)
+    });
+    if (pasteRes.ok) {
+      const pasteData = await pasteRes.json();
+      const newKey = pasteData && pasteData.key;
+      if (newKey) {
+        await fetch(`https://keyvalue.immanuel.co/api/KeyVal/UpdateValue/${CLOUD_KV_APP}/${CLOUD_PTR_KEY}/${newKey}`, {
+          method: 'POST'
+        });
+        lastSyncedPtr = newKey;
+      }
+    }
+  } catch (err) {
+    console.error('Error writing to cloud persistence:', err);
   }
 }
 
@@ -96,6 +166,7 @@ function getDb() {
 
 function saveDb(db) {
   memoryDb = db;
+  dbDirty = true;
   try {
     fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2), 'utf8');
   } catch (err) {
@@ -235,18 +306,7 @@ const Backend = {
       throw new Error('Invalid email or password.');
     }
 
-    db.admin.password = normPwd;
     const token = 'VCL-SESSION-' + Math.random().toString(36).substring(2);
-    db.auditLogs.unshift({
-      logId: 'LOG-' + Math.random().toString(36).substring(2, 7).toUpperCase(),
-      timestamp: new Date().toISOString(),
-      user: normEmail,
-      action: 'LOGIN_SUCCESS',
-      details: 'Treasurer authenticated successfully',
-      status: 'SUCCESS'
-    });
-    saveDb(db);
-
     return {
       success: true,
       sessionToken: token,
@@ -560,17 +620,20 @@ const Backend = {
   updateStudentSelection(sessionToken, indexNumber, selection) {
     const db = getDb();
     const normIdx = String(indexNumber || '').trim().toUpperCase();
+    const st = db.students.find(s => String(s.indexNumber || '').trim().toUpperCase() === normIdx);
+    const qty = st ? Math.max(1, parseInt(st.quantity, 10) || 1) : 1;
     let sel = db.selections.find(s => String(s.indexNumber || '').trim().toUpperCase() === normIdx);
     if (sel) {
       sel.selectedColour = selection.colour;
       sel.selectedSize = selection.size;
+      sel.quantity = qty;
       sel.status = 'CORRECTED';
     } else {
-      const st = db.students.find(s => String(s.indexNumber || '').trim().toUpperCase() === normIdx);
       db.selections.push({
         submissionId: 'ITSU-LAC-ADM-' + Math.random().toString(36).substring(2, 6).toUpperCase(),
         fullName: st ? st.fullName : 'Student',
         indexNumber: normIdx,
+        quantity: qty,
         selectedColour: selection.colour,
         selectedSize: selection.size,
         submittedAt: new Date().toISOString().replace('T', ' ').substring(0, 19),
